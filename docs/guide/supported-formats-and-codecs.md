@@ -21,6 +21,26 @@ Mediabunny supports many commonly used media container formats, all of which are
 - MPEG Transport Stream (.ts)
 - HLS (.m3u8)
 
+### Experimental MXF input
+
+MXF reading is opt-in with `new Input({ source, formats: [MXF] })`. Import `MXF` from `mediabunny`; it is not included in `ALL_FORMATS`. There is no MXF writer. `canRead()` recognizes the file signature; reading track metadata can still reject unsupported layouts.
+
+The reader discovers tracks and extracts packets from finalized, seekable, self-contained OP1a files with a closed complete header at byte zero. It supports progressive, frame-wrapped ProRes and ST 382 AES/BWF packed 16/24/32-bit little-endian PCM. ST 331 AES3 subframe packing is not supported. ProRes decoding uses the existing `@mediabunny/prores` extension.
+
+Color primaries, transfer characteristics, and matrix coefficients come from the first ProRes frame header. MXF mastering-display and content-light metadata are not preserved.
+
+The supported metadata graph has one material package, one file source package, and one untrimmed SourceClip per media track. Origin and StartPosition must be zero, material and source edit rates must match, and descriptors must identify their source tracks through LinkedTrackID. Interlaced/PsF pictures, cropped display apertures, other wrapping or sound coding, external essence, source-clip channel selection, and more complex edits are rejected. Timecode components are exposed separately in `MetadataTags.raw` under `mxf.timecode.<track ID>`, not as audio tracks.
+
+Indexed lookup discovers partitions from the trailing Random Index Pack, or from the header's footer pointer and previous-partition chain. RIP entries identify partitions, not frames. BodySID and IndexSID select the essence and index streams; BodyOffset maps index stream offsets into the appropriate physical partition. Supported index segments use fixed two-byte or BER local lengths, with non-reordered VBE entries or whole-container CBE edit-unit byte counts. CBE requires start position zero, duration zero or the full track duration, and no index entries or slices. The exceptional CBE layout with a different-sized first unit falls back to scanning. DeltaEntry and SliceOffset values locate individual elements, whose KLV keys identify the tracks.
+
+Distributed indexes and repeated footer indexes are supported. On indexed lookup, scalar segment summaries are checked for ordering and overlap within each index partition. Only the requested entries and their successors are fetched, not the complete entry array. Applicable repeated entries must resolve to the same essence location and size; conflicting copies are rejected. Indexed end-of-track trusts the declared duration and index coverage. It does not scan otherwise unreferenced trailing essence to validate the total picture count. Full sequential scans retain the picture-count check.
+
+PCM uses indexed timing only when the descriptor explicitly marks audio as locked and the audio sample rate is an integer multiple of the edit rate. Each retrieved payload must contain exactly that number of sample frames. Fractional-rate PCM, unlocked PCM, missing index coverage, and unsupported index timing representations use sequential KLV discovery and actual payload sample counts. In particular, the reader does not infer or repeat a 29.97/59.94 fps audio cadence. Such fallback seeks can still inspect all preceding essence headers. Malformed index lengths, unsafe offsets, inconsistent partition pointers, and invalid slice references are errors, not reasons to invent packet timing.
+
+Metadata-only packet retrieval does not request essence payloads. Decoder configuration separately reads the first 36 bytes of ProRes essence. Structural reads use bounded windows of up to 4 KiB inside metadata/index regions and, when its address is known, the footer. A source's own caching or read-ahead can transfer additional bytes; HTTP callers that need finite range requests can use `UrlSource`'s opt-in `rangePolicy`. Header metadata is limited to 16 MiB, individual metadata sets to 1 MiB, and indexed partition directories to 10,000 entries. These are subset and resource limits, not a claim of general MXF support.
+
+The node tests include a sparse 10 GB logical file without allocating its essence, CBE/VBE and BER-local indexes, partition-pointer fallback, malformed indexes, packet ownership, and measured source reads. Run `npm test -- node/mxf`. Set `MXF_PRORES_FIXTURE` to a local FFmpeg FATE `Meridian-Apple_ProResProxy-HDR10.mxf` file to enable the ProRes Proxy interoperability case. `MXF_GENERATED_FIXTURE` enables the independently probed 24-second, 720p25 ProRes LT/stereo PCM24 fixture case, including packet hashes across distributed index boundaries. Neither media file is included in the repository. These tests verify packet extraction and timing, not universal decoder or audio-playback compatibility.
+
 ## Codecs
 
 Mediabunny supports a wide range of video, audio, and subtitle codecs. More specifically, it supports all codecs specified by the WebCodecs API and a few additional PCM codecs out of the box.

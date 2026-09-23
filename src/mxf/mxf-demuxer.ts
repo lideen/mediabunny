@@ -1,0 +1,608 @@
+/*!
+ * Copyright (c) 2026-present, Vanilagy and contributors
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+import { AudioCodec } from '../codec';
+import { extractProresCodecInfoFromPacket } from '../codec-data';
+import { Demuxer } from '../demuxer';
+import { InputDisposedError } from '../input';
+import { InputAudioTrackBacking, InputTrackBacking, InputVideoTrackBacking } from '../input-track';
+import { PacketRetrievalOptions } from '../media-sink';
+import { DEFAULT_TRACK_DISPOSITION, MetadataTags } from '../metadata';
+import {
+	COLOR_PRIMARIES_MAP_INVERSE, IDENTITY_MATRIX, MATRIX_COEFFICIENTS_MAP_INVERSE,
+	TRANSFER_CHARACTERISTICS_MAP_INVERSE, UNDETERMINED_LANGUAGE,
+} from '../misc';
+import { EncodedPacket, PLACEHOLDER_DATA } from '../packet';
+import {
+	batch, equalRationals, hex, MetadataSet, P, parseSet, position, property, rational, requireMxf, uint,
+} from './mxf-metadata';
+import { FILL_KEYS, INDEX_KEYS, MxfIndex, MxfKlv as Klv, PARTITION_PREFIX } from './mxf-index';
+
+const PRIMER = '060e2b34020501010d01020101050100';
+const SET_PREFIX = '060e2b34025301010d0101010101';
+const ESSENCE_PREFIX = '060e2b34010201010d010301';
+// SMPTE RDD 44 frame-wrapped ProRes mapping.
+const PRORES_CONTAINER = '060e2b340401010d0d010301021c0100';
+// ST 382 AES/BWF carries packed little-endian samples, not ST 331 AES3 subframes.
+const WAVE_CONTAINER = '060e2b34040101010d01030102060100';
+const AES_CONTAINER = '060e2b34040101010d01030102060300';
+const PICTURE = '060e2b34040101010103020201000000';
+const SOUND = '060e2b34040101010103020202000000';
+const TIMECODE = '060e2b34040101010103020101000000';
+const PROFILES = ['apco', 'apcs', 'apcn', 'apch', 'ap4h', 'ap4x'];
+
+type PacketLocation = { offset: number; size: number; timestamp: number; duration: number };
+type TrackInfo = {
+	id: number;
+	number: number;
+	bodySid: number;
+	indexSid: number;
+	trackNumber: number;
+	rate: { numerator: number; denominator: number };
+	duration: number;
+	editUnitCount: number;
+	descriptor: MetadataSet;
+	packets: PacketLocation[];
+	sampleCount: number;
+};
+
+export class MxfDemuxer extends Demuxer {
+	private metadataPromise: Promise<void> | null = null;
+	private scanPromise: Promise<void> | null = null;
+	private tracks: MxfTrackBacking[] = [];
+	private scanOffset = 0;
+	private bodySid = 0;
+	private ended = false;
+	private footerSeen = false;
+	private disposed = false;
+	private metadataTags: MetadataTags = {};
+	private index: MxfIndex | null = null;
+
+	checkDisposed() {
+		if (this.disposed) throw new InputDisposedError();
+	}
+
+	async bytes(offset: number, size: number) {
+		this.checkDisposed();
+		requireMxf(Number.isSafeInteger(offset) && offset >= 0 && Number.isSafeInteger(size) && size >= 0
+			&& Number.isSafeInteger(offset + size) && offset + size <= this.input._reader.fileSize!,
+		'invalid byte range');
+		const slice = await this.input._reader.source._read(offset, offset + size, offset, offset + size);
+		this.checkDisposed();
+		requireMxf(slice, 'truncated data');
+		return slice.bytes.subarray(offset - slice.offset, offset - slice.offset + size);
+	}
+
+	async klv(offset: number): Promise<Klv> {
+		const header = await this.bytes(offset, 17);
+		const first = header[16]!;
+		let size = first;
+		let start = offset + 17;
+		if (first & 0x80) {
+			const count = first & 0x7f;
+			requireMxf(count > 0 && count <= 8, 'indefinite or oversized BER length');
+			size = uint(await this.bytes(start, count), count);
+			start += count;
+		}
+		const end = start + size;
+		requireMxf(Number.isSafeInteger(end) && end <= this.input._reader.fileSize!, 'KLV exceeds file');
+		return { key: hex(header.subarray(0, 16)), offset: start, size, end };
+	}
+
+	async partition(klv: Klv, offset: number) {
+		requireMxf(klv.size >= 88 && klv.size <= 4096, 'partition pack size');
+		const data = await this.bytes(klv.offset, klv.size);
+		requireMxf(uint(data.subarray(0, 2), 2) === 1, 'partition version');
+		requireMxf(uint(data.subarray(8, 16), 8) === offset, 'partition offset');
+		for (const start of [16, 24, 52]) uint(data.subarray(start, start + 8), 8);
+		const op = hex(data.subarray(64, 80));
+		requireMxf(op.startsWith('060e2b34040101010d0102010101') && op.endsWith('00')
+			&& (data[78]! & 2) === 0, 'only self-contained OP1a is supported');
+		batch(data.subarray(80), 16);
+		return {
+			headerSize: uint(data.subarray(32, 40), 8),
+			indexSize: uint(data.subarray(40, 48), 8),
+			bodySid: uint(data.subarray(60, 64), 4),
+			indexSid: uint(data.subarray(48, 52), 4),
+			previous: uint(data.subarray(16, 24), 8),
+			footer: uint(data.subarray(24, 32), 8),
+			bodyOffset: uint(data.subarray(52, 60), 8),
+		};
+	}
+
+	private readMetadata() {
+		return this.metadataPromise ??= this.initialize();
+	}
+
+	async countedRegion(offset: number, size: number, kind: 'header' | 'index') {
+		if (size === 0) return { start: offset, end: offset };
+		// Leading alignment Fill can only move the region's end later, so this window stays before essence.
+		await this.bytes(offset, Math.min(size, 4096));
+		let first = await this.klv(offset);
+		while (FILL_KEYS.includes(first.key)) {
+			offset = first.end;
+			first = await this.klv(offset);
+		}
+		requireMxf(kind === 'header' ? first.key === PRIMER : INDEX_KEYS.includes(first.key),
+			`missing ${kind} region start`);
+		// ST 377-1 counts from the Primer/first index key, excluding leading alignment Fill.
+		const end = offset + size;
+		requireMxf(Number.isSafeInteger(end) && end <= this.input._reader.fileSize! && first.end <= end,
+			`${kind} region exceeds file or splits KLV`);
+		return { start: offset, end };
+	}
+
+	private async initialize() {
+		requireMxf(this.input._reader.fileSize !== null, 'a seekable source with known size is required');
+		await this.bytes(0, Math.min(105, this.input._reader.fileSize));
+		const first = await this.klv(0);
+		requireMxf(first.key === `${PARTITION_PREFIX}020400`, 'closed complete header at byte zero required');
+		const partition = await this.partition(first, 0);
+		requireMxf(partition.headerSize > 0 && partition.headerSize <= 16 * 1024 * 1024,
+			'header metadata size');
+		const header = await this.countedRegion(first.end, partition.headerSize, 'header');
+		await this.bytes(header.start, header.end - header.start);
+		const primer = new Map<number, string>();
+		const sets = new Map<string, MetadataSet>();
+		let offset = header.start;
+		while (offset < header.end) {
+			const klv = await this.klv(offset);
+			requireMxf(klv.end <= header.end, 'KLV exceeds header metadata');
+			if (klv.key === PRIMER) {
+				requireMxf(primer.size === 0 && klv.size <= 2 * 1024 * 1024, 'duplicate or oversized primer');
+				for (const item of batch(await this.bytes(klv.offset, klv.size), 18)) {
+					const tag = uint(item.subarray(0, 2), 2);
+					requireMxf(!primer.has(tag), 'duplicate primer tag');
+					primer.set(tag, hex(item.subarray(2)));
+				}
+			} else if (klv.key.startsWith(SET_PREFIX)) {
+				requireMxf(klv.size <= 1024 * 1024 && sets.size < 10000, 'metadata limit exceeded');
+				const set = parseSet(Number.parseInt(klv.key.slice(28, 30), 16),
+					await this.bytes(klv.offset, klv.size), primer);
+				const id = hex(property(set, P.instance, 16));
+				requireMxf(!sets.has(id), 'duplicate instance UID');
+				sets.set(id, set);
+			}
+			offset = klv.end;
+		}
+		this.buildTracks(sets);
+		this.scanOffset = (await this.countedRegion(header.end, partition.indexSize, 'index')).end;
+		this.bodySid = partition.bodySid;
+		this.index = new MxfIndex(this, this.input._reader.fileSize, partition.footer);
+	}
+
+	private buildTracks(sets: Map<string, MetadataSet>) {
+		const resolve = (ref: Uint8Array) => {
+			requireMxf(ref.length === 16, 'invalid strong reference');
+			const set = sets.get(hex(ref));
+			requireMxf(set, 'unresolved metadata reference');
+			return set;
+		};
+		const refs = (set: MetadataSet, key: string) => batch(property(set, key), 16).map(resolve);
+		const prefaces = [...sets.values()].filter(x => x.kind === 0x2f);
+		requireMxf(prefaces.length === 1, 'one Preface required');
+		const content = resolve(property(prefaces[0]!, P.content));
+		const packages = refs(content, P.packages);
+		const materials = packages.filter(x => x.kind === 0x36);
+		const sources = packages.filter(x => x.kind === 0x37);
+		requireMxf(materials.length === 1 && sources.length === 1, 'one material and one file package required');
+		const source = sources[0]!;
+		const sourceId = hex(property(source, P.packageId, 32));
+		const essence = refs(content, P.essenceData).filter(x => hex(property(x, P.linkedPackage, 32)) === sourceId);
+		requireMxf(essence.length === 1, 'one essence container data set required');
+		const bodySid = uint(property(essence[0]!, P.bodySid), 4);
+		const indexProperty = essence[0]!.properties.get(P.indexSid);
+		const indexSid = indexProperty ? uint(indexProperty, 4) : 0;
+		requireMxf(bodySid !== 0, 'external essence');
+		const descriptor = resolve(property(source, P.descriptor));
+		const descriptors = descriptor.kind === 0x44 ? refs(descriptor, P.subDescriptors) : [descriptor];
+		const sourceTracks = refs(source, P.tracks);
+		let videos = 0;
+		let audios = 0;
+		const routes = new Set<number>();
+		const ids = new Set<number>();
+		for (const track of refs(materials[0]!, P.tracks)) {
+			const sequence = resolve(property(track, P.sequence));
+			const definition = hex(property(sequence, P.definition, 16));
+			if (definition === TIMECODE) {
+				const components = refs(sequence, P.components);
+				if (components.length === 1 && components[0]!.kind === 0x14) {
+					const timecode = components[0]!;
+					this.metadataTags.raw ??= {};
+					this.metadataTags.raw[`mxf.timecode.${uint(property(track, P.trackId), 4)}`] = {
+						start: String(position(property(timecode, P.timecodeStart))),
+						roundedBase: String(uint(property(timecode, P.timecodeBase), 2)),
+						dropFrame: String(uint(property(timecode, P.timecodeDrop), 1)),
+					};
+				}
+				continue;
+			}
+			requireMxf(definition === PICTURE || definition === SOUND, 'unsupported material track data definition');
+			requireMxf(track.kind === 0x3b && sequence.kind === 0x0f, 'timeline track and Sequence required');
+			requireMxf(position(property(track, P.origin)) === 0, 'nonzero Origin');
+			const components = refs(sequence, P.components);
+			requireMxf(components.length === 1 && components[0]!.kind === 0x11, 'one SourceClip per track required');
+			const clip = components[0]!;
+			requireMxf(position(property(clip, P.start)) === 0, 'nonzero StartPosition');
+			requireMxf(hex(property(clip, P.sourcePackage, 32)) === sourceId, 'external source package');
+			const sourceTrackId = uint(property(clip, P.sourceTrack), 4);
+			const matches = sourceTracks.filter(x => uint(property(x, P.trackId), 4) === sourceTrackId);
+			requireMxf(matches.length === 1, 'source track reference');
+			const sourceTrack = matches[0]!;
+			requireMxf(sourceTrack.kind === 0x3b && position(property(sourceTrack, P.origin)) === 0,
+				'source Origin/layout');
+			const rate = rational(property(track, P.editRate));
+			const sourceRate = rational(property(sourceTrack, P.editRate));
+			requireMxf(equalRationals(rate, sourceRate), 'material/source edit rate mismatch');
+			const sourceSequence = resolve(property(sourceTrack, P.sequence));
+			requireMxf(hex(property(sourceSequence, P.definition)) === definition, 'source data definition mismatch');
+			const sourceClips = refs(sourceSequence, P.components);
+			requireMxf(sourceSequence.kind === 0x0f && sourceClips.length === 1
+				&& sourceClips[0]!.kind === 0x11, 'source sequence layout');
+			const sourceClip = sourceClips[0]!;
+			for (const component of [clip, sourceClip]) {
+				requireMxf(!component.properties.has(P.channelIds)
+					&& !component.properties.has(P.monoSourceTrackIds), 'source clip channel mapping');
+			}
+			requireMxf(position(property(sourceClip, P.start)) === 0
+				&& property(sourceClip, P.sourcePackage, 32).every(x => x === 0)
+				&& uint(property(sourceClip, P.sourceTrack), 4) === 0, 'nonterminal source clip');
+			const duration = position(property(sequence, P.duration));
+			for (const component of [clip, sourceSequence, sourceClip]) {
+				requireMxf(position(property(component, P.duration)) === duration, 'trimmed or mismatched duration');
+				requireMxf(hex(property(component, P.definition, 16)) === definition,
+					'component data definition mismatch');
+			}
+			const linked = descriptors.filter(x => uint(property(x, P.linkedTrack), 4) === sourceTrackId);
+			requireMxf(linked.length === 1, 'descriptor LinkedTrackID');
+			const id = uint(property(track, P.trackId), 4);
+			const trackNumber = uint(property(sourceTrack, P.trackNumber), 4);
+			requireMxf(!ids.has(id) && !routes.has(trackNumber), 'duplicate track identity');
+			ids.add(id);
+			routes.add(trackNumber);
+			const info: TrackInfo = {
+				id, number: definition === PICTURE ? ++videos : ++audios, bodySid, indexSid, trackNumber, rate,
+				duration: duration * rate.denominator / rate.numerator,
+				editUnitCount: duration,
+				descriptor: linked[0]!, packets: [], sampleCount: 0,
+			};
+			this.tracks.push(definition === PICTURE
+				? new MxfVideoTrackBacking(this, info)
+				: new MxfAudioTrackBacking(this, info));
+		}
+		for (const track of sourceTracks) {
+			const sequence = resolve(property(track, P.sequence));
+			requireMxf(hex(property(sequence, P.definition)) === TIMECODE
+				|| routes.has(uint(property(track, P.trackNumber), 4)), 'unmapped source track');
+		}
+		requireMxf(videos > 0 && descriptors.length === this.tracks.length, 'unmapped essence descriptor');
+	}
+
+	private async scanOne() {
+		if (this.scanOffset === this.input._reader.fileSize) {
+			requireMxf(this.footerSeen, 'missing footer partition');
+			for (const track of this.tracks) {
+				if (track.getType() === 'video') {
+					requireMxf(track.info.packets.length === track.info.editUnitCount,
+						'picture edit-unit count does not match metadata');
+				}
+			}
+			this.ended = true;
+			return;
+		}
+		const offset = this.scanOffset;
+		const klv = await this.klv(offset);
+		let next = klv.end;
+		if (klv.key.startsWith(PARTITION_PREFIX) && ['03', '04'].includes(klv.key.slice(26, 28))) {
+			requireMxf(!this.footerSeen, 'partition after footer');
+			requireMxf(klv.key.endsWith('0400'), 'open or incomplete partition');
+			const partition = await this.partition(klv, offset);
+			this.footerSeen = klv.key.slice(26, 28) === '04';
+			this.bodySid = partition.bodySid;
+			// Later partition metadata has its own primer and does not replace the closed header snapshot.
+			const header = await this.countedRegion(next, partition.headerSize, 'header');
+			next = (await this.countedRegion(header.end, partition.indexSize, 'index')).end;
+		} else if (klv.key.startsWith(ESSENCE_PREFIX)) {
+			requireMxf(!this.footerSeen, 'essence after footer');
+			const trackNumber = Number.parseInt(klv.key.slice(24), 16);
+			const track = this.tracks.find(x => x.info.bodySid === this.bodySid && x.info.trackNumber === trackNumber);
+			requireMxf(track, 'unmapped essence element');
+			track.append(klv);
+		}
+		this.scanOffset = next;
+	}
+
+	async scanUntil(done: () => boolean) {
+		await this.readMetadata();
+		this.checkDisposed();
+		while (!done() && !this.ended) {
+			if (!this.scanPromise) {
+				this.scanPromise = this.scanOne();
+			}
+			const pending = this.scanPromise;
+			await pending;
+			if (this.scanPromise === pending) this.scanPromise = null;
+		}
+	}
+
+	async indexedPacket(index: number, info: TrackInfo) {
+		await this.readMetadata();
+		this.checkDisposed();
+		return info.indexSid ? this.index!.locate(index, info) : null;
+	}
+
+	async getTrackBackings() {
+		await this.readMetadata();
+		return this.tracks;
+	}
+
+	async getMimeType() { return 'application/mxf'; }
+	async getMetadataTags(): Promise<MetadataTags> {
+		await this.readMetadata();
+		return this.metadataTags;
+	}
+
+	override dispose() { this.disposed = true; }
+}
+
+abstract class MxfTrackBacking implements InputTrackBacking {
+	private packetIndices = new WeakMap<EncodedPacket, number>();
+	private indexedPackets = new Map<number, Promise<PacketLocation | null>>();
+	private indexedEnd = false;
+
+	constructor(public demuxer: MxfDemuxer, public info: TrackInfo) {}
+	abstract getType(): 'video' | 'audio';
+	abstract getCodec(): 'prores' | AudioCodec;
+	abstract getDecoderConfig(): Promise<VideoDecoderConfig | AudioDecoderConfig>;
+	abstract append(klv: Klv): void;
+	abstract indexedLocation(klv: Klv, index: number): PacketLocation;
+	canUseIndex() { return this.info.indexSid !== 0; }
+	abstract getInternalCodecId(): Uint8Array | null;
+	getId() { return this.info.id; }
+	getNumber() { return this.info.number; }
+	getName() { return null; }
+	getLanguageCode() { return UNDETERMINED_LANGUAGE; }
+	getTimeResolution() { return this.info.rate.numerator; }
+	isRelativeToUnixEpoch() { return false; }
+	getUnixTimeForTimestamp() { return null; }
+	getDisposition() { return { ...DEFAULT_TRACK_DISPOSITION }; }
+	getPairingMask() { return 1n; }
+	getBitrate() { return null; }
+	getAverageBitrate() { return null; }
+	async getDurationFromMetadata() { return this.info.duration; }
+	async getLiveRefreshInterval() { return null; }
+	getHasOnlyKeyPackets() { return true; }
+	async packet(index: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null> {
+		if (index < 0) return null;
+		if (index >= this.info.editUnitCount && this.indexedEnd) return null;
+		const packet = await this.location(index);
+		this.demuxer.checkDisposed();
+		if (!packet) return null;
+		const data = options.metadataOnly ? PLACEHOLDER_DATA : await this.demuxer.bytes(packet.offset, packet.size);
+		const result = new EncodedPacket(data, 'key', packet.timestamp, packet.duration, index, packet.size);
+		this.demuxer.checkDisposed();
+		this.packetIndices.set(result, index);
+		return result;
+	}
+
+	private async indexed(index: number): Promise<PacketLocation | null> {
+		if (this.canUseIndex() && index < this.info.editUnitCount) {
+			let pending = this.indexedPackets.get(index);
+			if (!pending) {
+				pending = this.demuxer.indexedPacket(index, this.info).then((klv) => {
+					if (!klv) return null;
+					const location = this.indexedLocation(klv, index);
+					if (index === this.info.editUnitCount - 1) this.indexedEnd = true;
+					return location;
+				});
+				// Bound sparse random-access state independently of the sequential scan's exact packet list.
+				if (this.indexedPackets.size >= 256) {
+					this.indexedPackets.delete(this.indexedPackets.keys().next().value!);
+				}
+				this.indexedPackets.set(index, pending);
+			}
+			return pending;
+		}
+		return null;
+	}
+
+	async location(index: number): Promise<PacketLocation | null> {
+		const location = await this.indexed(index);
+		if (location) return location;
+		await this.demuxer.scanUntil(() => this.info.packets.length > index);
+		return this.info.packets[index] ?? null;
+	}
+
+	getFirstPacket(options: PacketRetrievalOptions) { return this.packet(0, options); }
+	async getPacket(timestamp: number, options: PacketRetrievalOptions) {
+		if (timestamp < 0) return null;
+		if (this.canUseIndex() && this.info.editUnitCount > 0) {
+			const { numerator, denominator } = this.info.rate;
+			let index = Math.min(this.info.editUnitCount - 1, Math.floor(timestamp * numerator / denominator));
+			if (index * denominator / numerator > timestamp) index--;
+			if (index + 1 < this.info.editUnitCount && (index + 1) * denominator / numerator <= timestamp) index++;
+			if (await this.indexed(index)) return this.packet(index, options);
+		}
+		await this.demuxer.scanUntil(() => {
+			const last = this.info.packets.at(-1);
+			return !!last && last.timestamp > timestamp;
+		});
+		let low = 0;
+		let high = this.info.packets.length;
+		while (low < high) {
+			const mid = Math.floor((low + high) / 2);
+			if (this.info.packets[mid]!.timestamp <= timestamp) low = mid + 1;
+			else high = mid;
+		}
+		return this.packet(low - 1, options);
+	}
+
+	getNextPacket(packet: EncodedPacket, options: PacketRetrievalOptions) {
+		const index = this.packetIndices.get(packet);
+		if (index === undefined) {
+			throw new Error('Packet does not belong to this track.');
+		}
+		return this.packet(index + 1, options);
+	}
+
+	getKeyPacket(timestamp: number, options: PacketRetrievalOptions) { return this.getPacket(timestamp, options); }
+	getNextKeyPacket(packet: EncodedPacket, options: PacketRetrievalOptions) {
+		return this.getNextPacket(packet, options);
+	}
+}
+
+class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBacking {
+	private width: number;
+	private height: number;
+	private squareWidth: number;
+	private codec: string;
+	private headerPromise: Promise<VideoColorSpaceInit> | null = null;
+	constructor(demuxer: MxfDemuxer, info: TrackInfo) {
+		super(demuxer, info);
+		const d = info.descriptor;
+		requireMxf(d.kind === 0x28 && hex(property(d, P.container)) === PRORES_CONTAINER,
+			'ProRes frame wrapping required');
+		const coding = hex(property(d, P.pictureCoding, 16));
+		const profile = Number.parseInt(coding.slice(28, 30), 16);
+		requireMxf(coding.startsWith('060e2b340401010d040102020306') && coding.endsWith('00')
+			&& profile >= 1 && profile <= 6, 'unsupported ProRes profile');
+		this.codec = PROFILES[profile - 1]!;
+		requireMxf(uint(property(d, P.layout), 1) === 0, 'interlaced or segmented-frame picture');
+		const rate = rational(property(d, P.sampleRate));
+		requireMxf(equalRationals(rate, info.rate), 'picture rate mismatch');
+		const number = info.trackNumber;
+		requireMxf((number >>> 24) === 0x15 && ((number >>> 8) & 255) === 0x17, 'ProRes essence key');
+		this.width = uint(property(d, P.width), 4);
+		this.height = uint(property(d, P.height), 4);
+		requireMxf(this.width > 0 && this.height > 0, 'empty picture');
+		for (const [key, expected] of [[P.displayWidth, this.width], [P.displayHeight, this.height],
+			[P.displayX, 0], [P.displayY, 0]] as const) {
+			const value = d.properties.get(key);
+			requireMxf(!value || uint(value, 4) === expected, 'cropped picture is not supported');
+		}
+		const aspect = rational(property(d, P.aspect));
+		this.squareWidth = this.height * aspect.numerator / aspect.denominator;
+	}
+
+	getType() { return 'video' as const; }
+	getCodec() { return 'prores' as const; }
+	getInternalCodecId() { return property(this.info.descriptor, P.pictureCoding).slice(); }
+	getCodedWidth() { return this.width; }
+	getCodedHeight() { return this.height; }
+	getSquarePixelWidth() { return this.squareWidth; }
+	getSquarePixelHeight() { return this.height; }
+	getTransformationMatrix() { return IDENTITY_MATRIX; }
+	async canBeTransparent() { return this.codec === 'ap4h' || this.codec === 'ap4x'; }
+	append(klv: Klv) {
+		this.info.packets.push(this.indexedLocation(klv, this.info.packets.length));
+	}
+
+	indexedLocation(klv: Klv, index: number) {
+		requireMxf(klv.size >= 36, 'truncated ProRes frame');
+		const duration = this.info.rate.denominator / this.info.rate.numerator;
+		return { offset: klv.offset, size: klv.size,
+			timestamp: index * this.info.rate.denominator / this.info.rate.numerator, duration };
+	}
+
+	getColorSpace(): Promise<VideoColorSpaceInit> {
+		return this.headerPromise ??= (async () => {
+			const first = await this.location(0);
+			requireMxf(first && first.size >= 36, 'missing ProRes frame');
+			const bytes = await this.demuxer.bytes(first.offset, 36);
+			const header = extractProresCodecInfoFromPacket(bytes);
+			requireMxf(header && uint(bytes.subarray(0, 4), 4) === first.size
+				&& uint(bytes.subarray(8, 10), 2) + 8 <= first.size, 'invalid ProRes frame header');
+			requireMxf(uint(bytes.subarray(16, 18), 2) === this.width
+				&& uint(bytes.subarray(18, 20), 2) === this.height && ((bytes[20]! >> 2) & 3) === 0,
+			'ProRes geometry or progressive layout mismatch');
+			return {
+				primaries: COLOR_PRIMARIES_MAP_INVERSE[header.colourPrimaries],
+				transfer: TRANSFER_CHARACTERISTICS_MAP_INVERSE[header.transferCharacteristics],
+				matrix: MATRIX_COEFFICIENTS_MAP_INVERSE[header.matrixCoefficients], fullRange: false,
+			} as VideoColorSpaceInit;
+		})();
+	}
+
+	async getDecoderConfig(): Promise<VideoDecoderConfig> {
+		return {
+			codec: this.codec, codedWidth: this.width, codedHeight: this.height, colorSpace: await this.getColorSpace(),
+		};
+	}
+}
+
+class MxfAudioTrackBacking extends MxfTrackBacking implements InputAudioTrackBacking {
+	private channels: number;
+	private sampleRate: number;
+	private blockAlign: number;
+	private codec: AudioCodec;
+	constructor(demuxer: MxfDemuxer, info: TrackInfo) {
+		super(demuxer, info);
+		const d = info.descriptor;
+		const container = hex(property(d, P.container, 16));
+		requireMxf((d.kind === 0x47 && container === AES_CONTAINER)
+			|| (d.kind === 0x48 && container === WAVE_CONTAINER),
+		'packed frame-wrapped PCM required');
+		const coding = d.properties.get(P.soundCoding);
+		requireMxf(!coding || [
+			'060e2b34040101010402020101000000', '060e2b3404010101040202017f000000',
+		].includes(hex(coding)),
+		'unsupported sound coding');
+		const elementType = d.kind === 0x47 ? 0x03 : 0x01;
+		requireMxf((info.trackNumber >>> 24) === 0x16 && ((info.trackNumber >>> 8) & 255) === elementType,
+			'PCM essence key');
+		const rate = rational(property(d, P.audioRate));
+		this.sampleRate = rate.numerator / rate.denominator;
+		requireMxf(Number.isInteger(this.sampleRate), 'fractional audio sample rate');
+		const descriptorRate = rational(property(d, P.sampleRate));
+		requireMxf(equalRationals(descriptorRate, rate) || equalRationals(descriptorRate, info.rate),
+			'PCM descriptor sample rate');
+		this.channels = uint(property(d, P.channels), 4);
+		const bits = uint(property(d, P.bits), 4);
+		this.blockAlign = uint(property(d, P.blockAlign), 2);
+		requireMxf(this.channels > 0 && [16, 24, 32].includes(bits)
+			&& this.blockAlign === this.channels * bits / 8, 'unsupported PCM packing');
+		this.codec = bits === 16 ? 'pcm-s16' : bits === 24 ? 'pcm-s24' : 'pcm-s32';
+	}
+
+	getType() { return 'audio' as const; }
+	getCodec() { return this.codec; }
+	getInternalCodecId() { return this.info.descriptor.properties.get(P.soundCoding)?.slice() ?? null; }
+	getNumberOfChannels() { return this.channels; }
+	getSampleRate() { return this.sampleRate; }
+	override getTimeResolution() { return this.sampleRate; }
+
+	override canUseIndex() {
+		// ST 382 fixes the sample count for locked audio at integer samples per edit unit.
+		const locked = this.info.descriptor.properties.get(P.locked);
+		const samplesNumerator = this.sampleRate * this.info.rate.denominator;
+		return super.canUseIndex()
+			&& !!locked && uint(locked, 1) === 1
+			&& Number.isSafeInteger(samplesNumerator) && samplesNumerator % this.info.rate.numerator === 0;
+	}
+
+	indexedLocation(klv: Klv, index: number) {
+		const samples = this.sampleRate * this.info.rate.denominator / this.info.rate.numerator;
+		requireMxf(klv.size === samples * this.blockAlign, 'indexed PCM sample count does not match edit rate');
+		requireMxf(Number.isSafeInteger(index * samples), 'PCM sample count overflow');
+		return { offset: klv.offset, size: klv.size, timestamp: index * samples / this.sampleRate,
+			duration: samples / this.sampleRate };
+	}
+
+	append(klv: Klv) {
+		requireMxf(klv.size > 0 && klv.size % this.blockAlign === 0, 'PCM payload block alignment');
+		const samples = klv.size / this.blockAlign;
+		this.info.packets.push({ offset: klv.offset, size: klv.size,
+			timestamp: this.info.sampleCount / this.sampleRate, duration: samples / this.sampleRate });
+		this.info.sampleCount += samples;
+		requireMxf(Number.isSafeInteger(this.info.sampleCount), 'PCM sample count overflow');
+	}
+
+	async getDecoderConfig(): Promise<AudioDecoderConfig> {
+		return { codec: this.codec, numberOfChannels: this.channels, sampleRate: this.sampleRate };
+	}
+}
