@@ -742,7 +742,10 @@ export type UrlSourceOptions = {
 	 * Requires valid Content-Range headers on 206 responses. Cross-origin servers must expose that header using
 	 * `Access-Control-Expose-Headers: Content-Range`. Servers returning 200 are still read sequentially.
 	 */
-	rangePolicy?: { minimumRequestSize: number };
+	rangePolicy?: {
+		/** Forward read-ahead floor in bytes, subject to the requested read boundaries and file size. */
+		minimumRequestSize: number;
+	};
 
 	/**
 	 * A WHATWG-compatible fetch function. You can use this field to polyfill the `fetch` function, add missing
