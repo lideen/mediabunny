@@ -649,6 +649,9 @@ type UrlSourceOptions = {
 	// The maximum number of parallel requests to use for fetching. Defaults to 2.
 	parallelism?: number;
 
+	// Opt into bounded, forward-only HTTP range requests.
+	rangePolicy?: { minimumRequestSize: number };
+
 	// Used to provide a custom fetch function
 	fetchFn?: typeof fetch;
 
@@ -656,6 +659,17 @@ type UrlSourceOptions = {
 	handleUnhandledError?: (error: unknown) => unknown;
 };
 ```
+
+For sparse reads where transferred bytes matter more than request latency, opt into bounded ranges:
+```ts
+const source = new UrlSource('https://example.com/video.mp4', {
+	rangePolicy: { minimumRequestSize: 32 * 1024 },
+});
+```
+
+`minimumRequestSize` must be a positive safe integer. It is a forward-prefetch floor, not a packet size limit. A larger contiguous read uses a larger range. Requests have finite inclusive ends, do not prefetch backward, and do not bridge gaps between disjoint regions. Adjacent and overlapping reads can still share workers and cached data. The cache limit and default parallelism remain unchanged. Omitting `rangePolicy` retains adaptive prefetching and open-ended requests.
+
+Bounded mode requires each `206 Partial Content` response to include a valid `Content-Range` with the total resource size. Cross-origin servers must send `Access-Control-Expose-Headers: Content-Range`. A partial response's `Content-Length` is not the resource size. Encoded range responses are rejected. If the server ignores Range and returns `200 OK`, the source falls back to sequential reading, so bounded transfer costs are no longer guaranteed.
 
 You can use `requestInit` just like you would in the Fetch API to further customize the request:
 ```ts

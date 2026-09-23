@@ -735,6 +735,16 @@ export type UrlSourceOptions = {
 	parallelism?: number;
 
 	/**
+	 * Opts into finite HTTP range requests with forward-only prefetching. The minimum request size must be a positive
+	 * safe integer, in bytes. Larger contiguous reads use larger ranges; this is not a maximum request size.
+	 * Disjoint ranges are not bridged. Omit this option to retain the default adaptive prefetching strategy.
+	 *
+	 * Requires valid Content-Range headers on 206 responses. Cross-origin servers must expose that header using
+	 * `Access-Control-Expose-Headers: Content-Range`. Servers returning 200 are still read sequentially.
+	 */
+	rangePolicy?: { minimumRequestSize: number };
+
+	/**
 	 * A WHATWG-compatible fetch function. You can use this field to polyfill the `fetch` function, add missing
 	 * features, or use a custom implementation.
 	 */
@@ -822,6 +832,14 @@ export class UrlSource extends PathedSource {
 			throw new TypeError('options.fetchFn, when provided, must be a function.');
 			// Won't bother validating this function beyond this
 		}
+		if (options.rangePolicy !== undefined && (
+			!options.rangePolicy
+			|| typeof options.rangePolicy !== 'object'
+			|| !Number.isSafeInteger(options.rangePolicy.minimumRequestSize)
+			|| options.rangePolicy.minimumRequestSize <= 0
+		)) {
+			throw new TypeError('options.rangePolicy.minimumRequestSize must be a positive safe integer.');
+		}
 		if (options.handleUnhandledError !== undefined && typeof options.handleUnhandledError !== 'function') {
 			throw new TypeError('options.handleUnhandledError, when provided, must be a function.');
 		}
@@ -880,13 +898,20 @@ export class UrlSource extends PathedSource {
 		// Most files in the real-world have a single sequential access pattern, but having two in parallel can
 		// also happen
 		const DEFAULT_PARALLELISM = 2;
+		const minimumRequestSize = options.rangePolicy?.minimumRequestSize;
 
 		this._orchestrator = new ReadOrchestrator({
 			maxCacheSize: options.maxCacheSize ?? (64 * 2 ** 20 /* 64 MiB */),
 			maxWorkerCount: options.parallelism ?? DEFAULT_PARALLELISM,
 			runWorker: this._runWorker.bind(this),
 			onIdleWorkerRemoved: worker => this._abortControllers.delete(worker),
-			prefetchProfile: PREFETCH_PROFILES.network,
+			prefetchProfile: minimumRequestSize !== undefined
+				? (start, end) => ({
+						start,
+						end: Math.max(end, Math.min(start + minimumRequestSize, Number.MAX_SAFE_INTEGER)),
+					})
+				: PREFETCH_PROFILES.network,
+			gapTolerance: options.rangePolicy ? 0 : undefined,
 			handleUnhandledError: options.handleUnhandledError,
 		});
 	}
@@ -956,6 +981,7 @@ export class UrlSource extends PathedSource {
 
 			const abortController = new AbortController();
 			this._abortControllers.set(worker, abortController);
+			const requestEnd = this._options.rangePolicy ? worker.targetPos - 1 : null;
 
 			const response = await retriedFetch(
 				this._options.fetchFn ?? fetch,
@@ -963,7 +989,7 @@ export class UrlSource extends PathedSource {
 				mergeRequestInit(this._requestInit, {
 					headers: {
 						// Always sending a range request is a good way to probe if the server supports them
-						Range: `bytes=${worker.currentPos}-`,
+						Range: `bytes=${worker.currentPos}-${requestEnd ?? ''}`,
 					},
 					signal: abortController.signal,
 				}),
@@ -979,6 +1005,29 @@ export class UrlSource extends PathedSource {
 			if (response.redirected) {
 				// Modify our own root path so that future subrequests get made relative to the redirected URL
 				this.rootPath = response.url;
+			}
+
+			let responseEnd: number | null = null;
+			if (requestEnd !== null && response.status === 206) {
+				const match = /^bytes (\d+)-(\d+)\/(\d+)$/.exec(response.headers.get('Content-Range') ?? '');
+				const start = Number(match?.[1]);
+				const end = Number(match?.[2]);
+				const total = Number(match?.[3]);
+				if (
+					!match || ![start, end, total].every(Number.isSafeInteger)
+					|| start !== worker.currentPos || end < start || end > requestEnd || end >= total
+					|| response.headers.has('Content-Encoding')
+					|| (this._orchestrator.fileSize !== null && total !== this._orchestrator.fileSize)
+				) {
+					abortController.abort();
+					throw new Error('Bounded range requests require a valid Content-Range header matching the request'
+						+ ' and an unencoded response. Cross-origin servers must expose Content-Range using'
+						+ ' Access-Control-Expose-Headers.');
+				}
+				responseEnd = end + 1;
+				if (this._orchestrator.fileSize === null) {
+					this._orchestrator.supplyFileSize(total);
+				}
 			}
 
 			outer:
@@ -1098,6 +1147,13 @@ export class UrlSource extends PathedSource {
 				const { done, value } = readResult;
 
 				if (done) {
+					if (responseEnd !== null) {
+						if (worker.currentPos !== responseEnd) {
+							throw new Error('Bounded range response ended before its Content-Range was delivered.');
+						}
+						// The worker may have grown beyond this request's snapshot while the response was in flight.
+						break;
+					}
 					if (worker.currentPos >= worker.targetPos) {
 						// All data was delivered, we're good
 						this._orchestrator.onWorkerFinished(worker);
@@ -1116,6 +1172,10 @@ export class UrlSource extends PathedSource {
 					}
 				}
 
+				if (responseEnd !== null && worker.currentPos + value.length > responseEnd) {
+					abortController.abort();
+					throw new Error('Bounded range response exceeded its Content-Range.');
+				}
 				this._dispatchRead(worker.currentPos, worker.currentPos + value.length);
 				this._orchestrator.supplyWorkerData(worker, value);
 			}
@@ -2092,6 +2152,7 @@ class ReadOrchestrator {
 		runWorker: (worker: ReadWorker) => Promise<void>;
 		prefetchProfile: PrefetchProfile;
 		maxWorkerCount: number;
+		gapTolerance?: number;
 		onIdleWorkerRemoved?: (worker: ReadWorker) => void;
 		handleUnhandledError?: (error: unknown) => unknown;
 	}) {}
@@ -2323,7 +2384,7 @@ class ReadOrchestrator {
 		// A small tolerance in the case that the requested region is *just* after the target position of an
 		// existing worker. In that case, it's probably more efficient to repurpose that worker than to spawn
 		// another one so close to it
-		const gapTolerance = 2 ** 17;
+		const gapTolerance = this.options.gapTolerance ?? 2 ** 17;
 
 		// This check also implies worker.currentPos <= hole.start, a critical condition
 		if (closedIntervalsOverlap(
