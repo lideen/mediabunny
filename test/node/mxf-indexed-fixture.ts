@@ -18,6 +18,7 @@ export const makeIndexedMxf = (options: {
 	cbe?: boolean; noRip?: boolean; ber?: boolean; unlockedAudio?: boolean;
 	padding?: boolean; repeatIndex?: boolean; exceptionalCbe?: boolean; extraEssence?: boolean;
 	avc?: boolean;
+	frameSize?: number;
 	avcSps?: Uint8Array;
 	avcNonIdrAt?: number;
 	avcMissingParametersAt?: number;
@@ -27,7 +28,7 @@ export const makeIndexedMxf = (options: {
 	const item = (tag: number, value: Uint8Array) => join(integer(tag, 2),
 		options.ber ? join(integer(0x83, 1), integer(value.length, 3)) : integer(value.length, 2), value);
 	const count = 10000;
-	const frameSize = 1024 * 1024;
+	const frameSize = options.frameSize ?? 1024 * 1024;
 	const pcmSize = 5760;
 	const system = klv('060e2b34020501010d01030104010100', new Uint8Array(12));
 	const pictureOffset = system.length;

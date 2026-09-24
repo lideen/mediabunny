@@ -13,7 +13,7 @@ export const FILL_KEYS = ['060e2b34010101010301021001000000', '060e2b34010101020
 export const INDEX_KEYS = ['060e2b34025301010d01020101100100', '060e2b34021301010d01020101100100'];
 const RIP = '060e2b34020501010d01020101110100';
 
-export type MxfKlv = { key: string; offset: number; size: number; end: number };
+export type MxfKlv = { key: string; offset: number; size: number; end: number; prefetchEnd?: number };
 export type MxfPartition = {
 	headerSize: number; indexSize: number; bodySid: number; indexSid: number;
 	previous: number; footer: number; bodyOffset: number;
@@ -368,7 +368,9 @@ export class MxfIndex {
 			requireMxf(streamEnd === null || stream + klv.end - physical <= streamEnd,
 				'indexed element exceeds edit unit');
 			requireMxf(klv.key.startsWith('060e2b34'), 'index does not point to a KLV key');
-			if (klv.key === `060e2b34010201010d010301${track.trackNumber.toString(16).padStart(8, '0')}`) return klv;
+			if (klv.key === `060e2b34010201010d010301${track.trackNumber.toString(16).padStart(8, '0')}`) {
+				return { ...klv, prefetchEnd: body.end };
+			}
 		}
 		return null;
 	}

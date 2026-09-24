@@ -44,7 +44,9 @@ const avcParameterSets = (record: AvcDecoderConfigurationRecord) => [
 	...record.sequenceParameterSets, ...record.pictureParameterSets,
 ].map(hex).sort().join(':');
 
-type PacketLocation = { offset: number; size: number; timestamp: number; duration: number; isKey?: boolean };
+type PacketLocation = {
+	offset: number; size: number; timestamp: number; duration: number; isKey?: boolean; prefetchEnd?: number;
+};
 type TrackInfo = {
 	id: number;
 	number: number;
@@ -75,12 +77,12 @@ export class MxfDemuxer extends Demuxer {
 		if (this.disposed) throw new InputDisposedError();
 	}
 
-	async bytes(offset: number, size: number) {
+	async bytes(offset: number, size: number, prefetchEnd = offset + size) {
 		this.checkDisposed();
 		requireMxf(Number.isSafeInteger(offset) && offset >= 0 && Number.isSafeInteger(size) && size >= 0
 			&& Number.isSafeInteger(offset + size) && offset + size <= this.input._reader.fileSize!,
 		'invalid byte range');
-		const slice = await this.input._reader.source._read(offset, offset + size, offset, offset + size);
+		const slice = await this.input._reader.source._read(offset, offset + size, offset, prefetchEnd);
 		this.checkDisposed();
 		requireMxf(slice, 'truncated data');
 		return slice.bytes.subarray(offset - slice.offset, offset - slice.offset + size);
@@ -401,7 +403,11 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 	async getDurationFromMetadata() { return this.info.duration; }
 	async getLiveRefreshInterval() { return null; }
 	getHasOnlyKeyPackets() { return true; }
-	protected readPacket(packet: PacketLocation) { return this.demuxer.bytes(packet.offset, packet.size); }
+	protected readPacket(packet: PacketLocation) {
+		// Only payload reads allow source-managed read-ahead, capped at the containing body partition.
+		return this.demuxer.bytes(packet.offset, packet.size, packet.prefetchEnd);
+	}
+
 	async packet(index: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null> {
 		if (index < 0) return null;
 		if (index >= this.info.editUnitCount && this.indexedEnd) return null;
@@ -423,6 +429,7 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 				pending = this.demuxer.indexedPacket(index, this.info, this.getCodec() === 'avc').then(async (klv) => {
 					if (!klv) return null;
 					const location = this.indexedLocation(klv, index);
+					location.prefetchEnd = klv.prefetchEnd;
 					if (this.getCodec() === 'avc') {
 						const timing = await this.demuxer.resolveDecode(index, this.info);
 						const { numerator, denominator } = this.info.rate;
