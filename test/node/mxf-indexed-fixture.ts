@@ -17,6 +17,12 @@ const klv = (key: string, value: Uint8Array) => join(hex(key), integer(0x83, 1),
 export const makeIndexedMxf = (options: {
 	cbe?: boolean; noRip?: boolean; ber?: boolean; unlockedAudio?: boolean;
 	padding?: boolean; repeatIndex?: boolean; exceptionalCbe?: boolean; extraEssence?: boolean;
+	avc?: boolean;
+	avcSps?: Uint8Array;
+	avcNonIdrAt?: number;
+	avcMissingParametersAt?: number;
+	avcChangedParametersAt?: number;
+	editRate?: [number, number];
 } = {}) => {
 	const item = (tag: number, value: Uint8Array) => join(integer(tag, 2),
 		options.ber ? join(integer(0x83, 1), integer(value.length, 3)) : integer(value.length, 2), value);
@@ -28,8 +34,9 @@ export const makeIndexedMxf = (options: {
 	const audioOffset = pictureOffset + 20 + frameSize;
 	const stride = audioOffset + 2 * (20 + pcmSize);
 	const metadataCount = count - (options.extraEssence ? 1 : 0);
-	const base = makeMxf({ metadataDuration: metadataCount, editRate: [25, 1], indexSid: 2,
-		audioLocked: !options.unlockedAudio });
+	const rate: [number, number] = options.editRate ?? [25, 1];
+	const base = makeMxf({ metadataDuration: metadataCount, editRate: rate, indexSid: 2,
+		audioLocked: !options.unlockedAudio, avc: options.avc });
 	const header = base.data.slice(0, base.firstPayloadOffset - 20 - 140);
 	const partition = (kind: number, offset: number, previous: number, footer: number,
 		bodyOffset: number, bodySid: number, indexSize = 0) => klv(
@@ -49,26 +56,31 @@ export const makeIndexedMxf = (options: {
 	const offsets = starts.map((frame, i) => header.length + streamOffset(frame) + i * (packSize + padding));
 	let footerOffset = header.length + count * stride + firstExtra + starts.length * (packSize + 2 * padding);
 	const segments: Uint8Array[] = [];
-	const segmentSize = options.ber || options.cbe ? count : 2000;
+	const segmentSize = options.ber || options.cbe ? count : options.avc ? 1999 : 2000;
 	const ranges: [number, number][] = options.exceptionalCbe
 		? [[0, 1], [1, count - 1]]
-		: Array.from({ length: count / segmentSize }, (_, i) => [i * segmentSize, segmentSize]);
+		: Array.from({ length: Math.ceil(count / segmentSize) }, (_, i) =>
+				[i * segmentSize, Math.min(segmentSize, count - i * segmentSize)]);
 	for (const [start, length] of ranges) {
 		const entries: Uint8Array[] = [];
 		if (!options.cbe) {
 			for (let i = start; i < start + length; i++) {
-				entries.push(join(hex('000080'), integer(streamOffset(i), 8), integer(audioOffset, 4)));
+				const timing = options.avc
+					? Uint8Array.of([0, 1, 1, 254][i % 4]!, (256 - i % 4) % 256,
+							[0xc4, 0x26, 0x37, 0x33][i % 4]!)
+					: hex('000080');
+				entries.push(join(timing, integer(streamOffset(i), 8), integer(audioOffset, 4)));
 			}
 		}
 		segments.push(klv(options.ber ? '060e2b34021301010d01020101100100' : '060e2b34025301010d01020101100100', join(
 			item(0x3c0a, integer(start + 1, 16)),
-			item(0x3f0b, join(integer(25, 4), integer(1, 4))),
+			item(0x3f0b, join(integer(rate[0], 4), integer(rate[1], 4))),
 			item(0x3f0c, integer(start, 8)), item(0x3f0d, integer(Math.min(length, metadataCount - start), 8)),
 			item(0x3f05, integer(options.cbe ? stride + (start === 0 ? firstExtra : 0) : 0, 4)),
 			item(0x3f06, integer(2, 4)), item(0x3f07, integer(1, 4)),
 			item(0x3f08, integer(options.cbe ? 0 : 1, 1)), item(0x3f0e, integer(0, 1)),
 			item(0x3f09, join(integer(4, 4), integer(6, 4),
-				integer(0, 6), join(hex('0000'), integer(pictureOffset, 4)),
+				integer(0, 6), join(hex(options.avc ? 'ff00' : '0000'), integer(pictureOffset, 4)),
 				join(integer(0, 1), integer(options.cbe ? 0 : 1, 1), integer(options.cbe ? audioOffset : 0, 4)),
 				join(integer(0, 1), integer(options.cbe ? 0 : 1, 1),
 					integer((options.cbe ? audioOffset : 0) + 20 + pcmSize, 4)))),
@@ -121,11 +133,25 @@ export const makeIndexedMxf = (options: {
 					const offset = body + i * stride + (p === 0 && i > 0 ? firstExtra : 0);
 					copy(offset, system);
 					copy(offset + pictureOffset,
-						join(hex('060e2b34010201010d0103011501170083'), integer(frameSize, 3)));
-					const frame = new Uint8Array(40);
-					frame.set(integer(frameSize, 4));
-					frame.set(hex('69637066001c000061706c30050002d08000091009'), 4);
-					frame[39] = (starts[p]! + i) % 256;
+						join(hex(options.avc
+							? '060e2b34010201010d0103011501050083'
+							: '060e2b34010201010d0103011501170083'), integer(frameSize, 3)));
+					const frame = new Uint8Array(options.avc ? 128 : 40);
+					if (options.avc) {
+						// SPS/PPS from generated testsrc2, followed by a demux-only slice stub, not decodable media.
+						const defaultSps = hex('6764001facd9405005bb011000000300100000030320f1831960');
+						const sps = (options.avcSps ?? defaultSps).slice();
+						if (starts[p]! + i === options.avcChangedParametersAt) sps[3] = 32;
+						const idr = i % 4 === 0 && starts[p]! + i !== options.avcNonIdrAt;
+						const slice = hex('0000000168ebe2cb22c000000001' + (idr ? '65' : '41') + '88');
+						frame.set(starts[p]! + i === options.avcMissingParametersAt
+							? hex('000000016588')
+							: join(hex('00000001'), sps, slice));
+					} else {
+						frame.set(integer(frameSize, 4));
+						frame.set(hex('69637066001c000061706c30050002d08000091009'), 4);
+					}
+					frame[frame.length - 1] = (starts[p]! + i) % 256;
 					copy(offset + pictureOffset + 20, frame);
 					for (let a = 0; a < 2; a++) {
 						const shorter = options.unlockedAudio && starts[p] === 0 && i === 0 && a === 0;

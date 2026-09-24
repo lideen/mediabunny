@@ -79,12 +79,14 @@ export const makeMxf = (options: {
 	editRate?: [number, number];
 	indexSid?: number;
 	audioLocked?: boolean;
+	avc?: boolean;
 } = {}) => {
 	const rate = options.editRate
 		? join(integer(options.editRate[0], 4), integer(options.editRate[1], 4))
 		: join(integer(60000, 4), integer(1001, 4));
 	const audioContainer = options.waveAudio ? bytes('060e2b34040101010d01030102060100') : pcmContainer;
 	const audioTrackNumber = options.waveAudio ? 0x16020100 : 0x16020300;
+	const videoTrackNumber = options.avc ? 0x15010500 : 0x15011700;
 	const sourceReference = umid(4);
 	const pcmDescriptorRate = options.pcmDescriptorRate
 		? join(integer(options.pcmDescriptorRate[0], 4), integer(options.pcmDescriptorRate[1], 4))
@@ -112,7 +114,7 @@ export const makeMxf = (options: {
 			const id = base + (source ? 3 : 0);
 			sets.push(set(0x3b, id, {
 				0x4801: integer(i + (source ? 0 : options.materialIdOffset ?? 0), 4),
-				0x4804: integer(source ? i === 1 ? 0x15011700 : audioTrackNumber + i - 2 : 0, 4),
+				0x4804: integer(source ? i === 1 ? videoTrackNumber : audioTrackNumber + i - 2 : 0, 4),
 				0x4803: ref(id + 1), 0x4b01: rate, 0x4b02: integer(options.origin ?? 0, 8),
 			}));
 			sets.push(set(0x0f, id + 1, { 0x0201: definition,
@@ -129,10 +131,15 @@ export const makeMxf = (options: {
 			sets.push(set(0x11, id + 2, clipFields));
 		}
 		sets.push(i === 1
-			? set(0x28, base + 6, {
+			? set(options.avc ? 0x51 : 0x28, base + 6, {
 					0x3006: integer(i, 4), 0x3001: rate,
-					0x3004: options.unsupportedContainer ? pcmContainer : proresContainer,
-					0x3201: bytes('060e2b340401010d0401020203060100'), 0x320c: integer(options.layout ?? 0, 1),
+					0x3004: options.avc
+						? bytes('060e2b340401010a0d01030102106001')
+						: options.unsupportedContainer ? pcmContainer : proresContainer,
+					0x3201: bytes(options.avc
+						? '060e2b340401010d0401020201314001'
+						: '060e2b340401010d0401020203060100'),
+					0x320c: integer(options.layout ?? 0, 1),
 					0x3203: integer(1280, 4), 0x3202: integer(720, 4), 0x320e: join(integer(16, 4), integer(9, 4)),
 					0x8000: bytes('12345678'),
 				})

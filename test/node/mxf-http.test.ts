@@ -9,10 +9,14 @@ import { makeIndexedMxf } from './mxf-indexed-fixture.js';
 
 describe('given a ten GB indexed MXF served over HTTP', () => {
 	describe('when seeking cold into late essence with bounded ranges', () => {
-		it.each([16384, 32768])('should bound traffic and reuse cached metadata with a %i floor', async (floor) => {
-			const fixture = makeIndexedMxf();
+		it.each([
+			{ floor: 16384, avc: false }, { floor: 32768, avc: false },
+			{ floor: 16384, avc: true }, { floor: 32768, avc: true },
+		])('should bound traffic and reuse cached metadata with %j', async ({ floor, avc }) => {
+			const fixture = makeIndexedMxf({ avc });
 			const counts: number[] = [];
 			for (const frame of [8750, 9750]) {
+				const decode = avc ? frame + 1 : frame;
 				const ranges: string[] = [];
 				let writtenBytes = 0;
 				const responses: Promise<void>[] = [];
@@ -53,14 +57,14 @@ describe('given a ten GB indexed MXF served over HTTP', () => {
 					const packet = await sink.getPacket(frame / 25);
 					expect(packet).not.toBeNull();
 					expect([packet!.timestamp, packet!.duration, packet!.sequenceNumber, packet!.byteLength])
-						.toEqual([frame / 25, 0.04, frame, 1048576]);
+						.toEqual([frame / 25, 0.04, decode, 1048576]);
 					expect(packet!.data).toHaveLength(1048576);
-					expect(packet!.data[39]).toBe(frame % 256);
+					expect(packet!.data[avc ? 127 : 39]).toBe(decode % 256);
 					const requestsBeforeRepeat = ranges.length;
 					const bytesBeforeRepeat = writtenBytes;
 					const cached = await sink.getPacket(frame / 25, { metadataOnly: true });
 					expect([cached!.timestamp, cached!.sequenceNumber, cached!.byteLength])
-						.toEqual([frame / 25, frame, 1048576]);
+						.toEqual([frame / 25, decode, 1048576]);
 					expect(ranges).toHaveLength(requestsBeforeRepeat);
 					expect(writtenBytes).toBe(bytesBeforeRepeat);
 					await Promise.all(responses);
@@ -69,7 +73,7 @@ describe('given a ten GB indexed MXF served over HTTP', () => {
 					expect(ranges.length).toBeLessThanOrEqual(48);
 					expect(writtenBytes).toBeLessThanOrEqual(2 * 1024 * 1024);
 					counts.push(ranges.length);
-					console.log('MXF HTTP cold seek', { floor, frame, requests: ranges.length, writtenBytes });
+					console.log('MXF HTTP cold seek', { floor, avc, frame, requests: ranges.length, writtenBytes });
 				} finally {
 					server.closeAllConnections();
 					await new Promise<void>((resolve, reject) => {

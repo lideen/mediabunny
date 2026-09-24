@@ -40,7 +40,77 @@ type IndexReader = {
 /** ST 377-1 partition directory and on-demand index entries. Never stores the IndexEntryArray. */
 export class MxfIndex {
 	private directory: Promise<Partition[]> | null = null;
+	private entryWindows = new Map<string, Promise<Uint8Array>>();
 	constructor(private reader: IndexReader, private size: number, private footer: number) {}
+
+	private async entry(s: Segment, index: number) {
+		const relative = index - s.start;
+		const start = Math.floor(relative / 128) * 128;
+		const count = Math.min(128, s.entryCount - start);
+		const key = `${s.entries}:${start}`;
+		let pending = this.entryWindows.get(key);
+		if (!pending) {
+			pending = this.reader.bytes(s.entries + start * s.entrySize, count * s.entrySize);
+			if (this.entryWindows.size >= 16) this.entryWindows.delete(this.entryWindows.keys().next().value!);
+			this.entryWindows.set(key, pending);
+		}
+		const bytes = await pending;
+		return bytes.subarray((relative - start) * s.entrySize, (relative - start + 1) * s.entrySize);
+	}
+
+	private async temporalEntries(start: number, end: number, track: IndexedTrack) {
+		const entries = new Map<number, Uint8Array>();
+		for (const p of await (this.directory ??= this.partitions())) {
+			if (!p.indexSize || p.indexSid !== track.indexSid) continue;
+			for (const s of await this.segments(p)) {
+				if (s.bodySid !== track.bodySid || s.start >= end || s.start + s.duration <= start) continue;
+				requireMxf(equalRationals(s.rate, track.rate) && !s.positions && !s.byteCount
+					&& s.deltas.some(delta => delta.position === 255)
+					&& s.start + s.duration <= track.editUnitCount, 'unsupported AVC temporal index');
+				for (let i = Math.max(start, s.start); i < Math.min(end, s.start + s.duration); i++) {
+					const entry = await this.entry(s, i);
+					requireMxf(!(entry[2]! & 0x08), 'AVC temporal offset overflow is unsupported');
+					const previous = entries.get(i);
+					requireMxf(!previous || hex(previous) === hex(entry), 'conflicting repeated index entries');
+					entries.set(i, entry);
+				}
+			}
+		}
+		for (let i = start; i < end; i++) requireMxf(entries.has(i), 'missing AVC temporal index entry');
+		return entries;
+	}
+
+	async resolvePresentation(presentation: number, track: IndexedTrack) {
+		const entry = (await this.temporalEntries(presentation, presentation + 1, track)).get(presentation)!;
+		const decode = presentation + (entry[0]! << 24 >> 24);
+		requireMxf(decode >= 0 && decode < track.editUnitCount, 'AVC temporal offset outside track');
+		return decode;
+	}
+
+	async resolveDecode(decode: number, track: IndexedTrack) {
+		// ST 377-1: d = p + TemporalOffset[p], not p = d + TemporalOffset[d].
+		const entries = await this.temporalEntries(Math.max(0, decode - 127),
+			Math.min(track.editUnitCount, decode + 129), track);
+		const matches = [...entries].filter(([p, entry]) => p + (entry[0]! << 24 >> 24) === decode);
+		requireMxf(matches.length === 1, 'AVC temporal index must have a unique inverse');
+		const entry = entries.get(decode)!;
+		const key = decode + (entry[1]! << 24 >> 24);
+		requireMxf(key >= 0 && key <= decode, 'AVC key frame offset outside supported closed GOP');
+		const keyEntry = (await this.temporalEntries(key, key + 1, track)).get(key)!;
+		requireMxf((keyEntry[2]! & 0xb7) === 0x84 && keyEntry[1] === 0,
+			'AVC requires an IDR random access point, not an open GOP or recovery point');
+		requireMxf(keyEntry[2]! & 0x40, 'AVC random access requires an in-band SPS flag');
+		requireMxf(![...entries].some(([i, value]) => i > key && i <= decode && (value[2]! & 0x87) === 0x84),
+			'AVC key frame offset skips an intervening IDR');
+		// ST 381-3 permits all four strict prediction-bit combinations for P/B pictures.
+		requireMxf(decode === key || (!(entry[2]! & 0x80) && [2, 3, 6, 7].includes(entry[2]! & 7)),
+			'unsupported AVC index picture flags');
+		const presentation = matches[0]![0];
+		requireMxf(keyEntry[0] === 0 && presentation >= key
+			&& ![...entries].some(([i, value]) => i > decode && i <= presentation && (value[2]! & 0x87) === 0x84),
+		'AVC temporal reordering crosses an IDR boundary');
+		return { presentation, key, isKey: decode === key };
+	}
 
 	private async partitions() {
 		const r = this.reader;
@@ -232,7 +302,7 @@ export class MxfIndex {
 		})();
 	}
 
-	async locate(index: number, track: IndexedTrack): Promise<MxfKlv | null> {
+	async locate(index: number, track: IndexedTrack, temporal = false): Promise<MxfKlv | null> {
 		const partitions = await (this.directory ??= this.partitions());
 		let result: MxfKlv | null = null;
 		for (let i = partitions.length - 1; i >= 0; i--) {
@@ -243,7 +313,7 @@ export class MxfIndex {
 					|| (s.duration && index >= s.start + s.duration)) continue;
 				requireMxf(!s.duration || s.start + s.duration <= track.editUnitCount,
 					'index duration exceeds track metadata');
-				const location = await this.locateSegment(s, index, track, partitions);
+				const location = await this.locateSegment(s, index, track, partitions, temporal);
 				if (!location) return null;
 				requireMxf(!result || (result.offset === location.offset && result.size === location.size),
 					'conflicting repeated index entries');
@@ -253,7 +323,9 @@ export class MxfIndex {
 		return result;
 	}
 
-	private async locateSegment(s: Segment, index: number, track: IndexedTrack, partitions: Partition[]) {
+	private async locateSegment(
+		s: Segment, index: number, track: IndexedTrack, partitions: Partition[], temporal: boolean,
+	) {
 		if (!equalRationals(s.rate, track.rate) || s.positions) return null;
 		// ST 377-1's different-sized first CBE edit unit needs a two-segment calculation.
 		// Only ordinary whole-container CBE tables use the multiplication below.
@@ -266,7 +338,8 @@ export class MxfIndex {
 			const relative = index - s.start;
 			const count = Math.min(2, s.entryCount - relative);
 			entry = await this.reader.bytes(s.entries + relative * s.entrySize, count * s.entrySize);
-			if (entry[0] || entry[1] || (entry[2]! & 0x30)) return null;
+			if (!temporal && track.trackNumber >>> 24 === 0x15
+				&& (entry[0] || entry[1] || (entry[2]! & 0x30))) return null;
 			streamOffset = uint(entry.subarray(3, 11), 8);
 			if (count === 2) streamEnd = uint(entry.subarray(s.entrySize + 3, s.entrySize + 11), 8);
 		}
@@ -274,7 +347,7 @@ export class MxfIndex {
 		requireMxf(streamEnd === null || (Number.isSafeInteger(streamEnd) && streamEnd > streamOffset),
 			'nonmonotonic index stream offsets');
 		for (const delta of s.deltas) {
-			if (delta.position) continue;
+			if (delta.position !== (temporal ? 255 : 0)) continue;
 			const slice = delta.slice
 				? uint(entry!.subarray(11 + (delta.slice - 1) * 4, 15 + (delta.slice - 1) * 4), 4)
 				: 0;

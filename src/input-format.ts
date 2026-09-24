@@ -637,9 +637,9 @@ export class MpegTsInputFormat extends InputFormat {
 }
 
 /**
- * Experimental MXF input for finalized, self-contained OP1a with progressive frame-wrapped ProRes and packed PCM.
+ * Experimental MXF input for finalized OP1a with progressive frame-wrapped ProRes or 8-bit 4:2:0 AVC and packed PCM.
  * Requires a seekable source with known size. Only simple, untrimmed source clips are supported.
- * Packet access uses supported MXF indexes, with sequential KLV scanning for missing coverage or unsupported layouts.
+ * AVC requires a supported temporal index and closed IDR GOPs. ProRes/PCM can fall back to sequential KLV scanning.
  * Not included in {@link ALL_FORMATS}. Use the {@link MXF} singleton explicitly.
  * @group Input formats
  * @public
