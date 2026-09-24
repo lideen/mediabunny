@@ -4,6 +4,7 @@ import {
 	BlobSource,
 	CanvasSink,
 	Input,
+	MXF,
 	UrlSource,
 	WrappedAudioBuffer,
 	WrappedCanvas,
@@ -111,7 +112,7 @@ const initMediaPlayer = async (resource: File | string) => {
 			source: typeof resource === 'string'
 				? new UrlSource(resource)
 				: new BlobSource(resource),
-			formats: ALL_FORMATS, // Accept all formats
+			formats: [...ALL_FORMATS, MXF],
 		});
 
 		let videoTrack = await input.getPrimaryVideoTrack();
@@ -744,7 +745,7 @@ window.addEventListener('resize', () => {
 selectMediaButton.addEventListener('click', () => {
 	const fileInput = document.createElement('input');
 	fileInput.type = 'file';
-	fileInput.accept = 'video/*,video/x-matroska,video/mp2t,.mkv,.ts,audio/*,audio/aac,.aac';
+	fileInput.accept = 'video/*,video/x-matroska,video/mp2t,.mkv,.ts,.mxf,audio/*,audio/aac,.aac';
 	fileInput.addEventListener('change', () => {
 		const file = fileInput.files?.[0];
 		if (!file) {
