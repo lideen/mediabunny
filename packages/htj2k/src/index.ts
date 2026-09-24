@@ -10,6 +10,10 @@ import { CustomVideoDecoder, EncodedPacket, registerDecoder, VideoCodec, VideoSa
 import makeHTCodec, { NativeModule } from '../vendor/HT_internal.js';
 import wasmBinary from '../vendor/HT_internal.wasm';
 import { requireHt, validDimensions, validateCodestream } from './codestream.js';
+import { extractReduced } from './reduced.js';
+import type {
+	VideoDecodePacketReader, ReducedVideoDecodeRequest, PreparedVideoDecodeInput, VideoPreparationLimits,
+} from 'mediabunny';
 
 let modulePromise: Promise<NativeModule> | null = null;
 const loadModule = () => modulePromise ??= WebAssembly.compile(wasmBinary).then(module => makeHTCodec({
@@ -41,6 +45,23 @@ const bitDepth = (config: VideoDecoderConfig) => {
 	return bytes.length === 1 && (bytes[0] === 8 || bytes[0] === 16) ? bytes[0] : null;
 };
 
+class Htj2kPreparedInput implements PreparedVideoDecodeInput {
+	constructor(
+		readonly owner: Htj2kDecoder,
+		public result: Awaited<ReturnType<typeof extractReduced>> | null,
+		readonly timestamp: number,
+		readonly duration: number,
+	) {}
+
+	get byteLength() {
+		return this.result?.data.byteLength ?? 0;
+	}
+
+	dispose() {
+		this.result = null;
+	}
+}
+
 class Htj2kDecoder extends CustomVideoDecoder {
 	private module: NativeModule | null = null;
 	private closed = false;
@@ -65,12 +86,45 @@ class Htj2kDecoder extends CustomVideoDecoder {
 		const height = this.config.codedHeight!;
 		const bits = bitDepth(this.config)!;
 		validateCodestream(packet.data, width, height, bits);
+		this.decodeData(packet.data, 0, width, height, packet.timestamp, packet.duration);
+	}
+
+	override async decodeReduced(reader: VideoDecodePacketReader, request: ReducedVideoDecodeRequest) {
+		const result = await extractReduced(reader, request, {
+			width: this.config.codedWidth!, height: this.config.codedHeight!, bits: bitDepth(this.config)!,
+		});
+		this.decodeData(result.data, result.skip, result.width, result.height, reader.timestamp, reader.duration);
+	}
+
+	override async prepareReduced(reader: VideoDecodePacketReader, request: Readonly<ReducedVideoDecodeRequest>,
+		limits: Readonly<VideoPreparationLimits>) {
+		const config = {
+			width: this.config.codedWidth!, height: this.config.codedHeight!, bits: bitDepth(this.config)!,
+		};
+		const target = { width: request.width, height: request.height };
+		const budget = { maxWorkingBytes: limits.maxWorkingBytes };
+		const { timestamp, duration } = reader;
+		const result = await extractReduced(reader, target, config, budget);
+		return new Htj2kPreparedInput(this, result, timestamp, duration);
+	}
+
+	override decodePrepared(input: PreparedVideoDecodeInput) {
+		requireHt(input instanceof Htj2kPreparedInput && input.owner === this && input.result,
+			'foreign or disposed prepared input');
+		const { data, skip, width, height } = input.result;
+		this.decodeData(data, skip, width, height, input.timestamp, input.duration);
+	}
+
+	private decodeData(data: Uint8Array, skip: number, width: number, height: number,
+		timestamp: number, duration: number) {
+		requireHt(!this.closed && this.module, 'decoder is closed or uninitialized');
+		const bits = bitDepth(this.config)!;
 		const rgba = new Uint8Array(width * height * 4);
-		const decoder = new this.module.HTDecoder(packet.data.length);
+		const decoder = new this.module.HTDecoder(data.length);
 		try {
-			decoder.getCodestreamBuffer().set(packet.data);
+			decoder.getCodestreamBuffer().set(data);
 			checked(decoder.readHeader());
-			checked(decoder.startDecoding(0, false));
+			checked(decoder.startDecoding(skip, false));
 			const max = 2 ** bits - 1;
 			const shift = bits - 8;
 			for (let y = 0; y < height; y++) {
@@ -91,7 +145,7 @@ class Htj2kDecoder extends CustomVideoDecoder {
 		}
 		this.onSample(new VideoSample(rgba, {
 			format: 'RGBA', codedWidth: width, codedHeight: height,
-			timestamp: packet.timestamp, duration: packet.duration, colorSpace: this.config.colorSpace,
+			timestamp, duration, colorSpace: this.config.colorSpace,
 		}));
 	}
 

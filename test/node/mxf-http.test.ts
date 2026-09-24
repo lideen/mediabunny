@@ -67,6 +67,16 @@ describe('given a ten GB indexed MXF served over HTTP', () => {
 						.toEqual([frame / 25, decode, 1048576]);
 					expect(ranges).toHaveLength(requestsBeforeRepeat);
 					expect(writtenBytes).toBe(bytesBeforeRepeat);
+					const metadataStart = ranges.length;
+					const metadataBytes = writtenBytes;
+					const next = await sink.getPacket((frame + 10) / 25, { metadataOnly: true });
+					expect(next!.byteLength).toBe(1048576);
+					const metadataRanges = ranges.slice(metadataStart).map((range) => {
+						const match = /^bytes=(\d+)-(\d+)$/.exec(range)!;
+						return Number(match[2]) - Number(match[1]) + 1;
+					});
+					expect(metadataRanges.length).toBeLessThanOrEqual(avc ? 1 : 3);
+					expect(writtenBytes - metadataBytes).toBeLessThanOrEqual(avc ? 25 : 80);
 					await Promise.all(responses);
 					expect(responses).toHaveLength(ranges.length);
 					expect(ranges.every(range => /^bytes=\d+-\d+$/.test(range))).toBe(true);

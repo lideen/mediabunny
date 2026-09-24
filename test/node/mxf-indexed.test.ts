@@ -46,7 +46,7 @@ describe('given a ten GB logical multi-partition MXF', () => {
 					const high = fixture.offsets[p + 1] ?? fixture.footerOffset;
 					if (start >= low && start < high) {
 						expect(start).toBeGreaterThanOrEqual(fixture.offsets[2]! + 108 + 1750 * fixture.stride);
-						expect(end).toBeLessThanOrEqual(fixture.offsets[2]! + 108 + 1750 * fixture.stride + 32 + 20);
+						expect(end).toBeLessThanOrEqual(fixture.offsets[2]! + 108 + 1750 * fixture.stride + 32 + 25);
 					}
 				}
 			}

@@ -31,17 +31,66 @@ type Segment = {
 	entries: number; entrySize: number; entryCount: number;
 };
 type IndexReader = {
-	bytes(offset: number, size: number): Promise<Uint8Array>;
-	klv(offset: number): Promise<MxfKlv>;
-	partition(klv: MxfKlv, offset: number): Promise<MxfPartition>;
-	countedRegion(offset: number, size: number, kind: 'header' | 'index'): Promise<Region>;
+	bytes(offset: number, size: number, prefetchEnd?: number, requireFiniteRange?: boolean,
+		signal?: AbortSignal): Promise<Uint8Array>;
+	klv(offset: number, signal?: AbortSignal): Promise<MxfKlv>;
+	partition(klv: MxfKlv, offset: number, signal?: AbortSignal): Promise<MxfPartition>;
+	countedRegion(offset: number, size: number, kind: 'header' | 'index', signal?: AbortSignal): Promise<Region>;
 };
 
 /** ST 377-1 partition directory and on-demand index entries. Never stores the IndexEntryArray. */
 export class MxfIndex {
-	private directory: Promise<Partition[]> | null = null;
+	private directory?: Promise<Partition[]>;
+	private pendingOwners = new WeakMap<Promise<unknown>, AbortSignal>();
 	private entryWindows = new Map<string, Promise<Uint8Array>>();
 	constructor(private reader: IndexReader, private size: number, private footer: number) {}
+
+	private readerFor(signal?: AbortSignal): IndexReader {
+		if (!signal) return this.reader;
+		const read = async <T>(operation: () => Promise<T>) => {
+			signal.throwIfAborted();
+			const value = await operation();
+			signal.throwIfAborted();
+			return value;
+		};
+		return {
+			bytes: (offset, size) => read(() => this.reader.bytes(offset, size, undefined, false, signal)),
+			klv: offset => read(() => this.reader.klv(offset, signal)),
+			partition: (klv, offset) => read(() => this.reader.partition(klv, offset, signal)),
+			countedRegion: (offset, size, kind) => read(() => this.reader.countedRegion(offset, size, kind, signal)),
+		};
+	}
+
+	// Completed metadata remains shared. A canceled builder must not poison another navigation's cached promise.
+	private async cached<T>(get: () => Promise<T> | undefined, set: (value: Promise<T> | undefined) => void,
+		create: () => Promise<T>, signal?: AbortSignal): Promise<T> {
+		while (true) {
+			signal?.throwIfAborted();
+			let pending = get();
+			if (!pending || this.pendingOwners.get(pending)?.aborted) {
+				pending = create();
+				set(pending);
+				if (signal) this.pendingOwners.set(pending, signal);
+				const task = pending;
+				void task.then(() => this.pendingOwners.delete(task), () => {});
+			}
+			try {
+				const result = await pending;
+				signal?.throwIfAborted();
+				return result;
+			} catch (error) {
+				if (signal?.aborted || !this.pendingOwners.get(pending)?.aborted) throw error;
+				if (get() === pending) set(undefined);
+			}
+		}
+	}
+
+	private getDirectory(signal?: AbortSignal) {
+		return this.cached(() => this.directory, (value) => {
+			this.directory = value;
+		},
+		() => this.partitions(signal), signal);
+	}
 
 	private async entry(s: Segment, index: number) {
 		const relative = index - s.start;
@@ -60,7 +109,7 @@ export class MxfIndex {
 
 	private async temporalEntries(start: number, end: number, track: IndexedTrack) {
 		const entries = new Map<number, Uint8Array>();
-		for (const p of await (this.directory ??= this.partitions())) {
+		for (const p of await this.getDirectory()) {
 			if (!p.indexSize || p.indexSid !== track.indexSid) continue;
 			for (const s of await this.segments(p)) {
 				if (s.bodySid !== track.bodySid || s.start >= end || s.start + s.duration <= start) continue;
@@ -128,8 +177,8 @@ export class MxfIndex {
 		return { presentation, key, isKey: decode === key };
 	}
 
-	private async partitions() {
-		const r = this.reader;
+	private async partitions(signal?: AbortSignal) {
+		const r = this.readerFor(signal);
 		if (this.footer) {
 			requireMxf(this.footer < this.size, 'footer partition exceeds file');
 			const start = Math.max(this.footer, this.size - 4096);
@@ -207,35 +256,42 @@ export class MxfIndex {
 		return result;
 	}
 
-	private regions(p: Partition) {
-		return p.regions ??= (async () => {
-			const header = await this.reader.countedRegion(p.packEnd, p.headerSize, 'header');
-			const index = await this.reader.countedRegion(header.end, p.indexSize, 'index');
+	private regions(p: Partition, signal?: AbortSignal) {
+		const reader = this.readerFor(signal);
+		return this.cached(() => p.regions, (value) => {
+			p.regions = value;
+		}, async () => {
+			const header = await reader.countedRegion(p.packEnd, p.headerSize, 'header');
+			const index = await reader.countedRegion(header.end, p.indexSize, 'index');
 			requireMxf(index.end <= p.end, 'partition regions overlap next partition');
 			return { index, end: index.end };
-		})();
+		}, signal);
 	}
 
-	private bodyStart(p: Partition) {
-		return p.bodyStart ??= (async () => {
-			let offset = (await this.regions(p)).end;
+	private bodyStart(p: Partition, signal?: AbortSignal) {
+		const reader = this.readerFor(signal);
+		return this.cached(() => p.bodyStart, (value) => {
+			p.bodyStart = value;
+		}, async () => {
+			let offset = (await this.regions(p, signal)).end;
 			while (offset < p.end) {
-				const klv = await this.reader.klv(offset);
+				const klv = await reader.klv(offset);
 				if (!FILL_KEYS.includes(klv.key)) break;
 				offset = klv.end;
 			}
 			requireMxf(offset <= p.end, 'alignment Fill exceeds partition');
 			return offset;
-		})();
+		}, signal);
 	}
 
-	private async readSegment(klv: MxfKlv): Promise<Segment> {
-		await this.reader.bytes(klv.offset, Math.min(klv.size, 512));
+	private async readSegment(klv: MxfKlv, signal?: AbortSignal): Promise<Segment> {
+		const reader = this.readerFor(signal);
+		await reader.bytes(klv.offset, Math.min(klv.size, 512));
 		const fields = new Map<number, { offset: number; size: number }>();
 		let offset = klv.offset;
 		while (offset < klv.end) {
 			requireMxf(offset + 4 <= klv.end, 'truncated index property');
-			const head = await this.reader.bytes(offset, 4);
+			const head = await reader.bytes(offset, 4);
 			const tag = uint(head.subarray(0, 2), 2);
 			let size = uint(head.subarray(2), 2);
 			let start = offset + 4;
@@ -245,7 +301,7 @@ export class MxfIndex {
 				if (size & 128) {
 					const count = size & 127;
 					requireMxf(count > 0 && count <= 8 && start + count <= klv.end, 'invalid index BER length');
-					size = uint(await this.reader.bytes(start, count), count);
+					size = uint(await reader.bytes(start, count), count);
 					start += count;
 				}
 			}
@@ -258,7 +314,7 @@ export class MxfIndex {
 			const field = fields.get(tag);
 			if (!field && optional) return new Uint8Array(size);
 			requireMxf(field && field.size === size, 'missing or invalid index property');
-			return this.reader.bytes(field.offset, field.size);
+			return reader.bytes(field.offset, field.size);
 		};
 		const slices = uint(await value(0x3f08, 1), 1);
 		const positions = uint(await value(0x3f0e, 1, true), 1);
@@ -266,7 +322,7 @@ export class MxfIndex {
 		const delta = fields.get(0x3f09);
 		if (delta) {
 			requireMxf(delta.size <= 8 + 256 * 6, 'index delta array limit exceeded');
-			for (const data of batch(await this.reader.bytes(delta.offset, delta.size), 6)) {
+			for (const data of batch(await reader.bytes(delta.offset, delta.size), 6)) {
 				requireMxf(data[1]! <= slices, 'index delta slice out of range');
 				requireMxf(data[0] === 255 || data[0]! <= positions, 'index position table reference out of range');
 				deltas.push({ position: data[0]!, slice: data[1]!, delta: uint(data.subarray(2), 4) });
@@ -278,7 +334,7 @@ export class MxfIndex {
 		let entryCount = 0;
 		if (entries) {
 			requireMxf(entries.size >= 8, 'truncated index entry array');
-			const head = await this.reader.bytes(entries.offset, 8);
+			const head = await reader.bytes(entries.offset, 8);
 			entryCount = uint(head.subarray(0, 4), 4);
 			requireMxf(uint(head.subarray(4), 4) === entrySize && entries.size === 8 + entryCount * entrySize,
 				'invalid index entry array length');
@@ -295,17 +351,20 @@ export class MxfIndex {
 			bodySid: uint(await value(0x3f07, 4), 4), indexSid: uint(await value(0x3f06, 4), 4) };
 	}
 
-	private segments(p: Partition) {
-		return p.segments ??= (async () => {
-			const { index } = await this.regions(p);
+	private segments(p: Partition, signal?: AbortSignal) {
+		const reader = this.readerFor(signal);
+		return this.cached(() => p.segments, (value) => {
+			p.segments = value;
+		}, async () => {
+			const { index } = await this.regions(p, signal);
 			const result: Segment[] = [];
 			const ends = new Map<number, number>();
 			let offset = index.start;
 			while (offset < index.end) {
-				const klv = await this.reader.klv(offset);
+				const klv = await reader.klv(offset);
 				requireMxf(klv.end <= index.end, 'index KLV exceeds region');
 				if (INDEX_KEYS.includes(klv.key)) {
-					const segment = await this.readSegment(klv);
+					const segment = await this.readSegment(klv, signal);
 					requireMxf(segment.indexSid === p.indexSid, 'index SID disagrees with partition');
 					requireMxf(segment.start >= (ends.get(segment.bodySid) ?? 0),
 						'overlapping or unordered index segments');
@@ -315,21 +374,21 @@ export class MxfIndex {
 				offset = klv.end;
 			}
 			return result;
-		})();
+		}, signal);
 	}
 
-	async locate(index: number, track: IndexedTrack, temporal = false): Promise<MxfKlv | null> {
-		const partitions = await (this.directory ??= this.partitions());
+	async locate(index: number, track: IndexedTrack, temporal = false, signal?: AbortSignal): Promise<MxfKlv | null> {
+		const partitions = await this.getDirectory(signal);
 		let result: MxfKlv | null = null;
 		for (let i = partitions.length - 1; i >= 0; i--) {
 			const p = partitions[i]!;
 			if (!p.indexSize || p.indexSid !== track.indexSid) continue;
-			for (const s of await this.segments(p)) {
+			for (const s of await this.segments(p, signal)) {
 				if (s.bodySid !== track.bodySid || index < s.start
 					|| (s.duration && index >= s.start + s.duration)) continue;
 				requireMxf(!s.duration || s.start + s.duration <= track.editUnitCount,
 					'index duration exceeds track metadata');
-				const location = await this.locateSegment(s, index, track, partitions, temporal);
+				const location = await this.locateSegment(s, index, track, partitions, temporal, signal);
 				if (!location) return null;
 				requireMxf(!result || (result.offset === location.offset && result.size === location.size),
 					'conflicting repeated index entries');
@@ -341,7 +400,9 @@ export class MxfIndex {
 
 	private async locateSegment(
 		s: Segment, index: number, track: IndexedTrack, partitions: Partition[], temporal: boolean,
+		signal?: AbortSignal,
 	) {
+		const reader = this.readerFor(signal);
 		if (!equalRationals(s.rate, track.rate) || s.positions) return null;
 		requireMxf(!track.opAtom || (!s.slices && s.deltas.length === 1
 			&& s.deltas[0]!.position === 255 && s.deltas[0]!.delta === 0),
@@ -356,7 +417,7 @@ export class MxfIndex {
 		if (!s.byteCount) {
 			const relative = index - s.start;
 			const count = Math.min(2, s.entryCount - relative);
-			entry = await this.reader.bytes(s.entries + relative * s.entrySize, count * s.entrySize);
+			entry = await reader.bytes(s.entries + relative * s.entrySize, count * s.entrySize);
 			if (!temporal && track.trackNumber >>> 24 === 0x15
 				&& (entry[0] || entry[1] || (entry[2]! & 0x30))) return null;
 			streamOffset = uint(entry.subarray(3, 11), 8);
@@ -383,11 +444,11 @@ export class MxfIndex {
 				if (candidate.bodySid === track.bodySid && candidate.bodyOffset <= stream) body = candidate;
 			}
 			requireMxf(body, 'index offset outside body stream');
-			const bodyStart = await this.bodyStart(body);
+			const bodyStart = await this.bodyStart(body, signal);
 			const physical = bodyStart + stream - body.bodyOffset;
 			requireMxf(Number.isSafeInteger(physical) && physical >= bodyStart && physical + 17 <= body.end,
 				'index offset outside body partition');
-			const klv = await this.reader.klv(physical);
+			const klv = await reader.klv(physical);
 			requireMxf(klv.end <= body.end, 'indexed element exceeds partition');
 			requireMxf(!track.opAtom || klv.end === (streamEnd === null
 				? body.end

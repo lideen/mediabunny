@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
 import { Input, InputDisposedError } from '../../src/input.js';
 import { ALL_FORMATS, MXF } from '../../src/input-format.js';
-import { BufferSource, CustomSource, FilePathSource } from '../../src/source.js';
+import { BufferSource, CustomSource, FilePathSource, ReadableStreamSource } from '../../src/source.js';
 import { EncodedPacketSink } from '../../src/media-sink.js';
 import { makeMxf } from './mxf-fixture.js';
 
@@ -100,7 +100,8 @@ describe('given a synthetic finalized OP1a ProRes and PCM file', () => {
 			const sink = new EncodedPacketSink((await input.getPrimaryVideoTrack())!);
 			const metadata = await sink.getFirstPacket({ metadataOnly: true });
 			expect(metadata!.byteLength).toBe(40);
-			expect(Math.max(...reads.map(([, end]) => end))).toBeLessThanOrEqual(fixture.firstPayloadOffset);
+			// The maximum BER header probe includes five bytes past this fixture's three-byte length.
+			expect(Math.max(...reads.map(([, end]) => end))).toBeLessThanOrEqual(fixture.firstPayloadOffset + 5);
 			const first = await sink.getFirstPacket();
 			expect(first!.data).toEqual(fixture.payloads[0]);
 			expect(Math.max(...reads.map(([, end]) => end))).toBeLessThanOrEqual(fixture.firstPayloadOffset + 40);
@@ -210,6 +211,15 @@ describe('given unsupported or malformed MXF', () => {
 			await expect(input.getTracks()).rejects.toThrow(/KLV exceeds file/);
 		});
 
+		it('should reject an unknown file bound before navigating KLV headers', async () => {
+			const prefix = new Uint8Array(32768);
+			prefix.set(makeMxf().data.subarray(0, prefix.length));
+			using input = new Input({ formats: [MXF], source: new ReadableStreamSource(
+				new ReadableStream<Uint8Array>({ start(controller) { controller.enqueue(prefix); } }),
+			) });
+			await expect(input.getTracks()).rejects.toThrow(/known size/);
+		});
+
 		it('should reject an unsafe 64-bit BER length before reading its value', async () => {
 			const data = makeMxf().data;
 			data[16] = 0x88;
@@ -219,6 +229,32 @@ describe('given unsupported or malformed MXF', () => {
 		});
 	});
 	describe('when routing essence packets', () => {
+		it.each([0, 1, 7, 8])('should accept a terminal empty KLV with %i BER extension bytes', async (count) => {
+			const fixture = makeMxf();
+			const data = new Uint8Array(fixture.data.length + 17 + count);
+			data.set(fixture.data);
+			data[fixture.data.length + 16] = count ? 0x80 | count : 0;
+			using input = new Input({ source: new CustomSource({
+				getSize: () => data.length,
+				read: (start, end) => {
+					expect(end).toBeLessThanOrEqual(data.length);
+					return data.slice(start, end);
+				},
+			}), formats: [MXF] });
+			const sink = new EncodedPacketSink((await input.getPrimaryVideoTrack())!);
+			expect((await sink.getPacket(Infinity))!.data).toEqual(fixture.payloads[4]);
+		});
+
+		it.each([16, 17, 24])('should reject a terminal truncated KLV header of %i bytes', async (length) => {
+			const fixture = makeMxf();
+			const data = new Uint8Array(fixture.data.length + length);
+			data.set(fixture.data);
+			if (length > 16) data[fixture.data.length + 16] = 0x88;
+			using input = new Input({ source: new BufferSource(data), formats: [MXF] });
+			const sink = new EncodedPacketSink((await input.getPrimaryVideoTrack())!);
+			await expect(sink.getPacket(Infinity)).rejects.toThrow(/truncated/);
+		});
+
 		it.each([4, 6])('should reject %i picture packets declared as five only when reaching EOF', async (count) => {
 			const fixture = makeMxf({ videoPacketCount: count });
 			using input = new Input({ source: new BufferSource(fixture.data), formats: [MXF] });

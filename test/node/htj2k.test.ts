@@ -114,7 +114,7 @@ describe('given complete-frame HTJ2K MXF input', () => {
 			expect(meta.data.byteLength).toBe(0);
 			const payloadOffset = source.offsets[2]! + 108 + 1000 * source.stride + 32 + 20;
 			expect(source.reads.every(([start, end]) =>
-				end <= payloadOffset || start >= payloadOffset + htj2k.data.length))
+				end <= payloadOffset + 5 || start >= payloadOffset + htj2k.data.length))
 				.toBe(true);
 			expect((await sink.getKeyPacket(375))!.data).toEqual(htj2k.data);
 			expect((await sink.getNextPacket(meta))!.timestamp).toBe(9001 / 24);

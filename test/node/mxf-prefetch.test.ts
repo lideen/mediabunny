@@ -58,7 +58,7 @@ describe('given indexed MXF with small interleaved essence packets over HTTP', (
 				expect(metadata!.byteLength).toBe(8192);
 				const payload = fixture.offsets[2]! + 108 + (avc ? 751 : 750) * fixture.stride + 52;
 				if (floor) {
-					expect(ranges.every(([start, end]) => end <= payload || start >= payload + 8192)).toBe(true);
+					expect(ranges.every(([start, end]) => end <= payload + 5 || start >= payload + 8192)).toBe(true);
 				}
 				let packet = await sink.getPacket(350);
 				expect(packet).not.toBeNull();

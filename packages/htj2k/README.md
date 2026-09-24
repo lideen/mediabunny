@@ -28,11 +28,51 @@ MXF is opt-in. The existing `examples/media-player` registers the extension alon
 - Three unsigned full-resolution components, one full-image tile and one tile-part, one quality layer, reversible 5/3 transform, up to six decompositions, and HT-only code blocks up to 64×64. RPCL and the other standard progression orders are accepted. The decoder applies the codestream's inverse color transform once.
 - At most 8192 pixels on either axis, 16,777,216 pixels per image, and 128 MiB per compressed frame. These bounds are checked before native frame allocation.
 
-Unsupported inputs fail rather than being reinterpreted as ProRes, YCbCr, XYZ, or signed RGB. Tile-header overrides, mixed HT/legacy blocks, lossy coding, subsampling, cropping, and interlacing are outside this initial profile. Encoded packets retain the complete original codestream, key-frame status, edit-unit timestamp, and duration. Metadata-only packet reads do not fetch the payload. Index lookup and source prefetch limits are unchanged.
+Unsupported inputs fail rather than being reinterpreted as ProRes, YCbCr, XYZ, or signed RGB. Tile-header overrides, mixed HT/legacy blocks, lossy coding, subsampling, cropping, and interlacing are outside this initial profile. Encoded packets retain the complete original codestream, key-frame status, edit-unit timestamp, and duration. Metadata-only packet reads use a bounded KLV header probe of at most 25 bytes, clamped to EOF. This can include up to eight initial value bytes but does not request the frame payload or a decoder extraction window. Index lookup and source prefetch limits are unchanged.
 
 The library codec name and decoder configuration string are `htj2k`. This is an internal custom-decoder identifier, **not a registered WebCodecs codec string**. MXF configurations carry a one-byte `description` containing the RGB component depth, 8 or 16. Geometry and component properties must match the codestream SIZ marker. Without a matching registered decoder, capability queries return false instead of probing a native `VideoDecoder` with this string. Initialization and decode failures propagate; there is no native fallback.
 
-There is no HTJ2K encoder or muxer support. MP4, CMAF, MOV, and Matroska output codec lists exclude it. This extension does not implement partial-codestream decoding, resolution-adaptive playback, or a separate player.
+There is no HTJ2K encoder or muxer support. MP4, CMAF, MOV, and Matroska output codec lists exclude it. Complete-frame decoding remains the default. Reduced decoding is an explicit request, not automatic adaptation to canvas size.
+
+## Explicit reduced decoding
+
+Create remote inputs with finite ranges **before reading track metadata**:
+
+```ts
+const input = new Input({
+	formats: [MXF],
+	source: new UrlSource(url, { rangePolicy: { minimumRequestSize: 32768 } }),
+});
+const track = await input.getPrimaryVideoTrack();
+const sink = new VideoSampleSink(track!, { reducedResolution: { width: 480, height: 270 } });
+const sample = await sink.getSample(10);
+sample?.close();
+input.dispose();
+```
+
+The decoder selects the largest decomposition skip whose decoded width and height meet the requested positive integer dimensions. Unsupported containers, selected decoders, codestream layouts, and requests requiring skip zero reject. There is no complete-frame fallback. `CanvasSink` accepts the same request through `decoderOptions`; its display size does not enable reduced decoding. Cropping with reduced decoding is currently rejected.
+
+The reduced subset additionally requires RPCL, the reversible multiple-component transform, one to six decompositions, explicit precincts no larger than 1024 on either axis, and precinct subbands at least as large as a codeblock. QCD must use one guard bit and positive exponents no greater than the component depth plus six. Only SIZ, CAP, COD, reversible QCD, optional COM, one SOT and SOD are accepted before packet data. Tile overrides, SOP/EPH, packed headers, and progression overrides are unsupported. Limits are 65,536 packets, 262,144 retained codeblock positions, and 128 MiB for both original and derived compressed buffers. Original geometry limits still apply.
+
+The extension parses inclusion and zero-bitplane tag trees, coding-pass counts, HT placeholder passes, Lblock, segment lengths, and stuffed packet-header bits. It checks physical receipt of every required component/precinct packet body. It then copies the covered low-resolution prefix into a **private derived decode input**, corrects Psot, appends an empty packet for each omitted packet, and writes EOC. COD is unchanged. This buffer is never returned as an original `EncodedPacket`. Omitted high-resolution entropy data is not fetched or validated; this is not a validator for the complete original codestream.
+
+Discovery uses a 640 KiB minimum refill size, bounded by the remaining packet bytes, to reduce dependent network requests. This is not a maximum read size: a larger parser request can require a larger refill, subject to the existing packet and working-buffer limits. The parser still validates required coverage independently and requests additional windows when needed. A small codestream may fit in one refill. Larger fixed refills can fetch unnecessary bytes for smaller preview resolutions or other packet layouts; this setting does not guarantee one request per frame or a particular playback rate. MXF caps source read-ahead at each requested window end, not the whole frame or partition. Remote readers reject a `UrlSource` without an explicit finite range policy, or one already using sequential fallback. The server must honor Range with 206 and expose Content-Range to cross-origin clients. A finite request policy is not an aggregate traffic budget. Playback iterators still look ahead, while the existing player's paused preview reads one target.
+
+Bytes must describe an immutable resource for the input's lifetime. This path does **not** verify an ETag or send If-Match. A server that hides ETag or rejects conditional CORS requests cannot provide that assurance through this API. Applications needing verified source identity must enforce it in their source or proxy. Disposal and iterator cancellation prevent subsequent partial reads, but cannot interrupt native decoding already in progress.
+
+Strict partial-read requirements propagate through source slices and custom path resolvers. A physical request retains its 206 requirement even if its logical caller cancels before response headers arrive. A non-206 response is canceled without draining its body or switching to sequential fallback. Ordinary reads retain their existing fallback behavior. A caller-defined `CustomSource` is responsible for honoring finite read bounds in its backing transport.
+
+### Bounded range preparation
+
+Explicit reduced range iterators use the decoder's optional `prepareReduced` / `decodePrepared` pair. At most two slots are admitted, counting preparing inputs, ready inputs, and native decoding. Each slot reserves a 64 MiB preparation-buffer allowance, so the aggregate allowance is 128 MiB. The extractor checks prefix storage, old and new read windows, the incoming reader copy, resize overlap, and the final derived allocation before allocating or requesting those bytes. Source-owned cache and copies, native memory, decoded samples, and separately bounded packet-header metadata are excluded. This is not a total process-memory limit.
+
+The 64 MiB allowance admits the retained 3840×2160 RGB16 example's 480×270, 960×540, and 1920×1080 requests. With the 640 KiB refill setting, their measured per-slot peak accounted buffer sizes are approximately 2.28 MB, 7.19 MB, and 27.08 MB respectively. Larger valid inputs may exceed the preparation budget and reject; they do not fall back to complete-frame fetching.
+
+Preparation snapshots configuration, request dimensions, and timing. It validates packet coverage without allocating native decoder state or emitting samples. The core submits prepared inputs to the existing native-call serializer in packet order and disposes them when decoding settles. Ready inputs are disposed on cancellation; inputs whose native call has started stay alive until that call settles. Timestamp iterators retain their serial reduced-decoding discipline. Decoders without the optional pair continue using `decodeReduced`; an incomplete pair is rejected during setup.
+
+Prepared range navigation admits another packet only when a slot is available, rather than filling an independent metadata queue. Known intra-frame ranges stop preparation at the requested end. Cancellation removes that operation's queued and worker-attached read demands without disposing the shared Input or canceling other consumers. An already-started physical read may finish and contribute valid bytes to the cache, but it does not schedule continuation solely for canceled demands.
+
+Packet-header interpretation follows OpenJPH 0.32.0 `ojph_precinct.cpp` and `ojph_bitbuffer_read.h`, pinned in `vendor/README.md`. The TypeScript parser is independently bounded and does not rely on native decode success as evidence of complete packet coverage.
 
 ## Precision, color, and ownership
 

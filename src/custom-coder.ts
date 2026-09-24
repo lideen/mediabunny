@@ -15,6 +15,58 @@ import { EncodedPacket } from './packet';
 import { AudioSample, VideoSample } from './sample';
 
 /**
+ * Minimum decoded dimensions for an explicit reduced-resolution request, in coded pixel coordinates.
+ * @group Custom coders
+ * @public
+ */
+export type ReducedVideoDecodeRequest = {
+	/** Minimum decoded width, as a positive integer. */
+	width: number;
+	/** Minimum decoded height, as a positive integer. */
+	height: number;
+};
+
+/**
+ * Exact, finite, half-open reads relative to one original encoded video packet.
+ * @group Custom coders
+ * @public
+ */
+export type VideoDecodePacketReader = {
+	/** Byte length of the complete original codestream. */
+	byteLength: number;
+	/** Original presentation timestamp, in seconds. */
+	timestamp: number;
+	/** Original duration, in seconds. */
+	duration: number;
+	/** Original decode-order sequence number. */
+	sequenceNumber: number;
+	/** Reads stable bytes in [start, end); rejects out-of-bounds, missing data, disposal or cancellation. */
+	read(start: number, end: number): Promise<Uint8Array>;
+};
+
+/**
+ * A decoder-owned prepared input, transferred to the core until decoding settles.
+ * @group Custom coders
+ * @public
+ */
+export type PreparedVideoDecodeInput = {
+	/** Bytes currently owned by this result. Zero after disposal. */
+	readonly byteLength: number;
+	/** Releases owned data. Safe to call more than once. */
+	dispose(): void;
+};
+
+/**
+ * Per-preparation buffer budget, excluding source cache, native memory, and decoded samples.
+ * @group Custom coders
+ * @public
+ */
+export type VideoPreparationLimits = {
+	/** Maximum simultaneously owned preparation-buffer bytes, including allocation overlap. */
+	readonly maxWorkingBytes: number;
+};
+
+/**
  * Base class for custom video decoders. To add your own custom video decoder, extend this class, implement the
  * abstract methods and static `supports` method, and register the decoder using {@link registerDecoder}.
  * @group Custom coders
@@ -40,6 +92,13 @@ export abstract class CustomVideoDecoder {
 	abstract init(): MaybePromise<void>;
 	/** Decodes the provided encoded packet. */
 	abstract decode(packet: EncodedPacket): MaybePromise<void>;
+	/** Optional reduced decoding. Never receives a partial EncodedPacket or falls back to full decoding. */
+	decodeReduced?(reader: VideoDecodePacketReader, request: ReducedVideoDecodeRequest): MaybePromise<void>;
+	/** Optional pair with decodePrepared. Must not allocate native decoder state or emit samples. */
+	prepareReduced?(reader: VideoDecodePacketReader, request: Readonly<ReducedVideoDecodeRequest>,
+		limits: Readonly<VideoPreparationLimits>): Promise<PreparedVideoDecodeInput>;
+	/** Consumes a prepared input without taking ownership. The core disposes it after this call settles. */
+	decodePrepared?(input: PreparedVideoDecodeInput): MaybePromise<void>;
 	/** Decodes all remaining packets and then resolves. */
 	abstract flush(): MaybePromise<void>;
 	/** Called when the decoder is no longer needed and its resources can be freed. */

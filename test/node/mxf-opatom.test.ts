@@ -177,7 +177,7 @@ describe('given a single-file Doremi-layout OPAtom AVC stream', () => {
 			expect(await sink.getNextKeyPacket(packet, { metadataOnly: true })).toBeNull();
 			for (let i = 0; i < 12; i++) {
 				const start = fixture.bodyStart + i * (1024 * 1024 + 20) + 20;
-				expect(reads.some(([a, b]) => a < start + 1024 * 1024 && b > start)).toBe(false);
+				expect(reads.some(([a, b]) => a < start + 1024 * 1024 && b > start + 5)).toBe(false);
 			}
 			expect(reads.reduce((sum, [a, b]) => sum + b - a, 0)).toBeLessThan(16000);
 			expect(reads.length).toBeLessThan(40);

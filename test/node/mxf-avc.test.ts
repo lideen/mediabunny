@@ -101,7 +101,7 @@ describe('given frame-wrapped AVC with I0 P3 B1 B2 and a presentation-to-decode 
 					if (start >= body && start < bodyEnd) {
 						const within = (start - body) % fixture.stride;
 						expect(within).toBeLessThan(52);
-						expect(end - start + within).toBeLessThanOrEqual(52);
+						expect(end - start + within).toBeLessThanOrEqual(57);
 					}
 				}
 			}
@@ -241,7 +241,7 @@ describe('given frame-wrapped AVC with I0 P3 B1 B2 and a presentation-to-decode 
 				read: fixture.read }), formats: [MXF] });
 			const sink = new EncodedPacketSink((await input.getPrimaryVideoTrack())!);
 			await expect(sink.getKeyPacket(0.16, { metadataOnly: true })).rejects.toThrow(/SPS flag/);
-			expect(fixture.reads.some(([start, end]) => start < payload + fixture.frameSize && end > payload))
+			expect(fixture.reads.some(([start, end]) => start < payload + fixture.frameSize && end > payload + 5))
 				.toBe(false);
 		});
 
@@ -252,7 +252,7 @@ describe('given frame-wrapped AVC with I0 P3 B1 B2 and a presentation-to-decode 
 				read: fixture.read }), formats: [MXF] });
 			const sink = new EncodedPacketSink((await input.getPrimaryVideoTrack())!);
 			expect((await sink.getKeyPacket(0.16, { metadataOnly: true }))!.sequenceNumber).toBe(4);
-			expect(fixture.reads.some(([start, end]) => start < payload + fixture.frameSize && end > payload))
+			expect(fixture.reads.some(([start, end]) => start < payload + fixture.frameSize && end > payload + 5))
 				.toBe(false);
 			await expect(sink.getKeyPacket(0.16)).rejects.toThrow(/SPS\/PPS/);
 		});

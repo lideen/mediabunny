@@ -107,7 +107,20 @@ const initMediaPlayer = async (resource: File | string) => {
 		clearTimeout(liveRefreshIntervalId);
 
 		// Create an Input from the resource
-		const minimumRequestSize = new URLSearchParams(location.search).get('minimumRequestSize');
+		const query = new URLSearchParams(location.search);
+		const minimumRequestSize = query.get('minimumRequestSize');
+		const decodeWidth = query.get('decodeWidth');
+		const decodeHeight = query.get('decodeHeight');
+		const reducedResolution = decodeWidth !== null || decodeHeight !== null
+			? { width: Number(decodeWidth), height: Number(decodeHeight) }
+			: undefined;
+		if (reducedResolution && (!Number.isSafeInteger(reducedResolution.width) || reducedResolution.width <= 0
+			|| !Number.isSafeInteger(reducedResolution.height) || reducedResolution.height <= 0)) {
+			throw new Error('decodeWidth and decodeHeight must both be positive integers.');
+		}
+		if (reducedResolution && typeof resource === 'string' && minimumRequestSize === null) {
+			throw new Error('Remote reduced decoding requires minimumRequestSize for finite HTTP ranges.');
+		}
 		const input = new Input({
 			source: typeof resource === 'string'
 				? new UrlSource(resource, {
@@ -213,6 +226,7 @@ const initMediaPlayer = async (resource: File | string) => {
 		// Each preview/playback generation owns its canvas pool. Late conversions must not mutate a newer pool.
 		const canvasTrack = videoTrack;
 		createVideoSink = canvasTrack && (() => new CanvasSink(canvasTrack, {
+			decoderOptions: { reducedResolution },
 			poolSize: 2, // Current and next frame during uninterrupted playback
 			fit: 'contain', // In case the video changes dimensions over time
 			alpha: videoCanBeTransparent,

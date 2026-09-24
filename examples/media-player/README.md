@@ -10,6 +10,8 @@ This setting is useful for servers that require finite byte ranges and for measu
 
 ## Paused previews and playback
 
+For explicit HTJ2K reduced decoding, add both `decodeWidth` and `decodeHeight`, for example `/examples/media-player/?minimumRequestSize=32768&decodeWidth=480&decodeHeight=270`. Remote reduced loads require a finite request floor before any metadata is read. Unsupported codecs, layouts, and requests that require full resolution report an error instead of falling back. The URL must remain immutable; this example does not verify ETags. The server must honor finite Range requests and expose Content-Range through CORS. This option is independent of canvas display dimensions and is off by default.
+
 Loading and seeking while paused use `CanvasSink.getCanvas(timestamp)`, without starting a sequential video iterator or an audio iterator. Inter-frame codecs still require their normal decoding dependencies. Play starts the existing buffered video/audio iterators; pause and seek return them and invalidate pending work before requesting a new preview. An in-flight read or native decode can finish, but an obsolete generation cannot draw, schedule audio, or restart playback. Playback and seek errors appear in the player's error element.
 
 Each paused request owns a separate `CanvasSink`. Each uninterrupted playback generation owns a separate two-canvas pool, reused throughout that playback. A late conversion from a retired request therefore cannot overwrite the pixels of the current generation's held next frame before its generation check runs. Single-frame retrieval closes its decoded sample; retired playback iterators are returned. `CanvasSink` itself has no disposal method.

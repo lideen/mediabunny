@@ -309,6 +309,10 @@ export {
 } from './conversion';
 export {
 	CustomVideoDecoder,
+	type ReducedVideoDecodeRequest,
+	type VideoDecodePacketReader,
+	type PreparedVideoDecodeInput,
+	type VideoPreparationLimits,
 	CustomVideoEncoder,
 	CustomAudioDecoder,
 	CustomAudioEncoder,
