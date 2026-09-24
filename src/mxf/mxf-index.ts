@@ -23,7 +23,7 @@ type Partition = MxfPartition & { offset: number; packEnd: number; end: number; 
 	index: Region; end: number;
 }>; bodyStart?: Promise<number>; segments?: Promise<Segment[]>; };
 type IndexedTrack = { bodySid: number; indexSid: number; trackNumber: number;
-	rate: ReturnType<typeof rational>; editUnitCount: number; };
+	rate: ReturnType<typeof rational>; editUnitCount: number; legacyAvc: boolean; opAtom: boolean; };
 type Segment = {
 	start: number; duration: number; rate: ReturnType<typeof rational>; byteCount: number;
 	bodySid: number; indexSid: number; slices: number; positions: number;
@@ -94,6 +94,22 @@ export class MxfIndex {
 		const matches = [...entries].filter(([p, entry]) => p + (entry[0]! << 24 >> 24) === decode);
 		requireMxf(matches.length === 1, 'AVC temporal index must have a unique inverse');
 		const entry = entries.get(decode)!;
+		if (track.legacyAvc) {
+			// These producers store positive GOP distances, contrary to ST 381-3. Validate the
+			// observed layout, but never use its recovery pictures as decoder restart keys.
+			const distance = entry[1]!;
+			const access = decode - distance;
+			requireMxf(distance <= 127 && access >= 0, 'legacy AVC GOP distance out of range');
+			const accessEntry = entries.get(access)!;
+			requireMxf(accessEntry[2] === 0xc0 && accessEntry[1] === 0
+				&& ![...entries].some(([i, value]) => i > access && i <= decode && value[2] === 0xc0),
+			'legacy AVC GOP distance disagrees with access point');
+			requireMxf(decode === access || [0x22, 0x33].includes(entry[2]!), 'unsupported legacy AVC picture flags');
+			const first = (await this.temporalEntries(0, 1, track)).get(0)!;
+			requireMxf(first[0] === 0 && first[1] === 0 && first[2] === 0xc0,
+				'legacy AVC must start at an unreordered access point');
+			return { presentation: matches[0]![0], key: 0, isKey: decode === 0, requiresParameters: decode === access };
+		}
 		const key = decode + (entry[1]! << 24 >> 24);
 		requireMxf(key >= 0 && key <= decode, 'AVC key frame offset outside supported closed GOP');
 		const keyEntry = (await this.temporalEntries(key, key + 1, track)).get(key)!;
@@ -327,6 +343,9 @@ export class MxfIndex {
 		s: Segment, index: number, track: IndexedTrack, partitions: Partition[], temporal: boolean,
 	) {
 		if (!equalRationals(s.rate, track.rate) || s.positions) return null;
+		requireMxf(!track.opAtom || (!s.slices && s.deltas.length === 1
+			&& s.deltas[0]!.position === 255 && s.deltas[0]!.delta === 0),
+		'OPAtom requires a single frame-wrapped index element');
 		// ST 377-1's different-sized first CBE edit unit needs a two-segment calculation.
 		// Only ordinary whole-container CBE tables use the multiplication below.
 		if (s.byteCount && (s.start !== 0 || (s.duration !== 0 && s.duration !== track.editUnitCount)
@@ -342,6 +361,11 @@ export class MxfIndex {
 				&& (entry[0] || entry[1] || (entry[2]! & 0x30))) return null;
 			streamOffset = uint(entry.subarray(3, 11), 8);
 			if (count === 2) streamEnd = uint(entry.subarray(s.entrySize + 3, s.entrySize + 11), 8);
+			else if (track.opAtom && index + 1 < track.editUnitCount) {
+				// An index segment can end inside a body partition without a terminal entry.
+				const next = (await this.temporalEntries(index + 1, index + 2, track)).get(index + 1)!;
+				streamEnd = uint(next.subarray(3, 11), 8);
+			}
 		}
 		requireMxf(Number.isSafeInteger(streamOffset), 'index stream offset overflow');
 		requireMxf(streamEnd === null || (Number.isSafeInteger(streamEnd) && streamEnd > streamOffset),
@@ -365,6 +389,10 @@ export class MxfIndex {
 				'index offset outside body partition');
 			const klv = await this.reader.klv(physical);
 			requireMxf(klv.end <= body.end, 'indexed element exceeds partition');
+			requireMxf(!track.opAtom || klv.end === (streamEnd === null
+				? body.end
+				: Math.min(body.end, physical + streamEnd - stream)),
+			'OPAtom requires one essence element per edit unit');
 			requireMxf(streamEnd === null || stream + klv.end - physical <= streamEnd,
 				'indexed element exceeds edit unit');
 			requireMxf(klv.key.startsWith('060e2b34'), 'index does not point to a KLV key');

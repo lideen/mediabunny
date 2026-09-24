@@ -47,6 +47,7 @@ const labels: Record<number, string> = {
 	0x3f01: '060e2b340101010406010104060b0000',
 	0x3001: '060e2b34010101010406010100000000',
 	0x3004: '060e2b34010101020601010401020000',
+	0x3005: '060e2b34010101020601010401030000',
 	0x3201: '060e2b34010101020401060100000000',
 	0x320c: '060e2b34010101010401030104000000',
 	0x3203: '060e2b34010101010401050202000000',
@@ -80,11 +81,17 @@ export const makeMxf = (options: {
 	indexSid?: number;
 	audioLocked?: boolean;
 	avc?: boolean;
+	videoOnly?: boolean;
+	opAtom?: boolean;
+	legacyAvc?: boolean;
 } = {}) => {
 	const rate = options.editRate
 		? join(integer(options.editRate[0], 4), integer(options.editRate[1], 4))
 		: join(integer(60000, 4), integer(1001, 4));
 	const audioContainer = options.waveAudio ? bytes('060e2b34040101010d01030102060100') : pcmContainer;
+	const avcContainer = bytes(options.legacyAvc
+		? '060e2b34040101020d01030102106001'
+		: '060e2b340401010a0d01030102106001');
 	const audioTrackNumber = options.waveAudio ? 0x16020100 : 0x16020300;
 	const videoTrackNumber = options.avc ? 0x15010500 : 0x15011700;
 	const sourceReference = umid(4);
@@ -102,12 +109,15 @@ export const makeMxf = (options: {
 	const sets: Uint8Array[] = [
 		set(0x2f, 1, { 0x3b03: ref(2) }),
 		set(0x18, 2, { 0x1901: batch(ref(3), ref(4)), 0x1902: batch(ref(5)) }),
-		set(0x36, 3, { 0x4401: umid(3), 0x4403: batch(ref(10), ref(20), ref(30)) }),
-		set(0x37, 4, { 0x4401: umid(4), 0x4403: batch(ref(13), ref(23), ref(33)), 0x4701: ref(6) }),
+		set(0x36, 3, { 0x4401: umid(3),
+			0x4403: options.videoOnly ? batch(ref(10)) : batch(ref(10), ref(20), ref(30)) }),
+		set(0x37, 4, { 0x4401: umid(4),
+			0x4403: options.videoOnly ? batch(ref(13)) : batch(ref(13), ref(23), ref(33)),
+			0x4701: ref(options.videoOnly ? 16 : 6) }),
 		set(0x23, 5, { 0x2701: umid(4), 0x3f07: integer(1, 4), 0x3f06: integer(options.indexSid ?? 0, 4) }),
-		set(0x44, 6, { 0x3f01: batch(ref(36), ref(16), ref(26)) }),
+		...(options.videoOnly ? [] : [set(0x44, 6, { 0x3f01: batch(ref(36), ref(16), ref(26)) })]),
 	];
-	for (let i = 1; i <= 3; i++) {
+	for (let i = 1; i <= (options.videoOnly ? 1 : 3); i++) {
 		const base = i * 10;
 		const definition = i === 1 ? picture : sound;
 		for (const source of [false, true]) {
@@ -134,11 +144,12 @@ export const makeMxf = (options: {
 			? set(options.avc ? 0x51 : 0x28, base + 6, {
 					0x3006: integer(i, 4), 0x3001: rate,
 					0x3004: options.avc
-						? bytes('060e2b340401010a0d01030102106001')
+						? avcContainer
 						: options.unsupportedContainer ? pcmContainer : proresContainer,
-					0x3201: bytes(options.avc
-						? '060e2b340401010d0401020201314001'
-						: '060e2b340401010d0401020203060100'),
+					0x3005: options.legacyAvc ? bytes('060e2b340401010a0401020201322001') : new Uint8Array(16),
+					0x3201: options.legacyAvc
+						? new Uint8Array(16)
+						: bytes(options.avc ? '060e2b340401010d0401020201314001' : '060e2b340401010d0401020203060100'),
 					0x320c: integer(options.layout ?? 0, 1),
 					0x3203: integer(1280, 4), 0x3202: integer(720, 4), 0x320e: join(integer(16, 4), integer(9, 4)),
 					0x8000: bytes('12345678'),
@@ -160,8 +171,12 @@ export const makeMxf = (options: {
 		`060e2b34020501010d010201010${kind}0400`, join(
 			integer(1, 2), integer(3, 2), integer(kag, 4), integer(offset, 8), integer(0, 8), integer(0, 8),
 			integer(headerSize, 8), integer(indexSize, 8), integer(indexSize ? 2 : 0, 4),
-			integer(0, 8), integer(bodySid, 4), op1a,
-			batch(proresContainer, audioContainer),
+			integer(0, 8), integer(bodySid, 4), options.opAtom ? bytes('060e2b34040101010d01020110000000') : op1a,
+			options.opAtom
+				? options.legacyAvc
+					? batch(bytes('060e2b34040101030d010301027f0100'), bytes('060e2b34040101020d01030102106001'))
+					: batch(bytes('060e2b340401010a0d01030102106001'))
+				: batch(proresContainer, audioContainer),
 		),
 	);
 	const empty = new Uint8Array(0);

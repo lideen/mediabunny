@@ -33,6 +33,7 @@ const ESSENCE_PREFIX = '060e2b34010201010d010301';
 // SMPTE RDD 44 frame-wrapped ProRes mapping.
 const PRORES_CONTAINER = '060e2b340401010d0d010301021c0100';
 const AVC_CONTAINER = '060e2b340401010a0d01030102106001';
+const LEGACY_AVC_CONTAINER = '060e2b34040101020d01030102106001';
 // ST 382 AES/BWF carries packed little-endian samples, not ST 331 AES3 subframes.
 const WAVE_CONTAINER = '060e2b34040101010d01030102060100';
 const AES_CONTAINER = '060e2b34040101010d01030102060300';
@@ -46,6 +47,7 @@ const avcParameterSets = (record: AvcDecoderConfigurationRecord) => [
 
 type PacketLocation = {
 	offset: number; size: number; timestamp: number; duration: number; isKey?: boolean; prefetchEnd?: number;
+	requiresParameters?: boolean;
 };
 type TrackInfo = {
 	id: number;
@@ -59,6 +61,8 @@ type TrackInfo = {
 	descriptor: MetadataSet;
 	packets: PacketLocation[];
 	sampleCount: number;
+	legacyAvc: boolean;
+	opAtom: boolean;
 };
 
 export class MxfDemuxer extends Demuxer {
@@ -72,6 +76,8 @@ export class MxfDemuxer extends Demuxer {
 	private disposed = false;
 	private metadataTags: MetadataTags = {};
 	private index: MxfIndex | null = null;
+	private opAtom = false;
+	private essenceContainers: string[] = [];
 
 	checkDisposed() {
 		if (this.disposed) throw new InputDisposedError();
@@ -111,9 +117,24 @@ export class MxfDemuxer extends Demuxer {
 		requireMxf(uint(data.subarray(8, 16), 8) === offset, 'partition offset');
 		for (const start of [16, 24, 52]) uint(data.subarray(start, start + 8), 8);
 		const op = hex(data.subarray(64, 80));
-		requireMxf(op.startsWith('060e2b34040101010d0102010101') && op.endsWith('00')
-			&& (data[78]! & 2) === 0, 'only self-contained OP1a is supported');
-		batch(data.subarray(80), 16);
+		const opAtom = op === '060e2b34040101010d01020110000000';
+		requireMxf(opAtom || (op.startsWith('060e2b34040101010d0102010101') && op.endsWith('00')
+			&& (data[78]! & 2) === 0), 'only self-contained OP1a or single-file OPAtom is supported');
+		if (offset === 0) this.opAtom = opAtom;
+		else requireMxf(opAtom === this.opAtom, 'partition operational pattern mismatch');
+		const containers = batch(data.subarray(80), 16).map(hex);
+		if (opAtom) {
+			requireMxf((containers.length === 1 && containers[0] === AVC_CONTAINER)
+				|| (containers.length === 2 && containers.includes(LEGACY_AVC_CONTAINER)
+					&& containers.includes('060e2b34040101030d010301027f0100')),
+			'unsupported OPAtom essence containers');
+			if (offset === 0) this.essenceContainers = containers;
+			else {
+				requireMxf(containers.length === this.essenceContainers.length
+					&& containers.every(container => this.essenceContainers.includes(container)),
+				'partition essence containers mismatch');
+			}
+		}
 		return {
 			headerSize: uint(data.subarray(32, 40), 8),
 			indexSize: uint(data.subarray(40, 48), 8),
@@ -203,7 +224,9 @@ export class MxfDemuxer extends Demuxer {
 		requireMxf(materials.length === 1 && sources.length === 1, 'one material and one file package required');
 		const source = sources[0]!;
 		const sourceId = hex(property(source, P.packageId, 32));
-		const essence = refs(content, P.essenceData).filter(x => hex(property(x, P.linkedPackage, 32)) === sourceId);
+		const essenceData = refs(content, P.essenceData);
+		requireMxf(!this.opAtom || essenceData.length === 1, 'OPAtom requires one local essence container');
+		const essence = essenceData.filter(x => hex(property(x, P.linkedPackage, 32)) === sourceId);
 		requireMxf(essence.length === 1, 'one essence container data set required');
 		const bodySid = uint(property(essence[0]!, P.bodySid), 4);
 		const indexProperty = essence[0]!.properties.get(P.indexSid);
@@ -211,6 +234,9 @@ export class MxfDemuxer extends Demuxer {
 		requireMxf(bodySid !== 0, 'external essence');
 		const descriptor = resolve(property(source, P.descriptor));
 		const descriptors = descriptor.kind === 0x44 ? refs(descriptor, P.subDescriptors) : [descriptor];
+		requireMxf(!this.opAtom || descriptor.kind !== 0x44, 'OPAtom requires one direct video descriptor');
+		requireMxf(!this.opAtom || this.essenceContainers.includes(hex(property(descriptor, P.container))),
+			'OPAtom descriptor container disagrees with partition');
 		const sourceTracks = refs(source, P.tracks);
 		let videos = 0;
 		let audios = 0;
@@ -280,6 +306,8 @@ export class MxfDemuxer extends Demuxer {
 				duration: duration * rate.denominator / rate.numerator,
 				editUnitCount: duration,
 				descriptor: linked[0]!, packets: [], sampleCount: 0,
+				legacyAvc: false,
+				opAtom: this.opAtom,
 			};
 			this.tracks.push(definition === PICTURE
 				? new MxfVideoTrackBacking(this, info)
@@ -291,6 +319,8 @@ export class MxfDemuxer extends Demuxer {
 				|| routes.has(uint(property(track, P.trackNumber), 4)), 'unmapped source track');
 		}
 		requireMxf(videos > 0 && descriptors.length === this.tracks.length, 'unmapped essence descriptor');
+		requireMxf(!this.opAtom || (videos === 1 && audios === 0 && this.tracks[0]!.getCodec() === 'avc'),
+			'OPAtom requires exactly one AVC video track');
 	}
 
 	private async scanOne() {
@@ -435,6 +465,7 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 						const { numerator, denominator } = this.info.rate;
 						location.timestamp = timing.presentation * denominator / numerator;
 						location.isKey = timing.isKey;
+						location.requiresParameters = timing.requiresParameters;
 					}
 					if (index === this.info.editUnitCount - 1) this.indexedEnd = true;
 					return location;
@@ -514,16 +545,22 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 	constructor(demuxer: MxfDemuxer, info: TrackInfo) {
 		super(demuxer, info);
 		const d = info.descriptor;
-		this.avc = hex(property(d, P.container)) === AVC_CONTAINER;
+		const container = hex(property(d, P.container));
+		const coding = hex(property(d, P.pictureCoding, 16));
+		// Doremi LibMedia leaves PictureEssenceCoding zero and mislabels Codec as High 10 Intra.
+		// This exact legacy descriptor is checked against the actual Main-profile SPS below.
+		info.legacyAvc = info.opAtom && d.kind === 0x51 && container === LEGACY_AVC_CONTAINER
+			&& coding === '00000000000000000000000000000000'
+			&& hex(d.properties.get(P.codec) ?? new Uint8Array()) === '060e2b340401010a0401020201322001';
+		this.avc = container === AVC_CONTAINER || info.legacyAvc;
 		requireMxf(this.avc
 			? [0x28, 0x51].includes(d.kind)
 			: d.kind === 0x28 && hex(property(d, P.container)) === PRORES_CONTAINER,
 		'unsupported picture descriptor or frame wrapping');
-		const coding = hex(property(d, P.pictureCoding, 16));
 		const profile = Number.parseInt(coding.slice(28, 30), 16);
 		if (this.avc) {
-			requireMxf(coding.startsWith('060e2b34040101')
-				&& ['0401020201312001', '0401020201314001'].includes(coding.slice(16)),
+			requireMxf(info.legacyAvc || (coding.startsWith('060e2b34040101')
+				&& ['0401020201312001', '0401020201314001'].includes(coding.slice(16))),
 			'unsupported AVC picture coding');
 			requireMxf(info.indexSid !== 0, 'AVC requires a temporal index');
 			this.codec = 'avc';
@@ -583,6 +620,15 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 
 	protected override async readPacket(packet: PacketLocation) {
 		const data = await super.readPacket(packet);
+		if (this.info.legacyAvc && !packet.isKey) {
+			const types = [...iterateNalUnitsInAnnexB(data)].map(nal => extractNalUnitTypeForAvc(data[nal.offset]!));
+			if (packet.requiresParameters || types.includes(7) || types.includes(8)) {
+				const record = extractAvcDecoderConfigurationRecord(data);
+				await this.getDecoderConfig();
+				requireMxf(record && avcParameterSets(record) === this.avcParameters,
+					'AVC requires stable parameter sets, repeated together');
+			}
+		}
 		if (this.avc && packet.isKey) {
 			const record = extractAvcDecoderConfigurationRecord(data);
 			requireMxf(record, 'AVC key access unit requires in-band SPS/PPS');
@@ -625,6 +671,7 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 				requireMxf(record && record.sequenceParameterSets.length === 1,
 					'AVC first access unit requires SPS/PPS');
 				const sps = parseAvcSps(record.sequenceParameterSets[0]!)!;
+				requireMxf(!this.info.legacyAvc || sps.profileIdc === 77, 'legacy OPAtom requires AVC Main profile');
 				requireMxf(sps.frameMbsOnlyFlag === 1 && sps.chromaFormatIdc === 1
 					&& sps.bitDepthLumaMinus8 === 0 && sps.bitDepthChromaMinus8 === 0,
 				'AVC requires progressive 8-bit 4:2:0');
@@ -670,6 +717,7 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 		if (!this.avc) return super.getNextKeyPacket(packet, options);
 		const index = this.packetIndices.get(packet);
 		if (index === undefined) throw new Error('Packet does not belong to this track.');
+		if (this.info.legacyAvc) return null;
 		for (let i = index + 1; i < this.info.editUnitCount; i++) {
 			const timing = await this.demuxer.resolveDecode(i, this.info);
 			if (timing.isKey) return this.packet(i, options);
