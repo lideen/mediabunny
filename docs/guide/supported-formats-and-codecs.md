@@ -29,6 +29,8 @@ The reader discovers tracks and extracts packets from finalized, seekable, self-
 
 Color primaries, transfer characteristics, and matrix coefficients come from the first ProRes frame header or AVC SPS. MXF mastering-display and content-light metadata are not preserved.
 
+The reader also supports complete-frame HTJ2K in JPEG 2000 P1 wrapping with a progressive RGBA descriptor, unsigned RGB8/RGB16 layout, full component range, and BT.709 primaries and transfer. The optional [`@mediabunny/htj2k`](./extensions/htj2k) package decodes this subset to owned RGBA8 samples with BT.709 color metadata. RGB16 output loses its low eight bits. The decoder validates codestream geometry and component properties against the descriptor. It does not support partial codestreams, adaptive resolution, YCbCr, XYZ, or HTJ2K encoding/muxing. Its decoder configuration comes entirely from the descriptor, without an essence read. Existing intra-frame index lookup and metadata-only packet behavior apply unchanged.
+
 The supported metadata graph has one material package, one file source package, and one untrimmed SourceClip per media track. Origin and StartPosition must be zero, material and source edit rates must match, and descriptors must identify their source tracks through LinkedTrackID. Interlaced/PsF pictures, offset display apertures, other wrapping or sound coding, external essence, source-clip channel selection, and more complex edits are rejected. ProRes also requires equal stored and display dimensions. AVC allows macroblock padding when its SPS display dimensions agree with the descriptor. Timecode components are exposed separately in `MetadataTags.raw` under `mxf.timecode.<track ID>`, not as audio tracks.
 
 Indexed lookup discovers partitions from the trailing Random Index Pack, or from the header's footer pointer and previous-partition chain. RIP entries identify partitions, not frames. BodySID and IndexSID select the essence and index streams; BodyOffset maps index stream offsets into the appropriate physical partition. Supported index segments use fixed two-byte or BER local lengths, with non-reordered VBE entries or whole-container CBE edit-unit byte counts. CBE requires start position zero, duration zero or the full track duration, and no index entries or slices. The exceptional CBE layout with a different-sized first unit falls back to scanning. DeltaEntry and SliceOffset values locate individual elements, whose KLV keys identify the tracks.
@@ -75,6 +77,7 @@ Mediabunny ships with built-in decoders and encoders for all audio PCM codecs, m
 - `'vp9'` - VP9
 - `'av1'` - AOMedia Video 1 (AV1)
 - `'prores'` - Apple ProRes [^prores]
+- `'htj2k'` - High-throughput JPEG 2000, decode-only via the optional [HTJ2K extension](./extensions/htj2k)
 
 ### Audio codecs
 

@@ -2622,6 +2622,7 @@ export const determineVideoPacketType = (
 			return null;
 		};
 
+		case 'htj2k':
 		case 'prores': {
 			return 'key';
 		};

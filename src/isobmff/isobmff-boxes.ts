@@ -1891,6 +1891,7 @@ const videoCodecToBoxName = (codec: VideoCodec, fullCodecString: string) => {
 		case 'vp9': return 'vp09';
 		case 'av1': return 'av01';
 		case 'prores': return fullCodecString;
+		case 'htj2k': throw new Error('HTJ2K muxing is not supported.');
 	}
 };
 
@@ -1904,6 +1905,7 @@ const VIDEO_CODEC_TO_CONFIGURATION_BOX: Record<
 	vp9: vpcC,
 	av1: av1C,
 	prores: null,
+	htj2k: null,
 };
 
 const audioCodecToBoxName = (codec: AudioCodec, fullCodecString: string, isQuickTime: boolean): string => {

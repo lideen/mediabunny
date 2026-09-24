@@ -12,6 +12,7 @@ import {
 import { registerAc3Decoder } from '@mediabunny/ac3';
 import { registerDtsDecoder } from '@mediabunny/dts';
 import { registerProresDecoder } from '@mediabunny/prores';
+import { registerHtj2kDecoder } from '@mediabunny/htj2k';
 
 import SampleFileUrl from '../../docs/assets/big-buck-bunny-trimmed.mp4';
 
@@ -19,6 +20,7 @@ import SampleFileUrl from '../../docs/assets/big-buck-bunny-trimmed.mp4';
 registerAc3Decoder();
 registerDtsDecoder();
 registerProresDecoder();
+registerHtj2kDecoder();
 
 (document.querySelector('#sample-file-download') as HTMLAnchorElement).href = SampleFileUrl;
 
@@ -52,7 +54,8 @@ let audioContext: AudioContext | null = null;
 let gainNode: GainNode | null = null;
 
 let fileLoaded = false;
-let videoSink: CanvasSink | null = null;
+let activeInput: Input | null = null;
+let createVideoSink: (() => CanvasSink) | null = null;
 let audioSink: AudioBufferSink | null = null;
 
 let firstTimestamp = 0;
@@ -85,17 +88,13 @@ let volumeMuted = false;
 /** === INIT LOGIC === */
 
 const initMediaPlayer = async (resource: File | string) => {
+	pause();
+	const currentAsyncId = asyncId;
 	try {
-		// First, dispose any ongoing playback:
-
-		if (playing) {
-			pause();
-		}
-
-		void videoFrameIterator?.return();
-		void audioBufferIterator?.return();
-
-		asyncId++;
+		activeInput?.dispose();
+		activeInput = null;
+		void audioContext?.close().catch(console.error);
+		audioContext = null;
 
 		fileLoaded = false;
 		fileNameElement.textContent = resource instanceof File ? resource.name : resource;
@@ -108,29 +107,43 @@ const initMediaPlayer = async (resource: File | string) => {
 		clearTimeout(liveRefreshIntervalId);
 
 		// Create an Input from the resource
+		const minimumRequestSize = new URLSearchParams(location.search).get('minimumRequestSize');
 		const input = new Input({
 			source: typeof resource === 'string'
-				? new UrlSource(resource)
+				? new UrlSource(resource, {
+					rangePolicy: minimumRequestSize === null
+						? undefined
+						: { minimumRequestSize: Number(minimumRequestSize) },
+				})
 				: new BlobSource(resource),
 			formats: [...ALL_FORMATS, MXF],
 		});
+		activeInput = input;
 
 		let videoTrack = await input.getPrimaryVideoTrack();
 		let audioTrack = await input.getPrimaryAudioTrack();
+		if (currentAsyncId !== asyncId) {
+			return;
+		}
 
 		const tracks = [videoTrack, audioTrack].filter(t => t !== null);
 
-		firstTimestamp = Math.max(
+		const initialTimestamp = Math.max(
 			await input.getFirstTimestamp(tracks),
 			0,
 		);
-		endTimestamp = await input.getDurationFromMetadata(tracks, { skipLiveWait: true })
+		const duration = await input.getDurationFromMetadata(tracks, { skipLiveWait: true })
 			?? await input.computeDuration(tracks, { skipLiveWait: true });
-		isRelativeToUnixEpoch = (await Promise.all(tracks.map(t => t.isRelativeToUnixEpoch()))).some(Boolean);
+		const relativeToUnixEpoch = (await Promise.all(tracks.map(t => t.isRelativeToUnixEpoch()))).some(Boolean);
+		if (currentAsyncId !== asyncId) {
+			return;
+		}
+		firstTimestamp = initialTimestamp;
+		isRelativeToUnixEpoch = relativeToUnixEpoch;
 		playbackTimeAtStart = firstTimestamp;
 
 		// For degenerate cases where the end timestamp is less than 0
-		endTimestamp = Math.max(firstTimestamp, endTimestamp);
+		endTimestamp = Math.max(firstTimestamp, duration);
 
 		// Configure the time display elements accordingly
 		const timestampFontSize = isRelativeToUnixEpoch ? '12px' : '';
@@ -174,6 +187,13 @@ const initMediaPlayer = async (resource: File | string) => {
 			throw new Error(problemMessage);
 		}
 
+		const sampleRate = await audioTrack?.getSampleRate();
+		const videoCanBeTransparent = await videoTrack?.canBeTransparent() ?? false;
+		const displayWidth = await videoTrack?.getDisplayWidth() ?? 0;
+		const displayHeight = await videoTrack?.getDisplayHeight() ?? 0;
+		if (currentAsyncId !== asyncId) {
+			return;
+		}
 		if (problemMessage) {
 			warningElement.textContent = problemMessage;
 		}
@@ -183,32 +203,28 @@ const initMediaPlayer = async (resource: File | string) => {
 
 		// We must create the audio context with the matching sample rate for correct acoustic results
 		// (especially for low-sample rate files)
-		audioContext = new AudioContext({ sampleRate: await audioTrack?.getSampleRate() });
+		audioContext = new AudioContext({ sampleRate });
 		gainNode = audioContext.createGain();
 		gainNode.connect(audioContext.destination);
 		updateVolume();
 
-		const videoCanBeTransparent = videoTrack
-			? await videoTrack.canBeTransparent()
-			: false;
-
 		playerContainer.style.background = videoCanBeTransparent ? 'transparent' : '';
 
-		// For video, let's use a CanvasSink as it handles rotation and closing video samples for us.
-		// Pool size of 2: We'll only ever have the current and the next frame around, so we only need two canvases.
-		videoSink = videoTrack && new CanvasSink(videoTrack, {
-			poolSize: 2,
+		// Each preview/playback generation owns its canvas pool. Late conversions must not mutate a newer pool.
+		const canvasTrack = videoTrack;
+		createVideoSink = canvasTrack && (() => new CanvasSink(canvasTrack, {
+			poolSize: 2, // Current and next frame during uninterrupted playback
 			fit: 'contain', // In case the video changes dimensions over time
 			alpha: videoCanBeTransparent,
-		});
+		}));
 		// For audio, we'll use an AudioBufferSink to directly retrieve AudioBuffers compatible with the Web Audio API
 		audioSink = audioTrack && new AudioBufferSink(audioTrack);
 
 		// Show the canvas if there's a video track, otherwise hide it
 		if (videoTrack) {
 			canvas.style.display = '';
-			canvas.width = await videoTrack.getDisplayWidth();
-			canvas.height = await videoTrack.getDisplayHeight();
+			canvas.width = displayWidth;
+			canvas.height = displayHeight;
 		} else {
 			canvas.style.display = 'none';
 		}
@@ -222,9 +238,11 @@ const initMediaPlayer = async (resource: File | string) => {
 			volumeBarContainer.style.display = 'none';
 		}
 
+		await renderPausedFrame(playbackTimeAtStart, currentAsyncId);
+		if (currentAsyncId !== asyncId) {
+			return;
+		}
 		fileLoaded = true;
-
-		await startVideoIterator();
 
 		if (audioContext.state === 'running') {
 			// Start playback automatically if the audio context permits
@@ -234,7 +252,7 @@ const initMediaPlayer = async (resource: File | string) => {
 		loadingElement.style.display = 'none';
 		playerContainer.style.display = '';
 
-		if (!videoSink) {
+		if (!createVideoSink) {
 			// If there's only an audio track, always show the controls
 			controlsElement.style.opacity = '1';
 			controlsElement.style.pointerEvents = '';
@@ -242,6 +260,9 @@ const initMediaPlayer = async (resource: File | string) => {
 		}
 
 		const refreshIntervals = await Promise.all(tracks.map(t => t.getLiveRefreshInterval()));
+		if (activeInput !== input) {
+			return;
+		}
 		const nonNullIntervals = refreshIntervals.filter(x => x !== null);
 
 		if (nonNullIntervals.length > 0) {
@@ -257,22 +278,33 @@ const initMediaPlayer = async (resource: File | string) => {
 			const scheduleLiveRefresh = () => {
 				// eslint-disable-next-line @typescript-eslint/no-misused-promises
 				liveRefreshIntervalId = window.setTimeout(async () => {
-					endTimestamp = await input.getDurationFromMetadata(tracks, { skipLiveWait: true })
-						?? await input.computeDuration(tracks, { skipLiveWait: true });
-					durationElement.textContent = formatTimestamp(endTimestamp);
-
-					// Check if we're still live
-					const stillLive = await Promise.all(tracks.map(t => t.isLive()));
-					if (stillLive.every(live => !live)) {
-						liveDot.style.display = 'none';
-					} else {
-						scheduleLiveRefresh();
+					try {
+						const duration = await input.getDurationFromMetadata(tracks, { skipLiveWait: true })
+							?? await input.computeDuration(tracks, { skipLiveWait: true });
+						const stillLive = await Promise.all(tracks.map(t => t.isLive()));
+						if (activeInput !== input) {
+							return;
+						}
+						endTimestamp = duration;
+						durationElement.textContent = formatTimestamp(endTimestamp);
+						if (stillLive.every(live => !live)) {
+							liveDot.style.display = 'none';
+						} else {
+							scheduleLiveRefresh();
+						}
+					} catch (error) {
+						if (activeInput === input) {
+							reportPlaybackError(error, asyncId);
+						}
 					}
 				}, interval * 1000);
 			};
 			scheduleLiveRefresh();
 		}
 	} catch (error) {
+		if (currentAsyncId !== asyncId) {
+			return;
+		}
 		console.error(error);
 
 		errorElement.textContent = String(error);
@@ -283,29 +315,37 @@ const initMediaPlayer = async (resource: File | string) => {
 
 /** === VIDEO RENDERING LOGIC === */
 
-/** Creates a new video frame iterator and renders the first video frame. */
-const startVideoIterator = async () => {
-	if (!videoSink) {
+const drawFrame = (frame: WrappedCanvas) => {
+	context.clearRect(0, 0, canvas.width, canvas.height);
+	context.drawImage(frame.canvas, 0, 0);
+};
+
+const renderPausedFrame = async (timestamp: number, currentAsyncId: number) => {
+	const frame = await createVideoSink?.().getCanvas(timestamp);
+	if (frame && currentAsyncId === asyncId && !playing) {
+		drawFrame(frame);
+	}
+};
+
+/** Creates a playback iterator; paused previews use a single timestamp instead. */
+const startVideoIterator = async (currentAsyncId: number) => {
+	const sink = createVideoSink?.();
+	if (!sink) {
 		return;
 	}
 
-	asyncId++;
-
-	await videoFrameIterator?.return(); // Dispose of the current iterator
-
-	// Create a new iterator
-	videoFrameIterator = videoSink.canvases(getPlaybackTime());
-
-	// Get the first two frames
-	const firstFrame = (await videoFrameIterator.next()).value ?? null;
-	const secondFrame = (await videoFrameIterator.next()).value ?? null;
-
-	nextFrame = secondFrame;
-
+	const iterator = sink.canvases(getPlaybackTime());
+	videoFrameIterator = iterator;
+	const firstFrame = (await iterator.next()).value;
+	if (currentAsyncId !== asyncId || !playing) {
+		return;
+	}
 	if (firstFrame) {
-		// Draw the first frame
-		context.clearRect(0, 0, canvas.width, canvas.height);
-		context.drawImage(firstFrame.canvas, 0, 0);
+		drawFrame(firstFrame);
+	}
+	const secondFrame = (await iterator.next()).value;
+	if (currentAsyncId === asyncId && playing) {
+		nextFrame = secondFrame ?? null;
 	}
 };
 
@@ -313,20 +353,20 @@ const startVideoIterator = async () => {
 const render = (requestFrame = true) => {
 	if (fileLoaded) {
 		const playbackTime = getPlaybackTime();
-		if (playbackTime >= endTimestamp) {
+		if (playing && playbackTime >= endTimestamp) {
 			// Pause playback once the end is reached
 			pause();
 			playbackTimeAtStart = endTimestamp;
 		}
 
 		// Check if the current playback time has caught up to the next frame
-		if (nextFrame && nextFrame.timestamp <= playbackTime) {
-			context.clearRect(0, 0, canvas.width, canvas.height);
-			context.drawImage(nextFrame.canvas, 0, 0);
+		if (playing && nextFrame && nextFrame.timestamp <= playbackTime) {
+			drawFrame(nextFrame);
 			nextFrame = null;
 
 			// Request the next frame
-			void updateNextFrame();
+			const currentAsyncId = asyncId;
+			void updateNextFrame().catch(error => reportPlaybackError(error, currentAsyncId));
 		}
 
 		if (!draggingProgressBar) {
@@ -346,23 +386,26 @@ setInterval(() => render(false), 500);
 /** Iterates over the video frame iterator until it finds a video frame in the future. */
 const updateNextFrame = async () => {
 	const currentAsyncId = asyncId;
+	const iterator = videoFrameIterator;
+	if (!iterator || !playing) {
+		return;
+	}
 
 	// We have a loop here because we may need to iterate over multiple frames until we reach a frame in the future
-	while (true) {
-		const newNextFrame = (await videoFrameIterator!.next()).value ?? null;
+	while (currentAsyncId === asyncId && playing) {
+		const newNextFrame = (await iterator.next()).value ?? null;
 		if (!newNextFrame) {
 			break;
 		}
 
-		if (currentAsyncId !== asyncId) {
+		if (currentAsyncId !== asyncId || !playing) {
 			break;
 		}
 
 		const playbackTime = getPlaybackTime();
 		if (newNextFrame.timestamp <= playbackTime) {
 			// Draw it immediately
-			context.clearRect(0, 0, canvas.width, canvas.height);
-			context.drawImage(newNextFrame.canvas, 0, 0);
+			drawFrame(newNextFrame);
 		} else {
 			// Save it for later
 			nextFrame = newNextFrame;
@@ -374,14 +417,15 @@ const updateNextFrame = async () => {
 /** === AUDIO PLAYBACK LOGIC === */
 
 /** Loops over the audio buffer iterator, scheduling the audio to be played in the audio context. */
-const runAudioIterator = async () => {
-	if (!audioSink) {
-		return;
-	}
-
+const runAudioIterator = async (
+	iterator: AsyncGenerator<WrappedAudioBuffer, void, unknown>, currentAsyncId: number,
+) => {
 	// To play back audio, we loop over all audio chunks (typically very short) of the file and play them at the correct
 	// timestamp. The result is a continuous, uninterrupted audio signal.
-	for await (const { buffer, timestamp } of audioBufferIterator!) {
+	for await (const { buffer, timestamp } of iterator) {
+		if (currentAsyncId !== asyncId || !playing) {
+			return;
+		}
 		const node = audioContext!.createBufferSource();
 		node.buffer = buffer;
 		node.connect(gainNode!);
@@ -409,12 +453,15 @@ const runAudioIterator = async () => {
 		if (timestamp - getPlaybackTime() >= 1) {
 			await new Promise<void>((resolve) => {
 				const id = setInterval(() => {
-					if (timestamp - getPlaybackTime() < 1) {
+					if (currentAsyncId !== asyncId || !playing || timestamp - getPlaybackTime() < 1) {
 						clearInterval(id);
 						resolve();
 					}
 				}, 100);
 			});
+			if (currentAsyncId !== asyncId || !playing) {
+				return;
+			}
 		}
 	}
 };
@@ -433,35 +480,49 @@ const getPlaybackTime = () => {
 };
 
 const play = async () => {
-	if (audioContext!.state === 'suspended') {
-		await audioContext!.resume();
+	if (!fileLoaded || playing) {
+		return;
 	}
-
+	const currentAsyncId = ++asyncId;
 	if (getPlaybackTime() === endTimestamp) {
 		// If we're at the end, let's snap back to the start
 		playbackTimeAtStart = firstTimestamp;
-		await startVideoIterator();
 	}
 
 	audioContextStartTime = audioContext!.currentTime;
 	playing = true;
 
-	if (audioSink) {
-		// Start the audio iterator
-		void audioBufferIterator?.return();
-		audioBufferIterator = audioSink?.buffers(getPlaybackTime());
-		void runAudioIterator();
-	}
-
 	playIcon.style.display = 'none';
 	pauseIcon.style.display = '';
+	try {
+		if (audioContext!.state === 'suspended') {
+			await audioContext!.resume();
+		}
+		if (currentAsyncId !== asyncId || !playing) {
+			return;
+		}
+		audioContextStartTime = audioContext!.currentTime;
+		if (audioSink) {
+			const iterator = audioSink.buffers(getPlaybackTime());
+			audioBufferIterator = iterator;
+			void runAudioIterator(iterator, currentAsyncId).catch(error => reportPlaybackError(error, currentAsyncId));
+		}
+		await startVideoIterator(currentAsyncId);
+	} catch (error) {
+		reportPlaybackError(error, currentAsyncId);
+	}
 };
 
 const pause = () => {
 	playbackTimeAtStart = getPlaybackTime();
 	playing = false;
-	void audioBufferIterator?.return(); // This stops any for-loops that are iterating the iterator
+	asyncId++;
+	// A pending read may finish, but its generation can no longer draw or schedule audio.
+	void videoFrameIterator?.return().catch(() => {});
+	void audioBufferIterator?.return().catch(() => {});
+	videoFrameIterator = null;
 	audioBufferIterator = null;
+	nextFrame = null;
 
 	// Stop all audio nodes that were already queued to play
 	for (const node of queuedAudioNodes) {
@@ -471,6 +532,15 @@ const pause = () => {
 
 	playIcon.style.display = '';
 	pauseIcon.style.display = 'none';
+};
+
+const reportPlaybackError = (error: unknown, currentAsyncId: number) => {
+	if (currentAsyncId !== asyncId) {
+		return;
+	}
+	pause();
+	console.error(error);
+	errorElement.textContent = String(error);
 };
 
 const togglePlay = () => {
@@ -486,16 +556,17 @@ const seekToTime = async (seconds: number) => {
 
 	const wasPlaying = playing;
 
-	if (wasPlaying) {
-		pause();
-	}
-
+	pause();
+	const currentAsyncId = asyncId;
 	playbackTimeAtStart = seconds;
-
-	await startVideoIterator();
-
-	if (wasPlaying && playbackTimeAtStart < endTimestamp) {
-		void play();
+	errorElement.textContent = '';
+	try {
+		await renderPausedFrame(seconds, currentAsyncId);
+		if (currentAsyncId === asyncId && wasPlaying && playbackTimeAtStart < endTimestamp) {
+			await play();
+		}
+	} catch (error) {
+		reportPlaybackError(error, currentAsyncId);
 	}
 };
 
@@ -591,7 +662,7 @@ volumeBarContainer.addEventListener('pointermove', (event) => {
 /** === CONTROL UI LOGIC === */
 
 const showControlsTemporarily = () => {
-	if (!videoSink) {
+	if (!createVideoSink) {
 		// Shouldn't run if there's only an audio track
 		return;
 	}
@@ -624,7 +695,7 @@ playerContainer.addEventListener('pointermove', (event) => {
 	}
 });
 playerContainer.addEventListener('pointerleave', (event) => {
-	if (!videoSink) {
+	if (!createVideoSink) {
 		// Shouldn't run if there's only an audio track
 		return;
 	}

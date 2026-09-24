@@ -53,6 +53,11 @@ const labels: Record<number, string> = {
 	0x3203: '060e2b34010101010401050202000000',
 	0x3202: '060e2b34010101010401050201000000',
 	0x320e: '060e2b34010101010401010101000000',
+	0x3401: '060e2b34010101020401050306000000',
+	0x3406: '060e2b3401010105040105030b000000',
+	0x3407: '060e2b3401010105040105030c000000',
+	0x3219: '060e2b34010101090401020101060100',
+	0x3210: '060e2b34010101020401020101010200',
 	0x3d03: '060e2b34010101050402030101010000',
 	0x3d02: '060e2b34010101040402030104000000',
 	0x3d07: '060e2b34010101050402010104000000',
@@ -84,6 +89,7 @@ export const makeMxf = (options: {
 	videoOnly?: boolean;
 	opAtom?: boolean;
 	legacyAvc?: boolean;
+	htj2k?: { data: Uint8Array; bits: number; width?: number; height?: number };
 } = {}) => {
 	const rate = options.editRate
 		? join(integer(options.editRate[0], 4), integer(options.editRate[1], 4))
@@ -93,8 +99,17 @@ export const makeMxf = (options: {
 		? '060e2b34040101020d01030102106001'
 		: '060e2b340401010a0d01030102106001');
 	const audioTrackNumber = options.waveAudio ? 0x16020100 : 0x16020300;
-	const videoTrackNumber = options.avc ? 0x15010500 : 0x15011700;
+	const videoTrackNumber = options.avc ? 0x15010500 : options.htj2k ? 0x15010801 : 0x15011700;
 	const sourceReference = umid(4);
+	const htProperties: Record<number, Uint8Array> = options.htj2k
+		? {
+				0x3401: Uint8Array.of(82, options.htj2k.bits, 71, options.htj2k.bits, 66, options.htj2k.bits,
+					0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+				0x3406: integer(2 ** options.htj2k.bits - 1, 4), 0x3407: integer(0, 4),
+				0x3219: bytes('060e2b34040101060401010103030000'),
+				0x3210: bytes('060e2b34040101010401010101020000'),
+			}
+		: {};
 	const pcmDescriptorRate = options.pcmDescriptorRate
 		? join(integer(options.pcmDescriptorRate[0], 4), integer(options.pcmDescriptorRate[1], 4))
 		: audioRate;
@@ -141,17 +156,26 @@ export const makeMxf = (options: {
 			sets.push(set(0x11, id + 2, clipFields));
 		}
 		sets.push(i === 1
-			? set(options.avc ? 0x51 : 0x28, base + 6, {
+			? set(options.avc ? 0x51 : options.htj2k ? 0x29 : 0x28, base + 6, {
 					0x3006: integer(i, 4), 0x3001: rate,
-					0x3004: options.avc
-						? avcContainer
-						: options.unsupportedContainer ? pcmContainer : proresContainer,
+					0x3004: options.htj2k
+						? bytes('060e2b340401010d0d010301020c0600')
+						: options.avc ? avcContainer : options.unsupportedContainer ? pcmContainer : proresContainer,
 					0x3005: options.legacyAvc ? bytes('060e2b340401010a0401020201322001') : new Uint8Array(16),
-					0x3201: options.legacyAvc
-						? new Uint8Array(16)
-						: bytes(options.avc ? '060e2b340401010d0401020201314001' : '060e2b340401010d0401020203060100'),
+					0x3201: options.htj2k
+						? bytes('060e2b340401010d0401020203010801')
+						: options.legacyAvc
+							? new Uint8Array(16)
+							: bytes(options.avc
+									? '060e2b340401010d0401020201314001'
+									: '060e2b340401010d0401020203060100'),
 					0x320c: integer(options.layout ?? 0, 1),
-					0x3203: integer(1280, 4), 0x3202: integer(720, 4), 0x320e: join(integer(16, 4), integer(9, 4)),
+					0x3203: integer(options.htj2k ? options.htj2k.width ?? 8 : 1280, 4),
+					0x3202: integer(options.htj2k ? options.htj2k.height ?? 4 : 720, 4),
+					0x320e: options.htj2k
+						? join(integer(options.htj2k.width ?? 8, 4), integer(options.htj2k.height ?? 4, 4))
+						: join(integer(16, 4), integer(9, 4)),
+					...htProperties,
 					0x8000: bytes('12345678'),
 				})
 			: set(options.waveAudio ? 0x48 : 0x47, base + 6, {
@@ -218,10 +242,11 @@ export const makeMxf = (options: {
 		frame.set(bytes('69637066001c000061706c30050002d08000091009'), 4);
 		frame[39] = i;
 		if (i < videoPacketCount) {
-			payloads.push(frame);
-			packets.push(klv('060e2b34010201010d01030115011700', frame));
+			const payload = options.htj2k?.data ?? frame;
+			payloads.push(payload);
+			packets.push(klv(`060e2b34010201010d010301${videoTrackNumber.toString(16)}`, payload));
 		}
-		if (i >= 5) continue;
+		if (i >= 5 || options.videoOnly) continue;
 		const samples = i === 2 ? 800 : 801;
 		packets.push(klv(`060e2b34010201010d010301${audioTrackNumber.toString(16)}`,
 			new Uint8Array(samples * 3).fill(i)));
