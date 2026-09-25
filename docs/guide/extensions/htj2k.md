@@ -30,7 +30,7 @@ Remote inputs require `new UrlSource(url, { rangePolicy: { minimumRequestSize: 3
 
 This mode supports a narrower RPCL, one-layer, one-tile, reversible MCT subset. The extension validates packet headers and physical coverage of all required component precincts before constructing a private, complete derived decode input with empty high-resolution packets. It preserves original packet APIs and decoder configuration. It does not decode an arbitrary truncated prefix. See the package README for geometry, marker, resource, and finite-window bounds.
 
-Partial fetching uses a 640 KiB minimum refill size, capped by the remaining packet bytes. A larger parser request can require a larger refill within the resource limits. This reduces dependent reads for some codestreams but can transfer unnecessary bytes for smaller previews. Required coverage still determines when extraction can finish; the refill size is neither a fixed prefix length nor a playback-rate guarantee.
+Partial fetching scales the minimum refill with requested pixel area from 16 to 640 KiB, capped by the remaining packet bytes. Requests at least as large as 480×270 retain the 640 KiB refill. A larger parser request can require a larger refill within the resource limits. This heuristic reduces smaller-preview overfetch without limiting required coverage. The refill size is neither a fixed prefix length nor a playback-rate guarantee.
 
 The HTTP server must return 206 and expose Content-Range. The resource must remain immutable during use. No ETag validation or If-Match guarantee is provided, and finite requests do not impose a total byte budget.
 

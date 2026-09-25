@@ -33,7 +33,7 @@ type Segment = {
 type IndexReader = {
 	bytes(offset: number, size: number, prefetchEnd?: number, requireFiniteRange?: boolean,
 		signal?: AbortSignal): Promise<Uint8Array>;
-	klv(offset: number, signal?: AbortSignal): Promise<MxfKlv>;
+	klv(offset: number, signal?: AbortSignal, windowBytes?: number): Promise<MxfKlv>;
 	partition(klv: MxfKlv, offset: number, signal?: AbortSignal): Promise<MxfPartition>;
 	countedRegion(offset: number, size: number, kind: 'header' | 'index', signal?: AbortSignal): Promise<Region>;
 };
@@ -55,7 +55,7 @@ export class MxfIndex {
 		};
 		return {
 			bytes: (offset, size) => read(() => this.reader.bytes(offset, size, undefined, false, signal)),
-			klv: offset => read(() => this.reader.klv(offset, signal)),
+			klv: (offset, _, windowBytes) => read(() => this.reader.klv(offset, signal, windowBytes)),
 			partition: (klv, offset) => read(() => this.reader.partition(klv, offset, signal)),
 			countedRegion: (offset, size, kind) => read(() => this.reader.countedRegion(offset, size, kind, signal)),
 		};
@@ -377,7 +377,8 @@ export class MxfIndex {
 		}, signal);
 	}
 
-	async locate(index: number, track: IndexedTrack, temporal = false, signal?: AbortSignal): Promise<MxfKlv | null> {
+	async locate(index: number, track: IndexedTrack, temporal = false, signal?: AbortSignal,
+		prefetchBytes = 0): Promise<MxfKlv | null> {
 		const partitions = await this.getDirectory(signal);
 		let result: MxfKlv | null = null;
 		for (let i = partitions.length - 1; i >= 0; i--) {
@@ -388,7 +389,7 @@ export class MxfIndex {
 					|| (s.duration && index >= s.start + s.duration)) continue;
 				requireMxf(!s.duration || s.start + s.duration <= track.editUnitCount,
 					'index duration exceeds track metadata');
-				const location = await this.locateSegment(s, index, track, partitions, temporal, signal);
+				const location = await this.locateSegment(s, index, track, partitions, temporal, signal, prefetchBytes);
 				if (!location) return null;
 				requireMxf(!result || (result.offset === location.offset && result.size === location.size),
 					'conflicting repeated index entries');
@@ -400,7 +401,7 @@ export class MxfIndex {
 
 	private async locateSegment(
 		s: Segment, index: number, track: IndexedTrack, partitions: Partition[], temporal: boolean,
-		signal?: AbortSignal,
+		signal?: AbortSignal, prefetchBytes = 0,
 	) {
 		const reader = this.readerFor(signal);
 		if (!equalRationals(s.rate, track.rate) || s.positions) return null;
@@ -448,7 +449,15 @@ export class MxfIndex {
 			const physical = bodyStart + stream - body.bodyOffset;
 			requireMxf(Number.isSafeInteger(physical) && physical >= bodyStart && physical + 17 <= body.end,
 				'index offset outside body partition');
-			const klv = await reader.klv(physical);
+			// Only a single, unsliced element at the edit-unit start is an unambiguous prefix candidate.
+			// Missing next-entry bounds are safe only for the track's last edit unit.
+			const prefix = prefetchBytes > 25 && !temporal && !s.slices && s.deltas.length === 1
+				&& delta.delta === 0 && (streamEnd !== null || index + 1 === track.editUnitCount);
+			const windowBytes = prefix
+				? Math.min(prefetchBytes, this.size - physical, body.end - physical,
+						streamEnd === null ? Infinity : streamEnd - stream)
+				: undefined;
+			const klv = await reader.klv(physical, undefined, windowBytes);
 			requireMxf(klv.end <= body.end, 'indexed element exceeds partition');
 			requireMxf(!track.opAtom || klv.end === (streamEnd === null
 				? body.end
@@ -457,7 +466,9 @@ export class MxfIndex {
 			requireMxf(streamEnd === null || stream + klv.end - physical <= streamEnd,
 				'indexed element exceeds edit unit');
 			requireMxf(klv.key.startsWith('060e2b34'), 'index does not point to a KLV key');
-			if (klv.key === `060e2b34010201010d010301${track.trackNumber.toString(16).padStart(8, '0')}`) {
+			const expectedKey = `060e2b34010201010d010301${track.trackNumber.toString(16).padStart(8, '0')}`;
+			requireMxf(!prefix || klv.key === expectedKey, 'indexed prefix does not point to the expected essence key');
+			if (klv.key === expectedKey) {
 				return { ...klv, prefetchEnd: body.end };
 			}
 		}

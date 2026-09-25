@@ -70,13 +70,26 @@ import {
  * @public
  */
 export type PacketRetrievalOptions = {
-	/** @internal */
-	_signal?: AbortSignal;
+	/**
+	 * Cancels packet retrieval and rejects with the signal's reason. Cancellable demuxer reads, including indexed MXF
+	 * metadata lookups, detach this operation's source demands. Already-started or non-cancellable reads may finish
+	 * in the background. Aborting does not dispose the Input or cancel other consumers.
+	 */
+	signal?: AbortSignal;
 	/**
 	 * When set to `true`, only packet metadata (like timestamp) will be retrieved - the actual packet data will not
-	 * be loaded.
+	 * be returned. By default, packet data is not loaded either; `prefetchBytes` can opt into bounded cache warming.
 	 */
 	metadataOnly?: boolean;
+	/**
+	 * Best-effort cache hint for metadata-only retrieval. Caps the demuxer's requested container window, including
+	 * its header, not physical Source traffic: Source worker reuse or coalescing may read additional bytes.
+	 * Must be a safe integer from 0 through 65536. Zero disables extra prefetching; nonzero requires `metadataOnly`.
+	 * Supported indexed layouts may combine the header read with a bounded prefix read. Other layouts and already
+	 * cached packet locations may ignore the hint. This does not guarantee cached payload coverage, return packet
+	 * data, or permit a complete-packet fallback. Ordinary metadata reads can exceed hints smaller than their header.
+	 */
+	prefetchBytes?: number;
 
 	/**
 	 * When set to `true`, key packets will be verified upon retrieval by looking into the packet's bitstream.
@@ -107,6 +120,15 @@ const validatePacketRetrievalOptions = (options: PacketRetrievalOptions) => {
 	if (options.metadataOnly !== undefined && typeof options.metadataOnly !== 'boolean') {
 		throw new TypeError('options.metadataOnly, when defined, must be a boolean.');
 	}
+	if (options.prefetchBytes !== undefined) {
+		if (!Number.isSafeInteger(options.prefetchBytes)
+			|| options.prefetchBytes < 0 || options.prefetchBytes > 65536) {
+			throw new TypeError('options.prefetchBytes must be a safe integer from 0 through 65536.');
+		}
+		if (options.prefetchBytes && options.metadataOnly !== true) {
+			throw new TypeError('Nonzero options.prefetchBytes requires options.metadataOnly.');
+		}
+	}
 	if (options.verifyKeyPackets !== undefined && typeof options.verifyKeyPackets !== 'boolean') {
 		throw new TypeError('options.verifyKeyPackets, when defined, must be a boolean.');
 	}
@@ -116,6 +138,27 @@ const validatePacketRetrievalOptions = (options: PacketRetrievalOptions) => {
 	if (options.skipLiveWait !== undefined && typeof options.skipLiveWait !== 'boolean') {
 		throw new TypeError('options.skipLiveWait, when defined, must be a boolean.');
 	}
+	if (options.signal !== undefined && !(options.signal instanceof AbortSignal)) {
+		throw new TypeError('options.signal, when defined, must be an AbortSignal.');
+	}
+	options.signal?.throwIfAborted();
+};
+
+const abortableRead = <T>(read: Promise<T>, signal?: AbortSignal) => {
+	if (!signal) return read;
+	const { promise, resolve, reject } = promiseWithResolvers<T>();
+	const abort = () => reject(signal.reason);
+	if (signal.aborted) abort();
+	else signal.addEventListener('abort', abort, { once: true });
+	void read.then((packet) => {
+		signal.removeEventListener('abort', abort);
+		if (signal.aborted) reject(signal.reason);
+		else resolve(packet);
+	}, (error) => {
+		signal.removeEventListener('abort', abort);
+		reject(error);
+	});
+	return promise;
 };
 
 const validateTimestamp = (timestamp: number) => {
@@ -129,6 +172,7 @@ const maybeFixPacketType = (
 	promise: Promise<EncodedPacket | null>,
 	options: PacketRetrievalOptions,
 ) => {
+	promise = abortableRead(promise, options.signal);
 	if (options.verifyKeyPackets) {
 		return promise.then(async (packet) => {
 			if (!packet || packet.type === 'delta') {
@@ -136,6 +180,7 @@ const maybeFixPacketType = (
 			}
 
 			const determinedType = await track.determinePacketType(packet);
+			options.signal?.throwIfAborted();
 			if (determinedType) {
 				// @ts-expect-error Technically readonly
 				packet.type = determinedType;
@@ -164,6 +209,44 @@ export class EncodedPacketSink {
 		}
 
 		this._track = track;
+	}
+
+	/**
+	 * Warms the Input's source cache with the exact half-open packet-relative range [start, end).
+	 * Requires an original metadata-only packet from this track and a backing that supports finite packet reads.
+	 * Unsupported tracks reject; this never falls back to fetching a complete packet. Completion does not guarantee
+	 * permanent cache residency or that the range is sufficient for decoding. No bytes are returned or retained here.
+	 * Cancellation removes only this operation's demands; already-started physical reads may finish into cache.
+	 */
+	async prefetchPacketRange(
+		packet: EncodedPacket, start: number, end: number, options: {
+			/** Cancels this range demand and rejects with the signal's reason. */
+			signal?: AbortSignal;
+		} = {},
+	) {
+		validatePacketRetrievalOptions(options);
+		if (this._track.input._disposed) throw new InputDisposedError();
+		if (!(packet instanceof EncodedPacket) || !packet.isMetadataOnly) {
+			throw new TypeError('packet must be an original metadata-only packet from this track.');
+		}
+		if (!Number.isSafeInteger(packet.byteLength) || packet.byteLength < 0
+			|| !Number.isSafeInteger(start) || !Number.isSafeInteger(end)
+			|| start < 0 || end < start || end > packet.byteLength) {
+			throw new RangeError('Invalid packet-relative range.');
+		}
+		const backing = this._track._backing;
+		if (!backing.getVideoDecodePacketReader) {
+			throw new Error('This track does not support finite packet-range prefetching.');
+		}
+		await abortableRead((async () => {
+			const reader = await backing.getVideoDecodePacketReader!(packet, options.signal);
+			options.signal?.throwIfAborted();
+			if (this._track.input._disposed) throw new InputDisposedError();
+			if (reader.byteLength !== packet.byteLength || end > reader.byteLength) {
+				throw new RangeError('Packet size does not match its backing.');
+			}
+			if (start !== end) await reader.read(start, end);
+		})(), options.signal);
 	}
 
 	/**
@@ -253,16 +336,17 @@ export class EncodedPacketSink {
 		}
 
 		if (!options.verifyKeyPackets) {
-			return this._track._backing.getKeyPacket(timestamp, options);
+			return abortableRead(this._track._backing.getKeyPacket(timestamp, options), options.signal);
 		}
 
-		const packet = await this._track._backing.getKeyPacket(timestamp, options);
+		const packet = await abortableRead(this._track._backing.getKeyPacket(timestamp, options), options.signal);
 		if (!packet) {
 			return packet;
 		}
 		assert(packet.type === 'key');
 
 		const determinedType = await this._track.determinePacketType(packet);
+		options.signal?.throwIfAborted();
 		if (determinedType === 'delta') {
 			// Try returning the previous key packet (in hopes that it's actually a key packet)
 			return this.getKeyPacket(packet.timestamp - 1 / await this._track.getTimeResolution(), options);
@@ -288,16 +372,18 @@ export class EncodedPacketSink {
 		}
 
 		if (!options.verifyKeyPackets) {
-			return this._track._backing.getNextKeyPacket(packet, options);
+			return abortableRead(this._track._backing.getNextKeyPacket(packet, options), options.signal);
 		}
 
-		const nextPacket = await this._track._backing.getNextKeyPacket(packet, options);
+		const nextPacket = await abortableRead(
+			this._track._backing.getNextKeyPacket(packet, options), options.signal);
 		if (!nextPacket) {
 			return nextPacket;
 		}
 		assert(nextPacket.type === 'key');
 
 		const determinedType = await this._track.determinePacketType(nextPacket);
+		options.signal?.throwIfAborted();
 		if (determinedType === 'delta') {
 			// Try returning the next key packet (in hopes that it's actually a key packet)
 			return this.getNextKeyPacket(nextPacket, options);
@@ -388,6 +474,11 @@ export class EncodedPacketSink {
 		return {
 			async next() {
 				while (true) {
+					if (options.signal?.aborted) {
+						terminated = true;
+						onQueueDequeue();
+						throw options.signal.reason;
+					}
 					if (track.input._disposed) {
 						throw new InputDisposedError();
 					} else if (terminated) {
@@ -476,6 +567,7 @@ export abstract class BaseMediaSampleSink<
 	): AsyncGenerator<MediaSample, void, unknown> {
 		validateTimestamp(startTimestamp);
 		validateTimestamp(endTimestamp);
+		validatePacketRetrievalOptions(options);
 
 		const sampleQueue: MediaSample[] = [];
 		let firstSampleQueued = false;
@@ -496,7 +588,9 @@ export abstract class BaseMediaSampleSink<
 
 		const packetRetrievalOptions: PacketRetrievalOptions = {
 			...options,
-			_signal: navigation?.signal,
+			signal: navigation && options.signal
+				? AbortSignal.any([navigation.signal, options.signal])
+				: navigation?.signal ?? options.signal,
 			verifyKeyPackets: !this._metadataOnlyForDecode,
 			metadataOnly: this._metadataOnlyForDecode,
 		};
@@ -644,6 +738,12 @@ export abstract class BaseMediaSampleSink<
 		return {
 			async next() {
 				while (true) {
+					if (options.signal?.aborted) {
+						terminated = true;
+						ended = true;
+						closeSamples();
+						throw options.signal.reason;
+					}
 					if (track.input._disposed) {
 						// Once next() throws, the consumer will never call return(), so terminate the
 						// iteration here - otherwise, the pump keeps queueing decoded samples that
@@ -695,6 +795,7 @@ export abstract class BaseMediaSampleSink<
 		options: PacketRetrievalOptions,
 	): AsyncGenerator<MediaSample | null, void, unknown> {
 		validateAnyIterable(timestamps);
+		validatePacketRetrievalOptions(options);
 		const timestampIterator = toAsyncIterator(timestamps);
 		const timestampsOfInterest: number[] = [];
 
@@ -720,7 +821,9 @@ export abstract class BaseMediaSampleSink<
 
 		const retrievalOptions: PacketRetrievalOptions = {
 			...options,
-			_signal: navigation?.signal,
+			signal: navigation && options.signal
+				? AbortSignal.any([navigation.signal, options.signal])
+				: navigation?.signal ?? options.signal,
 			verifyKeyPackets: !this._metadataOnlyForDecode,
 			metadataOnly: this._metadataOnlyForDecode,
 		};
@@ -925,6 +1028,10 @@ export abstract class BaseMediaSampleSink<
 						terminated = true;
 						closeSamples();
 						throw new InputDisposedError();
+					} else if (options.signal?.aborted) {
+						terminated = true;
+						closeSamples();
+						throw options.signal.reason;
 					} else if (terminated) {
 						return { value: undefined, done: true };
 					} else if (hasOutOfBandError) {

@@ -71,6 +71,46 @@ describe('given original lossless RGB fixtures with varied RPCL geometry', () =>
 });
 
 describe('given retained RPCL source bytes', () => {
+	const smoothOracles = process.env['HTJ2K_SMOOTH_ORACLES'];
+	it.skipIf(!smoothOracles)('should match complete-input low-tier raw32 and public RGBA references', async () => {
+		const { frames } = JSON.parse(readFileSync(smoothOracles!, 'utf8')) as { frames: {
+			source: string; inputSha256: string; width: number; height: number; skip: number;
+			outputs: { rgb32le: { sha256: string }; rgba8: { sha256: string } };
+		}[]; };
+		registerHtj2kDecoder();
+		const hash = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
+		for (const frame of frames) {
+			const data = new Uint8Array(readFileSync(frame.source));
+			expect(hash(data)).toBe(frame.inputSha256);
+			const request = { width: frame.width, height: frame.height };
+			const result = await extractReduced({ byteLength: data.length,
+				read: async (start, end) => data.slice(start, end),
+			}, request, { width: 3840, height: 2160, bits: 16 });
+			await expect(extractReduced({ byteLength: data.length,
+				read: async (start, end) => data.subarray(start, Math.min(end, result.coverage.requiredEnd - 1)),
+			}, request, { width: 3840, height: 2160, bits: 16 })).rejects.toThrow('coverage');
+			const rows = await decode(result.data, frame.skip, frame.width, frame.height);
+			const interleaved = new Uint8Array(rows.length * 4);
+			const view = new DataView(interleaved.buffer);
+			for (let y = 0; y < frame.height; y++) {
+				for (let x = 0; x < frame.width; x++) {
+					for (let c = 0; c < 3; c++) {
+						view.setUint32(((y * frame.width + x) * 3 + c) * 4,
+							rows[(y * 3 + c) * frame.width + x]!, true);
+					}
+				}
+			}
+			expect(hash(interleaved)).toBe(frame.outputs.rgb32le.sha256);
+			using input = new Input({ formats: [MXF], source: new BufferSource(makeMxf({
+				htj2k: { data: result.data, bits: 16, width: 3840, height: 2160 }, videoOnly: true,
+			}).data) });
+			const track = (await input.getPrimaryVideoTrack())!;
+			using sample = (await new VideoSampleSink(track, { reducedResolution: request }).getSample(0))!;
+			const rgba = new Uint8Array(sample.allocationSize({ format: 'RGBA' }));
+			await sample.copyTo(rgba, { format: 'RGBA' });
+			expect(hash(rgba)).toBe(frame.outputs.rgba8.sha256);
+		}
+	}, 30000);
 	const evidence = process.env['HTJ2K_EVIDENCE'];
 	it.skipIf(!evidence)('should derive a covered reduced input without fetching high-resolution bodies', async () => {
 		const source = new Uint8Array(readFileSync(`${evidence}/firstframe.jph`));
@@ -120,6 +160,27 @@ describe('given an explicit reduced-resolution sink request', () => {
 	const makeInput = () => new Input({ formats: [MXF], source: new BufferSource(makeMxf({
 		htj2k: { data, bits: 16, width: 193, height: 131 }, videoOnly: true,
 	}).data) });
+	it('should avoid fetching the whole codestream for a small exact preview', async () => {
+		registerHtj2kDecoder();
+		const file = makeIndexedMxf({ htj2k: { data, bits: 16, width: 193, height: 131 } });
+		using input = new Input({ formats: [MXF], source: new CustomSource({
+			getSize: () => file.size, read: file.read, maxCacheSize: 0,
+		}) });
+		const track = (await input.getPrimaryVideoTrack())!;
+		await track.getDecoderConfig();
+		await new EncodedPacketSink(track).getPacket(0, { metadataOnly: true });
+		const before = file.reads.length;
+		using sample = (await new VideoSampleSink(track, {
+			reducedResolution: { width: 25, height: 17 },
+		}).getSample(0))!;
+		expect([sample.codedWidth, sample.codedHeight]).toEqual([25, 17]);
+		const transferred = file.reads.slice(before).reduce((sum, [start, end]) => sum + end - start, 0);
+		expect(transferred).toBeLessThanOrEqual(32 * 1024);
+		const rgba = new Uint8Array(sample.allocationSize({ format: 'RGBA' }));
+		await sample.copyTo(rgba, { format: 'RGBA' });
+		expect(createHash('sha256').update(rgba).digest('hex'))
+			.toBe('ffa7e1b5ccdafdf12b7852587144c776e8b1adc7b0f071492856458e89e90cb6');
+	});
 	it.each(['finish', 'return', 'error'] as const)(
 		'should bound overlapping range preparations, preserve order, and clean up on %s', async (mode) => {
 			registerHtj2kDecoder();
@@ -146,7 +207,7 @@ describe('given an explicit reduced-resolution sink request', () => {
 					const end = Number(match[2]) + 1;
 					reads++;
 					const frame = Math.floor((start - firstPayload) / file.stride);
-					if (hold && frame >= 0 && frame < 10 && end - start > 32768
+					if (hold && frame >= 0 && frame < 10 && end - start > 25
 						&& start < firstPayload + frame * file.stride + data.length) {
 						payloadFrames.add(frame);
 						payloads = payloadFrames.size;

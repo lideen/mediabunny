@@ -15,6 +15,8 @@ import { registerProresDecoder } from '@mediabunny/prores';
 import { registerHtj2kDecoder } from '@mediabunny/htj2k';
 
 import SampleFileUrl from '../../docs/assets/big-buck-bunny-trimmed.mp4';
+import { SmoothPlayback } from './smooth-playback.js';
+import { SMOOTH_FETCH_CONCURRENCY } from './metadata-lookahead.js';
 
 // Enable codecs that aren't natively supported by WebCodecs.
 registerAc3Decoder();
@@ -57,6 +59,7 @@ let fileLoaded = false;
 let activeInput: Input | null = null;
 let createVideoSink: (() => CanvasSink) | null = null;
 let audioSink: AudioBufferSink | null = null;
+let smooth: SmoothPlayback | null = null;
 
 let firstTimestamp = 0;
 let endTimestamp = 0;
@@ -91,6 +94,10 @@ const initMediaPlayer = async (resource: File | string) => {
 	pause();
 	const currentAsyncId = asyncId;
 	try {
+		const previousSmooth = smooth;
+		smooth = null;
+		await previousSmooth?.dispose();
+		if (currentAsyncId !== asyncId) return;
 		activeInput?.dispose();
 		activeInput = null;
 		void audioContext?.close().catch(console.error);
@@ -111,6 +118,11 @@ const initMediaPlayer = async (resource: File | string) => {
 		const minimumRequestSize = query.get('minimumRequestSize');
 		const decodeWidth = query.get('decodeWidth');
 		const decodeHeight = query.get('decodeHeight');
+		const smoothMode = query.get('smooth') === '1';
+		const parallelMetadata = smoothMode && minimumRequestSize === '32768';
+		if (smoothMode && (decodeWidth !== null || decodeHeight !== null)) {
+			throw new Error('smooth=1 cannot be combined with fixed decodeWidth/decodeHeight.');
+		}
 		const reducedResolution = decodeWidth !== null || decodeHeight !== null
 			? { width: Number(decodeWidth), height: Number(decodeHeight) }
 			: undefined;
@@ -118,12 +130,14 @@ const initMediaPlayer = async (resource: File | string) => {
 			|| !Number.isSafeInteger(reducedResolution.height) || reducedResolution.height <= 0)) {
 			throw new Error('decodeWidth and decodeHeight must both be positive integers.');
 		}
-		if (reducedResolution && typeof resource === 'string' && minimumRequestSize === null) {
+		if ((reducedResolution || smoothMode) && typeof resource === 'string' && minimumRequestSize === null) {
 			throw new Error('Remote reduced decoding requires minimumRequestSize for finite HTTP ranges.');
 		}
 		const input = new Input({
 			source: typeof resource === 'string'
 				? new UrlSource(resource, {
+					parallelism: parallelMetadata ? SMOOTH_FETCH_CONCURRENCY : undefined,
+					requestInit: parallelMetadata ? { cache: 'no-store' } : undefined,
 					rangePolicy: minimumRequestSize === null
 						? undefined
 						: { minimumRequestSize: Number(minimumRequestSize) },
@@ -135,6 +149,14 @@ const initMediaPlayer = async (resource: File | string) => {
 
 		let videoTrack = await input.getPrimaryVideoTrack();
 		let audioTrack = await input.getPrimaryAudioTrack();
+		if (smoothMode && (!videoTrack || await videoTrack.getCodec() !== 'htj2k'
+			|| (await input.getAudioTracks()).length > 0 || await videoTrack.isLive())) {
+			throw new Error('Smooth playback requires seekable HTJ2K video without audio tracks.');
+		}
+		if (smoothMode && videoTrack
+			&& await videoTrack.getCodedWidth() * 9 !== await videoTrack.getCodedHeight() * 16) {
+			throw new Error('The smooth playback example currently requires 16:9 coded video.');
+		}
 		if (currentAsyncId !== asyncId) {
 			return;
 		}
@@ -209,6 +231,26 @@ const initMediaPlayer = async (resource: File | string) => {
 		}
 		if (problemMessage) {
 			warningElement.textContent = problemMessage;
+		}
+		if (smoothMode && videoTrack) {
+			createVideoSink = null;
+			audioSink = null;
+			canvas.style.display = '';
+			canvas.width = displayWidth;
+			canvas.height = displayHeight;
+			volumeButton.style.display = 'none';
+			volumeBarContainer.style.display = 'none';
+			const controller = new SmoothPlayback(videoTrack, (sample) => {
+				context.clearRect(0, 0, canvas.width, canvas.height);
+				sample.drawWithFit(context, { fit: 'contain' });
+			}, (error) => { errorElement.textContent = String(error); });
+			smooth = controller;
+			await controller.seek(firstTimestamp);
+			if (currentAsyncId !== asyncId) return;
+			fileLoaded = true;
+			loadingElement.style.display = 'none';
+			playerContainer.style.display = '';
+			return;
 		}
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
@@ -365,6 +407,18 @@ const startVideoIterator = async (currentAsyncId: number) => {
 
 /** Runs every frame; updates the canvas if necessary. */
 const render = (requestFrame = true) => {
+	if (fileLoaded && smooth) {
+		if (requestFrame) smooth.tick(performance.now() / 1000);
+		playing = smooth.wantsPlay;
+		playIcon.style.display = playing ? 'none' : '';
+		pauseIcon.style.display = playing ? '' : 'none';
+		warningElement.textContent = `${smooth.refining ? 'Refining' : smooth.state} · ${smooth.resolution}`
+			+ ` · ${smooth.bufferedSeconds.toFixed(2)}s buffered · ${(smooth.ownedBytes / 1048576).toFixed(2)} MiB`
+			+ ` · ${(smooth.lateness * 1000).toFixed(0)}ms late`;
+		if (!draggingProgressBar) updateProgressBarTime(smooth.timestamp);
+		if (requestFrame) requestAnimationFrame(() => render());
+		return;
+	}
 	if (fileLoaded) {
 		const playbackTime = getPlaybackTime();
 		if (playing && playbackTime >= endTimestamp) {
@@ -484,6 +538,7 @@ const runAudioIterator = async (
 
 /** Returns the current playback time in the media file. */
 const getPlaybackTime = () => {
+	if (smooth) return smooth.timestamp;
 	if (playing) {
 		// To ensure perfect audio-video sync, we always use the audio context's clock to determine playback time, even
 		// when there is no audio track.
@@ -494,6 +549,22 @@ const getPlaybackTime = () => {
 };
 
 const play = async () => {
+	if (smooth && fileLoaded) {
+		const controller = smooth;
+		const currentAsyncId = asyncId;
+		try {
+			if (controller.state === 'ended') await controller.seek(firstTimestamp);
+			if (smooth !== controller || currentAsyncId !== asyncId || !fileLoaded
+				|| controller.state === 'error' || controller.state === 'ended') return;
+			controller.play();
+			playing = controller.wantsPlay;
+		} catch (error) {
+			if (smooth === controller && currentAsyncId === asyncId) {
+				errorElement.textContent = String(error);
+			}
+		}
+		return;
+	}
 	if (!fileLoaded || playing) {
 		return;
 	}
@@ -528,6 +599,12 @@ const play = async () => {
 };
 
 const pause = () => {
+	if (smooth) {
+		smooth.pause();
+		playing = false;
+		asyncId++;
+		return;
+	}
 	playbackTimeAtStart = getPlaybackTime();
 	playing = false;
 	asyncId++;
@@ -566,6 +643,15 @@ const togglePlay = () => {
 };
 
 const seekToTime = async (seconds: number) => {
+	if (smooth) {
+		const controller = smooth;
+		try {
+			await controller.seek(seconds, controller.wantsPlay);
+		} catch (error) {
+			if (smooth === controller) errorElement.textContent = String(error);
+		}
+		return;
+	}
 	updateProgressBarTime(seconds);
 
 	const wasPlaying = playing;
@@ -676,7 +762,7 @@ volumeBarContainer.addEventListener('pointermove', (event) => {
 /** === CONTROL UI LOGIC === */
 
 const showControlsTemporarily = () => {
-	if (!createVideoSink) {
+	if (!createVideoSink && !smooth) {
 		// Shouldn't run if there's only an audio track
 		return;
 	}
@@ -709,7 +795,7 @@ playerContainer.addEventListener('pointermove', (event) => {
 	}
 });
 playerContainer.addEventListener('pointerleave', (event) => {
-	if (!createVideoSink) {
+	if (!createVideoSink && !smooth) {
 		// Shouldn't run if there's only an audio track
 		return;
 	}

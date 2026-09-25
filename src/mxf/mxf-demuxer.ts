@@ -101,9 +101,10 @@ export class MxfDemuxer extends Demuxer {
 		return slice.bytes.subarray(offset - slice.offset, offset - slice.offset + size);
 	}
 
-	async klv(offset: number, signal?: AbortSignal): Promise<Klv> {
+	async klv(offset: number, signal?: AbortSignal, windowBytes?: number): Promise<Klv> {
 		const header = await this.bytes(
-			offset, Math.min(25, this.input._reader.fileSize! - offset), undefined, false, signal,
+			offset, Math.min(windowBytes ?? 25, this.input._reader.fileSize! - offset), undefined,
+			windowBytes !== undefined, signal,
 		);
 		requireMxf(header.length >= 17, 'truncated KLV header');
 		const first = header[16]!;
@@ -392,12 +393,12 @@ export class MxfDemuxer extends Demuxer {
 		}
 	}
 
-	async indexedPacket(index: number, info: TrackInfo, temporal = false, signal?: AbortSignal) {
+	async indexedPacket(index: number, info: TrackInfo, temporal = false, signal?: AbortSignal, prefetchBytes = 0) {
 		signal?.throwIfAborted();
 		await this.readMetadata();
 		signal?.throwIfAborted();
 		this.checkDisposed();
-		return info.indexSid ? this.index!.locate(index, info, temporal, signal) : null;
+		return info.indexSid ? this.index!.locate(index, info, temporal, signal, prefetchBytes) : null;
 	}
 
 	async resolvePresentation(presentation: number, info: TrackInfo) {
@@ -465,7 +466,7 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 	async packet(index: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null> {
 		if (index < 0) return null;
 		if (index >= this.info.editUnitCount && this.indexedEnd) return null;
-		const packet = await this.location(index, options._signal);
+		const packet = await this.location(index, options.signal, options.prefetchBytes);
 		this.demuxer.checkDisposed();
 		if (!packet) return null;
 		const data = options.metadataOnly ? PLACEHOLDER_DATA : await this.readPacket(packet);
@@ -476,12 +477,14 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 		return result;
 	}
 
-	private async indexed(index: number, signal?: AbortSignal): Promise<PacketLocation | null> {
+	private async indexed(index: number, signal?: AbortSignal, prefetchBytes = 0): Promise<PacketLocation | null> {
 		signal?.throwIfAborted();
 		if (this.canUseIndex() && index < this.info.editUnitCount) {
 			let pending = this.indexedPackets.get(index);
 			if (!pending) {
-				const lookup = this.demuxer.indexedPacket(index, this.info, this.getCodec() === 'avc', signal);
+				const lookup = this.demuxer.indexedPacket(
+					index, this.info, this.getCodec() === 'avc', signal, prefetchBytes,
+				);
 				pending = lookup.then(async (klv) => {
 					signal?.throwIfAborted();
 					if (!klv) return null;
@@ -514,10 +517,10 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 		return null;
 	}
 
-	async location(index: number, signal?: AbortSignal): Promise<PacketLocation | null> {
+	async location(index: number, signal?: AbortSignal, prefetchBytes = 0): Promise<PacketLocation | null> {
 		signal?.throwIfAborted();
 		if (this.getCodec() === 'avc' && index >= this.info.editUnitCount) return null;
-		const location = await this.indexed(index, signal);
+		const location = await this.indexed(index, signal, prefetchBytes);
 		if (location) return location;
 		requireMxf(this.getCodec() !== 'avc',
 			'AVC requires a supported temporal index; scanning cannot recover timing');
@@ -537,12 +540,12 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 			if (this.getCodec() === 'avc') {
 				return this.packet(await this.demuxer.resolvePresentation(index, this.info), options);
 			}
-			if (await this.indexed(index, options._signal)) return this.packet(index, options);
+			if (await this.indexed(index, options.signal, options.prefetchBytes)) return this.packet(index, options);
 		}
 		await this.demuxer.scanUntil(() => {
 			const last = this.info.packets.at(-1);
 			return !!last && last.timestamp > timestamp;
-		}, options._signal);
+		}, options.signal);
 		let low = 0;
 		let high = this.info.packets.length;
 		while (low < high) {

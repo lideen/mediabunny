@@ -25,20 +25,21 @@ export const makeIndexedMxf = (options: {
 	avcMissingParametersAt?: number;
 	avcChangedParametersAt?: number;
 	editRate?: [number, number];
+	videoOnly?: boolean;
 } = {}) => {
 	const item = (tag: number, value: Uint8Array) => join(integer(tag, 2),
 		options.ber ? join(integer(0x83, 1), integer(value.length, 3)) : integer(value.length, 2), value);
 	const count = 10000;
 	const frameSize = options.htj2k?.data.length ?? options.frameSize ?? 1024 * 1024;
 	const pcmSize = 5760;
-	const system = klv('060e2b34020501010d01030104010100', new Uint8Array(12));
+	const system = options.videoOnly ? new Uint8Array(0) : klv('060e2b34020501010d01030104010100', new Uint8Array(12));
 	const pictureOffset = system.length;
 	const audioOffset = pictureOffset + 20 + frameSize;
-	const stride = audioOffset + 2 * (20 + pcmSize);
+	const stride = options.videoOnly ? audioOffset : audioOffset + 2 * (20 + pcmSize);
 	const metadataCount = count - (options.extraEssence ? 1 : 0);
 	const rate: [number, number] = options.editRate ?? [25, 1];
 	const base = makeMxf({ metadataDuration: metadataCount, editRate: rate, indexSid: 2,
-		audioLocked: !options.unlockedAudio, avc: options.avc, htj2k: options.htj2k });
+		audioLocked: !options.unlockedAudio, avc: options.avc, htj2k: options.htj2k, videoOnly: options.videoOnly });
 	const header = base.data.slice(0, base.firstPayloadOffset - 20 - 140);
 	const partition = (kind: number, offset: number, previous: number, footer: number,
 		bodyOffset: number, bodySid: number, indexSize = 0) => klv(
@@ -71,7 +72,8 @@ export const makeIndexedMxf = (options: {
 					? Uint8Array.of([0, 1, 1, 254][i % 4]!, (256 - i % 4) % 256,
 							[0xc4, 0x26, 0x37, 0x33][i % 4]!)
 					: hex('000080');
-				entries.push(join(timing, integer(streamOffset(i), 8), integer(audioOffset, 4)));
+				entries.push(join(timing, integer(streamOffset(i), 8),
+					...(options.videoOnly ? [] : [integer(audioOffset, 4)])));
 			}
 		}
 		segments.push(klv(options.ber ? '060e2b34021301010d01020101100100' : '060e2b34025301010d01020101100100', join(
@@ -80,13 +82,17 @@ export const makeIndexedMxf = (options: {
 			item(0x3f0c, integer(start, 8)), item(0x3f0d, integer(Math.min(length, metadataCount - start), 8)),
 			item(0x3f05, integer(options.cbe ? stride + (start === 0 ? firstExtra : 0) : 0, 4)),
 			item(0x3f06, integer(2, 4)), item(0x3f07, integer(1, 4)),
-			item(0x3f08, integer(options.cbe ? 0 : 1, 1)), item(0x3f0e, integer(0, 1)),
-			item(0x3f09, join(integer(4, 4), integer(6, 4),
-				integer(0, 6), join(hex(options.avc ? 'ff00' : '0000'), integer(pictureOffset, 4)),
-				join(integer(0, 1), integer(options.cbe ? 0 : 1, 1), integer(options.cbe ? audioOffset : 0, 4)),
-				join(integer(0, 1), integer(options.cbe ? 0 : 1, 1),
-					integer((options.cbe ? audioOffset : 0) + 20 + pcmSize, 4)))),
-			...(options.cbe ? [] : [item(0x3f0a, join(integer(length, 4), integer(15, 4), ...entries))]),
+			item(0x3f08, integer(options.cbe || options.videoOnly ? 0 : 1, 1)), item(0x3f0e, integer(0, 1)),
+			item(0x3f09, options.videoOnly
+				? join(integer(1, 4), integer(6, 4), hex(options.avc ? 'ff00' : '0000'), integer(0, 4))
+				: join(integer(4, 4), integer(6, 4),
+						integer(0, 6), join(hex(options.avc ? 'ff00' : '0000'), integer(pictureOffset, 4)),
+						join(integer(0, 1), integer(options.cbe ? 0 : 1, 1), integer(options.cbe ? audioOffset : 0, 4)),
+						join(integer(0, 1), integer(options.cbe ? 0 : 1, 1),
+							integer((options.cbe ? audioOffset : 0) + 20 + pcmSize, 4)))),
+			...(options.cbe
+				? []
+				: [item(0x3f0a, join(integer(length, 4), integer(options.videoOnly ? 11 : 15, 4), ...entries))]),
 		)));
 	}
 	const index = join(...segments);
@@ -157,7 +163,7 @@ export const makeIndexedMxf = (options: {
 					}
 					frame[frame.length - 1] = (starts[p]! + i) % 256;
 					copy(offset + pictureOffset + 20, options.htj2k?.data ?? frame);
-					for (let a = 0; a < 2; a++) {
+					for (let a = 0; a < (options.videoOnly ? 0 : 2); a++) {
 						const shorter = options.unlockedAudio && starts[p] === 0 && i === 0 && a === 0;
 						copy(offset + audioOffset + a * (20 + pcmSize),
 							join(hex(`060e2b34010201010d0103011602030${a}83`),

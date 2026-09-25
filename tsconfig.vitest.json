@@ -16,7 +16,7 @@
 			"@mediabunny/server": ["./packages/server/src/index.ts"],
 		},
 	},
-	"include": ["vitest.config.ts", "./test/**/*"],
+	"include": ["vitest.config.ts", "./test/**/*", "./examples/media-player/smooth-playback.ts", "./examples/media-player/metadata-lookahead.ts"],
 	"exclude": ["./test/public/**/*"],
 	"references": [
 		{ "path": "./src" },

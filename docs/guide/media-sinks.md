@@ -208,6 +208,49 @@ packet.data; // => Uint8Array([])
 ```
 Retrieving metadata-only packets is more efficient for some input formats: Only the metadata section of the file must be read, not the media data section.
 
+#### Canceling packet retrieval
+
+Pass an `AbortSignal` in the retrieval options to cancel an unwanted request:
+
+```ts
+const controller = new AbortController();
+const pending = sink.getPacket(5, { metadataOnly: true, signal: controller.signal });
+controller.abort(new Error('Seek replaced'));
+// Await or catch pending: it rejects with controller.signal.reason.
+```
+
+An already-aborted signal rejects before reading a packet. Aborting an indexed MXF metadata lookup removes that operation's source demands without disposing the Input or canceling other readers. Completed shared metadata remains reusable. Already-started physical reads and reads in demuxers without cancellation support may finish in the background; cancellation is not a traffic refund or an interruption of synchronous decoding. Omitting `signal` preserves normal packet retrieval.
+
+#### Prefetching a bounded packet range
+
+For metadata-only retrieval, `prefetchBytes` can hint a bounded container-header/prefix read into the same Source
+cache: `sink.getPacket(5, { metadataOnly: true, prefetchBytes: 65536, signal })`. It must be a safe integer from
+0 through 65536; nonzero requires `metadataOnly: true`. Zero requests no extra prefetch. The hint caps the
+demuxer's requested container window, including the header. Ordinary header reads can exceed smaller hints.
+Source worker reuse/coalescing may read additional physical bytes, so this is not a traffic or total-memory cap.
+Unambiguous indexed MXF layouts can honor it; unsupported layouts and cached locations may ignore it. Returned
+metadata packets still contain no data. No full-packet fallback is added, and decoding still validates required coverage.
+
+`EncodedPacketSink.prefetchPacketRange(packet, start, end, { signal })` warms the same Input's Source cache with
+the half-open packet-relative range `[start, end)`. It returns `Promise<void>`, not bytes or a partial packet.
+
+```ts
+const packet = await sink.getPacket(5, { metadataOnly: true });
+if (packet) {
+	await sink.prefetchPacketRange(packet, 0, Math.min(65536, packet.byteLength), { signal });
+}
+```
+
+Only original metadata-only packets from the same track/Input are accepted, including packets retrieved by another
+sink on that track. Cloned, constructed and foreign packets reject. Bounds must be safe integers within the
+authoritative packet size. Empty ranges still validate ownership, capability, cancellation and Input lifetime.
+
+This requires a backing with finite packet reads, currently HTJ2K in MXF. Unsupported tracks reject without a
+complete-packet fallback. Reads retain finite-range and cancellation guarantees. Aborting removes only this demand;
+shared readers and cached data remain usable, and already-started physical traffic may finish. Completion does not
+promise permanent cache residency or sufficient data for decoding. Callers must bound their lookahead and bytes.
+The operation discards its temporary stable reader copy; Source cache and transient copies remain separate allocations.
+
 ## Video data sinks
 
 These sinks can only be used with an `InputVideoTrack`.
