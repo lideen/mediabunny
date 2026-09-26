@@ -21,7 +21,9 @@ Registration is explicit and idempotent. Neither core nor `@mediabunny/server` r
 
 ## Supported input and ownership
 
-The verified MXF subset is progressive MPEG-2 Main Profile / High Level, 8-bit 4:2:0 in indexed OP1a frame wrapping, with complete in-band sequence, extension and closed-GOP headers on every restart key. It uses the core's MPEGVideoDescriptor and index validation. This is not Sony D-10 support. Interlaced frames, 4:2:2, field pictures, repeated-field cadence, scalable coding, other profiles/levels and incomplete headers are not part of this MXF integration.
+The MXF subset is progressive MPEG-2 Main Profile / High or High-1440 Level, 8-bit 4:2:0 in indexed OP1a frame wrapping. Restart keys carry complete in-band sequence, extension, GOP and I-picture headers. Closed GOPs may contain I/P/B pictures. Open-flag GOPs require a bounded per-restart proof of unreordered I/P-only index entries and actual picture headers through the next key or track end (at most 128 pictures). Open GOPs containing B pictures remain unsupported. The generic packet classifier conservatively returns `null` for open-flag I pictures; only the MXF reader has the interval evidence to expose those keys.
+
+Stored macroblock padding may exceed visible dimensions, with zero sampled/display offsets and matching sampled/display rectangles. Decoder configuration and owned planes use the visible sequence dimensions, not padded descriptor dimensions; no additional crop is applied. This is not Sony D-10 or LXF support. Interlaced frames, 4:2:2, field pictures, repeated-field cadence, scalable coding, other profiles/levels and incomplete headers are not part of this MXF integration.
 
 The adapter outputs planar I420 `VideoSample`s. Native `takeY`, `takeCb`, and `takeCr` transfer independent JS plane copies; the adapter combines them using the reported strides, creates an owned sample and frees each Rust frame in `finally`. Held samples survive later decode, flush, close, and input disposal. Color metadata is forwarded from decoder configuration without filling in unspecified primaries or transfer. The authored fixture specifies limited-range BT.709 matrix only.
 

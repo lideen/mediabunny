@@ -10,7 +10,7 @@ registerMpeg2Decoder();
 
 Use `formats: [MXF]` when creating the input. Registration does not add MXF to `ALL_FORMATS`, enable encoding or muxing, or install a server/native fallback.
 
-This integration supports the [narrow progressive Main Profile / High Level 4:2:0 MXF subset](../supported-formats-and-codecs#input-formats) and produces owned I420 samples. Restart keys must contain their sequence and closed-GOP headers. D-10, 4:2:2 and interlaced MXF are unsupported. Plane data, packet timestamps and durations remain independent of native reset and disposal. Unspecified color primaries and transfer remain unspecified.
+This integration supports the [narrow progressive Main Profile / High and High-1440 Level 4:2:0 MXF subset](../supported-formats-and-codecs#input-formats) and produces owned I420 samples at visible sequence dimensions. Restart keys contain their sequence and GOP headers. Open-flag GOPs require the MXF reader's bounded index-and-picture-header proof of an unreordered I/P-only interval; open GOPs with B pictures remain unsupported. Stored macroblock padding is not exposed as extra decoded pixels. D-10, LXF, 4:2:2 and interlaced MXF are unsupported. Plane data, packet timestamps and durations remain independent of native reset and disposal. Unspecified color primaries and transfer remain unspecified.
 
 The WASM bytes are bundled locally and compiled on first use without fetching another resource. Each decoder limits complete packets and padded frames to 8 MiB, with bounded native references and no 64-frame lifetime cap. Flush finishes a requested selection and resets for the next independent key; it does not claim complete-stream integrity when a selection omits trailing B pictures.
 

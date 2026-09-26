@@ -282,7 +282,6 @@ describe('given progressive Main Profile / High Level MPEG-2 in an unmodified OP
 			['picture coding', '060e2b34040101030401020201030300', '060e2b34040101030401020201020300'],
 			['frame wrapping', '060e2b34040101020d01030102046001', '060e2b34040101020d01030102046101'],
 			['interlaced', '320c000100', '320c000101'],
-			['closed GOP metadata', '8004000101', '8004000100'],
 			['8-bit 4:2:0', '3308000400000002', '3308000400000001'],
 			['temporal index', '3f06000400000002', '3f06000400000000'],
 		] as const)('should reject %s at the metadata boundary', async (error, before, after) => {
@@ -303,7 +302,7 @@ describe('given progressive Main Profile / High Level MPEG-2 in an unmodified OP
 
 		it.each([
 			['sequence/GOP', 0, 0xb2],
-			['closed GOP', 41, 0],
+			['I/P-only GOP', 41, 0],
 			['cropping', 5, 1],
 			['progressive', 17, 0x40],
 			['picture type', 47, 0x27],

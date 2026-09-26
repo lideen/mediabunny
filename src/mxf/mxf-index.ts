@@ -118,10 +118,12 @@ export class MxfIndex {
 			for (const s of await this.segments(p, signal)) {
 				if (s.bodySid !== track.bodySid || s.start >= end || s.start + s.duration <= start) continue;
 				requireMxf(equalRationals(s.rate, track.rate) && !s.positions && !s.byteCount
-					&& s.deltas.some(delta => delta.position === 255)
+					&& s.deltas.some(delta => delta.position === 255 || (track.mpeg2 && delta.position === 0))
 					&& s.start + s.duration <= track.editUnitCount, `unsupported ${codec} temporal index`);
 				for (let i = Math.max(start, s.start); i < Math.min(end, s.start + s.duration); i++) {
 					const entry = await this.entry(s, i, signal);
+					requireMxf(s.deltas.some(delta => delta.position === 255) || entry[0] === 0,
+						'MPEG-2 non-reordered index has a temporal offset');
 					requireMxf(!(entry[2]! & 0x08), `${codec} temporal offset overflow is unsupported`);
 					const previous = entries.get(i);
 					requireMxf(!previous || hex(previous) === hex(entry), 'conflicting repeated index entries');
@@ -133,6 +135,21 @@ export class MxfIndex {
 			requireMxf(entries.has(i), `missing ${codec} temporal index entry`);
 		}
 		return entries;
+	}
+
+	async mpeg2IpGopEnd(key: number, track: IndexedTrack, signal?: AbortSignal) {
+		// Signed key distances admit at most 128 pictures. Include the next entry to prove the boundary.
+		const end = Math.min(track.editUnitCount, key + 129);
+		const entries = await this.temporalEntries(key, end, track, signal);
+		for (let i = key; i < end; i++) {
+			const entry = entries.get(i)!;
+			if (i > key && entry[2] === 0xc0 && entry[0] === 0 && entry[1] === 0) return i;
+			requireMxf(i - key < 128 && entry[0] === 0 && (entry[1]! << 24 >> 24) === key - i
+				&& entry[2] === (i === key ? 0xc0 : 0x22),
+			'MPEG-2 open-flag restart requires a bounded unreordered I/P-only GOP');
+		}
+		requireMxf(end === track.editUnitCount, 'MPEG-2 I/P GOP boundary exceeds bounded lookahead');
+		return end;
 	}
 
 	async resolvePresentation(presentation: number, track: IndexedTrack, signal?: AbortSignal) {
@@ -456,7 +473,9 @@ export class MxfIndex {
 		requireMxf(streamEnd === null || (Number.isSafeInteger(streamEnd) && streamEnd > streamOffset),
 			'nonmonotonic index stream offsets');
 		for (const delta of s.deltas) {
-			if (delta.position !== (temporal ? 255 : 0)) continue;
+			if (delta.position !== (temporal ? 255 : 0)
+				&& !(temporal && track.mpeg2 && delta.position === 0 && entry?.[0] === 0
+					&& !s.deltas.some(element => element.position === 255))) continue;
 			const slice = delta.slice
 				? uint(entry!.subarray(11 + (delta.slice - 1) * 4, 15 + (delta.slice - 1) * 4), 4)
 				: 0;

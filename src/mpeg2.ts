@@ -32,6 +32,8 @@ export const parseMpeg2Headers = (data: Uint8Array) => {
 	let sequenceExtension = false;
 	let displayExtension = false;
 	let gop = false;
+	let closedGop = false;
+	let profileAndLevel = 0;
 	let pictureType = 0;
 	let temporalReference = 0;
 	let pictureExtension = false;
@@ -43,9 +45,9 @@ export const parseMpeg2Headers = (data: Uint8Array) => {
 		const code = data[offset + 3]!;
 		if (code >= 1 && code <= 0xaf) {
 			requireMpeg2(pictureType && pictureExtension, 'MPEG-2 requires complete picture headers');
-			requireMpeg2(!sequence || (sequenceExtension && gop), 'MPEG-2 requires sequence extension and closed GOP');
+			requireMpeg2(!sequence || (sequenceExtension && gop), 'MPEG-2 requires sequence extension and GOP');
 			return { width, height, frameRate, aspect, sequence, pictureType, temporalReference, colorSpace,
-				sliceOffset: offset };
+				closedGop, profileAndLevel, sliceOffset: offset };
 		}
 		let end = offset + 4;
 		while (end + 3 <= data.length
@@ -84,7 +86,8 @@ export const parseMpeg2Headers = (data: Uint8Array) => {
 			read(12);
 			requireMpeg2(read(1) === 1, 'invalid MPEG-2 GOP marker');
 			read(12);
-			requireMpeg2(read(1) === 1 && read(1) === 0, 'MPEG-2 requires a closed GOP without broken link');
+			closedGop = read(1) === 1;
+			requireMpeg2(read(1) === 0, 'MPEG-2 broken link is unsupported');
 			gop = true;
 		} else if (code === 0) {
 			requireMpeg2(!pictureType && (!sequence || gop), 'MPEG-2 requires one picture after sequence/GOP headers');
@@ -108,8 +111,9 @@ export const parseMpeg2Headers = (data: Uint8Array) => {
 			if (extension === 1) {
 				requireMpeg2(sequence && !sequenceExtension && !gop && !pictureType,
 					'misplaced MPEG-2 sequence extension');
-				requireMpeg2(read(8) === 0x44 && read(1) === 1 && read(2) === 1,
-					'MPEG-2 requires progressive Main Profile / High Level 4:2:0');
+				profileAndLevel = read(8);
+				requireMpeg2([0x44, 0x46].includes(profileAndLevel) && read(1) === 1 && read(2) === 1,
+					'MPEG-2 requires progressive Main Profile / High or High-1440 Level 4:2:0');
 				width += read(2) * 4096;
 				height += read(2) * 4096;
 				read(12);

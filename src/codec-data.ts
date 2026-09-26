@@ -2629,7 +2629,7 @@ export const determineVideoPacketType = (
 				if (header.pictureType !== 1) {
 					return 'delta';
 				}
-				return header.sequence && header.temporalReference === 0 ? 'key' : null;
+				return header.sequence && header.closedGop && header.temporalReference === 0 ? 'key' : null;
 			} catch (error) {
 				if (error instanceof Mpeg2HeaderError) {
 					return null;
