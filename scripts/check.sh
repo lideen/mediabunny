@@ -25,6 +25,9 @@ tsc -p packages/prores
 rm -rf packages/htj2k/dist/modules
 tsc -p packages/htj2k
 
+rm -rf packages/mpeg2/dist/modules
+tsc -p packages/mpeg2
+
 rm -rf packages/server/dist/modules
 tsc -p packages/server
 

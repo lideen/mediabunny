@@ -1,0 +1,18 @@
+{
+  "name": "@mediabunny/mpeg2",
+  "type": "module",
+  "version": "1.59.1",
+  "private": true,
+  "license": "UNLICENSED",
+  "description": "Private progressive MPEG-2 packet decoder extension for Mediabunny.",
+  "main": "./dist/bundles/mediabunny-mpeg2.mjs",
+  "module": "./dist/bundles/mediabunny-mpeg2.mjs",
+  "types": "./dist/modules/src/index.d.ts",
+  "exports": {
+    "types": "./dist/modules/src/index.d.ts",
+    "import": "./dist/bundles/mediabunny-mpeg2.mjs",
+    "require": "./dist/bundles/mediabunny-mpeg2.mjs"
+  },
+  "sideEffects": false,
+  "peerDependencies": { "mediabunny": "^1.59.1" }
+}

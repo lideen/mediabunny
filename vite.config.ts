@@ -20,6 +20,7 @@ const rollupInput = Object.fromEntries(
 export default defineConfig({
 	resolve: {
 		alias: {
+			'@mediabunny/mpeg2': path.resolve(__dirname, './packages/mpeg2/dist/bundles/mediabunny-mpeg2.mjs'),
 			'@mediabunny/htj2k': path.resolve(__dirname, './packages/htj2k/dist/bundles/mediabunny-htj2k.mjs'),
 			'mediabunny': path.resolve(__dirname, './dist/bundles/mediabunny.mjs'),
 			'@mediabunny/ac3':

@@ -296,6 +296,32 @@ const htj2kVariants = await createVariants(
 	},
 );
 
+const mpeg2Notice = `/* Private local integration. NOT FOR PUBLIC DISTRIBUTION.
+ * MPEG-2 Rust/WASM and generated vendor files have no selected project license.
+ * MPL-2.0 applies only to the Mediabunny adapter source. See packages/mpeg2/vendor/PROVENANCE.json.
+ * WASM SHA-256: 85cdf25a0ea5a94ffb28dee6930972f8a4424dca8e63ade45a91d0678a752a2f
+ */`;
+const mpeg2Variants = await createVariants(
+	'packages/mpeg2/src/index.ts',
+	'MediabunnyMpeg2',
+	'packages/mpeg2/dist/bundles/mediabunny-mpeg2',
+	'js',
+	{
+		loader: { '.wasm': 'binary' },
+		define: { 'import.meta.url': '""' },
+		banner: { js: mpeg2Notice },
+		legalComments: 'inline',
+		plugins: [PluginExternalGlobal.externalGlobalPlugin({ mediabunny: 'Mediabunny' })],
+	},
+	{
+		loader: { '.wasm': 'binary' },
+		external: ['mediabunny'],
+		platform: 'neutral',
+		banner: { js: mpeg2Notice },
+		legalComments: 'inline',
+	},
+);
+
 const serverVariants = await createVariants(
 	'packages/server/src/index.ts',
 	'MediabunnyServer',
@@ -322,6 +348,7 @@ const contexts = [
 	...flacEncoderVariants,
 	...proresVariants,
 	...htj2kVariants,
+	...mpeg2Variants,
 	...serverVariants,
 ];
 

@@ -29,5 +29,6 @@
     "@mediabunny/aac-encoder": "Polyfills AAC encoder support to Mediabunny.",
     "@mediabunny/flac-encoder": "Adds FLAC encoder support to Mediabunny.",
     "@mediabunny/prores": "Adds Apple ProRes decoder support to Mediabunny.",
-    "@mediabunny/htj2k": "Adds complete-frame HTJ2K RGB decoder support to Mediabunny."
+    "@mediabunny/htj2k": "Adds complete-frame HTJ2K RGB decoder support to Mediabunny.",
+    "@mediabunny/mpeg2": "Private local progressive MPEG-2 decoder integration. Not for public distribution."
 }

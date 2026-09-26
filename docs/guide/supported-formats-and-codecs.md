@@ -61,7 +61,7 @@ AVC tests always run against synthetic index/Annex B fixtures, including cross-s
 
 OPAtom tests always exercise synthetic public-API fixtures, including 24 and 24000/1001 rates, IDR-only key lookup, corrupt indexes, parameter changes, packet ownership, EOF, and bounded HTTP reads. Set `MXF_OPATOM_FIXTURE` to the untouched `h264_vid.mxf` and `MXF_OPATOM_FRACTIONAL_FIXTURE` to the untouched `dcinema-h264.mxf` to enable all-240-packet comparisons against FFmpeg decoded-frame PTS and packet hashes. These opt-in tests require `ffprobe` on PATH and check the original files' SHA-256 hashes. No downloaded media is included or repaired.
 
-MPEG-2 tests use the committed, authored 18-frame MXF and independent ffprobe packet manifest under `test/fixtures/mpeg2/`. Its unmodified index exercises two closed GOPs with B-frame reordering and interleaved PCM. The tests compare every complete payload hash, packet timing, key lookup, bounded metadata reads, cancellation, and unsupported-input errors. Regenerate with `python3 test/node/generate-mxf-mpeg2.py <new-directory>`. This verifies demuxing, not browser playback.
+MPEG-2 tests use the committed, authored 18-frame MXF and independent ffprobe packet manifest under `test/fixtures/mpeg2/`. Its unmodified index exercises two closed GOPs with B-frame reordering and interleaved PCM. The tests compare every complete payload hash, packet timing, key lookup, bounded metadata reads, cancellation, and unsupported-input errors. Regenerate with `python3 test/node/generate-mxf-mpeg2.py <new-directory>`. The optional [private MPEG-2 extension](./extensions/mpeg2) adds real WASM decoding with independent FAANI plane hashes, sample timing, selection flush/reset and owned-sample lifetime tests. It is not authorized for public distribution. Node plane equality does not prove browser playback or canvas color conversion.
 
 ## Codecs
 
@@ -84,7 +84,7 @@ Mediabunny ships with built-in decoders and encoders for all audio PCM codecs, m
 - `'av1'` - AOMedia Video 1 (AV1)
 - `'prores'` - Apple ProRes [^prores]
 - `'htj2k'` - High-throughput JPEG 2000, decode-only via the optional [HTJ2K extension](./extensions/htj2k)
-- `'mpeg2'` - MPEG-2 video, custom-decoder-only input; no encoder or output-container support
+- `'mpeg2'` - MPEG-2 video, custom-decoder-only input via the [private MPEG-2 extension](./extensions/mpeg2); no encoder or output-container support
 
 ### Audio codecs
 

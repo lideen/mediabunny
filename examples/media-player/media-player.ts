@@ -13,6 +13,7 @@ import { registerAc3Decoder } from '@mediabunny/ac3';
 import { registerDtsDecoder } from '@mediabunny/dts';
 import { registerProresDecoder } from '@mediabunny/prores';
 import { registerHtj2kDecoder } from '@mediabunny/htj2k';
+import { registerMpeg2Decoder } from '@mediabunny/mpeg2';
 
 import SampleFileUrl from '../../docs/assets/big-buck-bunny-trimmed.mp4';
 import { SmoothPlayback } from './smooth-playback.js';
@@ -23,6 +24,7 @@ registerAc3Decoder();
 registerDtsDecoder();
 registerProresDecoder();
 registerHtj2kDecoder();
+registerMpeg2Decoder();
 
 (document.querySelector('#sample-file-download') as HTMLAnchorElement).href = SampleFileUrl;
 

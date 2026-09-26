@@ -52,6 +52,8 @@ export default tseslint.config(
 			'packages/prores/dist',
 			'packages/htj2k/dist',
 			'packages/htj2k/vendor',
+			'packages/mpeg2/dist',
+			'packages/mpeg2/vendor',
 			'packages/server/dist',
 			'eslint.config.mjs',
 			'docs/.vitepress/cache',
