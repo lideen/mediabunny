@@ -5,6 +5,7 @@ import {
 	CanvasSink,
 	Input,
 	MXF,
+	LXF,
 	UrlSource,
 	WrappedAudioBuffer,
 	WrappedCanvas,
@@ -75,6 +76,8 @@ let playbackTimeAtStart = 0;
 let videoFrameIterator: AsyncGenerator<WrappedCanvas, void, unknown> | null = null;
 let audioBufferIterator: AsyncGenerator<WrappedAudioBuffer, void, unknown> | null = null;
 let nextFrame: WrappedCanvas | null = null;
+let videoEnded = true;
+let videoEndTimeout = -1;
 const queuedAudioNodes: Set<AudioBufferSourceNode> = new Set();
 
 /**
@@ -145,7 +148,7 @@ const initMediaPlayer = async (resource: File | string) => {
 						: { minimumRequestSize: Number(minimumRequestSize) },
 				})
 				: new BlobSource(resource),
-			formats: [...ALL_FORMATS, MXF],
+			formats: [...ALL_FORMATS, MXF, LXF],
 		});
 		activeInput = input;
 
@@ -343,6 +346,10 @@ const initMediaPlayer = async (resource: File | string) => {
 						if (activeInput !== input) {
 							return;
 						}
+						if (duration > endTimestamp) {
+							clearTimeout(videoEndTimeout);
+							videoEndTimeout = -1;
+						}
 						endTimestamp = duration;
 						durationElement.textContent = formatTimestamp(endTimestamp);
 						if (stillLive.every(live => !live)) {
@@ -400,10 +407,14 @@ const startVideoIterator = async (currentAsyncId: number) => {
 	}
 	if (firstFrame) {
 		drawFrame(firstFrame);
+	} else {
+		videoEnded = true;
+		return;
 	}
 	const secondFrame = (await iterator.next()).value;
 	if (currentAsyncId === asyncId && playing) {
 		nextFrame = secondFrame ?? null;
+		videoEnded = !secondFrame;
 	}
 };
 
@@ -424,9 +435,22 @@ const render = (requestFrame = true) => {
 	if (fileLoaded) {
 		const playbackTime = getPlaybackTime();
 		if (playing && playbackTime >= endTimestamp) {
-			// Pause playback once the end is reached
-			pause();
-			playbackTimeAtStart = endTimestamp;
+			// Clock end is not decode EOF. Keep this generation alive to present its remaining video frames.
+			if (videoEnded && !nextFrame) {
+				pause();
+			} else if (videoEndTimeout === -1) {
+				const currentAsyncId = asyncId;
+				const endpoint = endTimestamp;
+				const timeout = window.setTimeout(() => {
+					if (currentAsyncId !== asyncId || videoEndTimeout !== timeout) return;
+					videoEndTimeout = -1;
+					if (!playing || endTimestamp !== endpoint || getPlaybackTime() < endTimestamp
+						|| (videoEnded && !nextFrame)) return;
+					const error = new Error('Video did not finish within 10 seconds of playback end.');
+					reportPlaybackError(error, currentAsyncId);
+				}, 10000);
+				videoEndTimeout = timeout;
+			}
 		}
 
 		// Check if the current playback time has caught up to the next frame
@@ -464,11 +488,11 @@ const updateNextFrame = async () => {
 	// We have a loop here because we may need to iterate over multiple frames until we reach a frame in the future
 	while (currentAsyncId === asyncId && playing) {
 		const newNextFrame = (await iterator.next()).value ?? null;
-		if (!newNextFrame) {
+		if (currentAsyncId !== asyncId || !playing) {
 			break;
 		}
-
-		if (currentAsyncId !== asyncId || !playing) {
+		if (!newNextFrame) {
+			videoEnded = true;
 			break;
 		}
 
@@ -544,7 +568,7 @@ const getPlaybackTime = () => {
 	if (playing) {
 		// To ensure perfect audio-video sync, we always use the audio context's clock to determine playback time, even
 		// when there is no audio track.
-		return audioContext!.currentTime - audioContextStartTime! + playbackTimeAtStart;
+		return Math.min(endTimestamp, audioContext!.currentTime - audioContextStartTime! + playbackTimeAtStart);
 	} else {
 		return playbackTimeAtStart;
 	}
@@ -571,6 +595,7 @@ const play = async () => {
 		return;
 	}
 	const currentAsyncId = ++asyncId;
+	videoEnded = !createVideoSink;
 	if (getPlaybackTime() === endTimestamp) {
 		// If we're at the end, let's snap back to the start
 		playbackTimeAtStart = firstTimestamp;
@@ -601,6 +626,8 @@ const play = async () => {
 };
 
 const pause = () => {
+	clearTimeout(videoEndTimeout);
+	videoEndTimeout = -1;
 	if (smooth) {
 		smooth.pause();
 		playing = false;

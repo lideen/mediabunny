@@ -1,6 +1,6 @@
 # Media-player example
 
-Build with `npm run build`, start `npm run dev`, and open `/examples/media-player/`. The player accepts local files and remote URLs, including experimental MXF input. Optional decoders are registered in `media-player.ts`.
+Build with `npm run build`, start `npm run dev`, and open `/examples/media-player/`. The player accepts local files and remote URLs, including opt-in experimental MXF and narrow version-1 LXF input. Optional decoders are registered in `media-player.ts`. LXF PCM retains channel ordinals without a 7.1 assignment; interlaced MPEG-2 remains woven, not deinterlaced. Generated examples containing the private MPEG-2 extension must not be published.
 
 ## Finite HTTP ranges
 

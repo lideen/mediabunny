@@ -4,6 +4,7 @@
 		"moduleResolution": "nodenext",
 		"module": "NodeNext",
 		"composite": true,
+		"types": ["node", "vite/client"],
 		"noEmit": false,
 		"paths": {
 			//"mediabunny": ["./src/index.ts"], So that the direct source imports are preferred
@@ -17,7 +18,7 @@
 			"@mediabunny/server": ["./packages/server/src/index.ts"],
 		},
 	},
-	"include": ["vitest.config.ts", "./test/**/*", "./examples/media-player/smooth-playback.ts", "./examples/media-player/metadata-lookahead.ts"],
+	"include": ["vitest.config.ts", "./test/**/*", "./examples/media-player/media-player.ts", "./examples/media-player/smooth-playback.ts", "./examples/media-player/metadata-lookahead.ts"],
 	"exclude": ["./test/public/**/*"],
 	"references": [
 		{ "path": "./src" },

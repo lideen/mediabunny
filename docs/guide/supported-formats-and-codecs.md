@@ -67,6 +67,18 @@ OPAtom tests always exercise synthetic public-API fixtures, including 24 and 240
 
 MPEG-2 tests use the committed, authored 18-frame MXF and independent ffprobe packet manifest under `test/fixtures/mpeg2/`. Its unmodified index exercises two closed GOPs with B-frame reordering and interleaved PCM. The tests compare every complete payload hash, packet timing, key lookup, bounded metadata reads, cancellation, and unsupported-input errors. Regenerate with `python3 test/node/generate-mxf-mpeg2.py <new-directory>`. The optional [private MPEG-2 extension](./extensions/mpeg2) adds real WASM decoding with independent FAANI plane hashes, sample timing, selection flush/reset and owned-sample lifetime tests. It is not authorized for public distribution. Node plane equality does not prove browser playback or canvas color conversion.
 
+### Experimental LXF input
+
+Only single-segment files are supported. A type-2 segment header is admitted only at byte zero. An observed later segment boundary rejects; the reader does not merge segment metadata or normalize another timeline. Bounded discovery does not establish that every unvisited byte is free of additional segments.
+
+Use `formats: [LXF]` explicitly. `LxfInputFormat` recognizes `LEITCH\0\0` independently of the filename; LXF is not MXF and neither format is added to `ALL_FORMATS`. The local media-player example opts into both. There is no LXF muxer or encoder.
+
+The initial subset requires a known finite size, checksummed version-1 headers of 72–256 bytes, one 25 fps closed all-I MPEG-2 4:2:2/profile-82 stream with N=1/M=1, and one 48 kHz packed PCM24 stream with 1–8 contiguous channel ordinals. Separate field pictures, repeated fields, reordered video, version 0, sparse masks, 20-bit packing, multiple stream IDs and midstream format changes are unsupported. Woven I422 samples preserve native field-order metadata without deinterlacing. Decoding requires the optional [private MPEG-2 extension](./extensions/mpeg2), which remains unlicensed for distribution.
+
+Version-1 timestamps use 720,000 ticks per second. The reader preserves the common origin and separate track endpoints, including a shorter audio tail. Public PCM packets are an owned lossless permutation from wire channel planes to interleaved signed-24 triplets. Channels are not labeled as 7.1, downmixed or removed when silent. FFprobe's synthetic LXF DTS is not the wire-timestamp oracle.
+
+Random access uses sparse timestamp anchors and checksummed successor boundaries, not a full-file index. Tail discovery is limited to one 1 MiB window. Each seek permits at most twelve 1 MiB search windows and 12 MiB of uncached navigation requests, including successor headers; packets are limited to 2 MiB. Missing coverage, timestamp gaps or exhausted budgets reject rather than return a future frame or scan from zero. These limits can reject otherwise valid LXF layouts. They are not general LXF conformance or arbitrary-duration seek guarantees. See `src/lxf/README.md` for provenance, tests and exact scope. Browser playback acceptance is separate from Node verification.
+
 ## Codecs
 
 Mediabunny supports a wide range of video, audio, and subtitle codecs. More specifically, it supports all codecs specified by the WebCodecs API and a few additional PCM codecs out of the box.
