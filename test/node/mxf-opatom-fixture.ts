@@ -17,7 +17,7 @@ const item = (tag: number, data: Uint8Array) => join(integer(tag, 2), integer(da
 export const makeOpAtomMxf = (options: {
 	rate?: [number, number]; audio?: boolean; externalPackage?: boolean; op1a?: boolean;
 	changedParameters?: boolean; frameSize?: number; standard?: boolean;
-	splitIndex?: boolean; missingNextEntry?: boolean;
+	splitIndex?: boolean | number; missingNextEntry?: boolean; indexPadding?: number;
 } = {}) => {
 	const rate = options.rate ?? [24, 1];
 	const base = makeMxf({ avc: true, videoOnly: !options.audio, opAtom: !options.op1a,
@@ -51,13 +51,17 @@ export const makeOpAtomMxf = (options: {
 		entries.push(join(timing, integer(offset, 8)));
 		offset += packet.length;
 	}
-	const ranges = options.splitIndex ? [[0, 6], [options.missingNextEntry ? 7 : 6, 12]] as const : [[0, 12]] as const;
+	const split = typeof options.splitIndex === 'number' ? options.splitIndex : 6;
+	const ranges = options.splitIndex
+		? [[0, split], [options.missingNextEntry ? split + 1 : split, 12]] as const
+		: [[0, 12]] as const;
 	const segments = ranges.map(([start, end]) => klv('060e2b34025301010d01020101100100', join(
 		item(0x3c0a, integer(100 + start, 16)), item(0x3f0b, join(integer(rate[0], 4), integer(rate[1], 4))),
 		item(0x3f0c, integer(start, 8)), item(0x3f0d, integer(end - start, 8)), item(0x3f05, integer(0, 4)),
 		item(0x3f06, integer(2, 4)), item(0x3f07, integer(1, 4)),
 		item(0x3f08, integer(0, 1)), item(0x3f0e, integer(0, 1)),
 		item(0x3f09, join(integer(1, 4), integer(6, 4), hex('ff0000000000'))),
+		...(options.indexPadding ? [item(0x8000, new Uint8Array(options.indexPadding))] : []),
 		item(0x3f0a, join(integer(end - start, 4), integer(11, 4), ...entries.slice(start, end))),
 	)));
 	const index = join(...segments);

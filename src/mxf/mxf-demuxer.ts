@@ -26,6 +26,7 @@ import {
 	batch, equalRationals, hex, MetadataSet, P, parseSet, position, property, rational, requireMxf, uint,
 } from './mxf-metadata';
 import { FILL_KEYS, INDEX_KEYS, MxfIndex, MxfKlv as Klv, PARTITION_PREFIX } from './mxf-index';
+import { MPEG2_HEADER_LIMIT, parseMpeg2Headers } from '../mpeg2';
 
 const PRIMER = '060e2b34020501010d01020101050100';
 const SET_PREFIX = '060e2b34025301010d0101010101';
@@ -33,6 +34,7 @@ const ESSENCE_PREFIX = '060e2b34010201010d010301';
 // SMPTE RDD 44 frame-wrapped ProRes mapping.
 const PRORES_CONTAINER = '060e2b340401010d0d010301021c0100';
 const HTJ2K_CONTAINER = '060e2b340401010d0d010301020c0600';
+const MPEG2_CONTAINER = '060e2b34040101020d01030102046001';
 const AVC_CONTAINER = '060e2b340401010a0d01030102106001';
 const LEGACY_AVC_CONTAINER = '060e2b34040101020d01030102106001';
 // ST 382 AES/BWF carries packed little-endian samples, not ST 331 AES3 subframes.
@@ -49,6 +51,8 @@ const avcParameterSets = (record: AvcDecoderConfigurationRecord) => [
 type PacketLocation = {
 	offset: number; size: number; timestamp: number; duration: number; isKey?: boolean; prefetchEnd?: number;
 	requiresParameters?: boolean;
+	pictureType?: number;
+	key?: number;
 };
 type TrackInfo = {
 	id: number;
@@ -63,6 +67,7 @@ type TrackInfo = {
 	packets: PacketLocation[];
 	sampleCount: number;
 	legacyAvc: boolean;
+	mpeg2: boolean;
 	opAtom: boolean;
 };
 
@@ -319,6 +324,7 @@ export class MxfDemuxer extends Demuxer {
 				editUnitCount: duration,
 				descriptor: linked[0]!, packets: [], sampleCount: 0,
 				legacyAvc: false,
+				mpeg2: false,
 				opAtom: this.opAtom,
 			};
 			this.tracks.push(definition === PICTURE
@@ -401,18 +407,18 @@ export class MxfDemuxer extends Demuxer {
 		return info.indexSid ? this.index!.locate(index, info, temporal, signal, prefetchBytes) : null;
 	}
 
-	async resolvePresentation(presentation: number, info: TrackInfo) {
+	async resolvePresentation(presentation: number, info: TrackInfo, signal?: AbortSignal) {
 		await this.readMetadata();
 		this.checkDisposed();
-		const result = await this.index!.resolvePresentation(presentation, info);
+		const result = await this.index!.resolvePresentation(presentation, info, signal);
 		this.checkDisposed();
 		return result;
 	}
 
-	async resolveDecode(decode: number, info: TrackInfo) {
+	async resolveDecode(decode: number, info: TrackInfo, signal?: AbortSignal) {
 		await this.readMetadata();
 		this.checkDisposed();
-		const result = await this.index!.resolveDecode(decode, info);
+		const result = await this.index!.resolveDecode(decode, info, signal);
 		this.checkDisposed();
 		return result;
 	}
@@ -438,11 +444,17 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 
 	constructor(public demuxer: MxfDemuxer, public info: TrackInfo) {}
 	abstract getType(): 'video' | 'audio';
-	abstract getCodec(): 'prores' | 'avc' | 'htj2k' | AudioCodec;
+	abstract getCodec(): 'prores' | 'avc' | 'htj2k' | 'mpeg2' | AudioCodec;
 	abstract getDecoderConfig(): Promise<VideoDecoderConfig | AudioDecoderConfig>;
 	abstract append(klv: Klv): void;
 	abstract indexedLocation(klv: Klv, index: number): PacketLocation;
 	canUseIndex() { return this.info.indexSid !== 0; }
+	protected hasTemporalIndex() { return this.getCodec() === 'avc' || this.info.mpeg2; }
+	protected async validateIndexedPacket(location: PacketLocation, signal?: AbortSignal) {
+		signal?.throwIfAborted();
+		return location;
+	}
+
 	abstract getInternalCodecId(): Uint8Array | null;
 	getId() { return this.info.id; }
 	getNumber() { return this.info.number; }
@@ -458,9 +470,9 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 	async getDurationFromMetadata() { return this.info.duration; }
 	async getLiveRefreshInterval() { return null; }
 	getHasOnlyKeyPackets() { return true; }
-	protected readPacket(packet: PacketLocation) {
+	protected readPacket(packet: PacketLocation, signal?: AbortSignal) {
 		// Only payload reads allow source-managed read-ahead, capped at the containing body partition.
-		return this.demuxer.bytes(packet.offset, packet.size, packet.prefetchEnd);
+		return this.demuxer.bytes(packet.offset, packet.size, packet.prefetchEnd, false, signal);
 	}
 
 	async packet(index: number, options: PacketRetrievalOptions): Promise<EncodedPacket | null> {
@@ -469,7 +481,7 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 		const packet = await this.location(index, options.signal, options.prefetchBytes);
 		this.demuxer.checkDisposed();
 		if (!packet) return null;
-		const data = options.metadataOnly ? PLACEHOLDER_DATA : await this.readPacket(packet);
+		const data = options.metadataOnly ? PLACEHOLDER_DATA : await this.readPacket(packet, options.signal);
 		const result = new EncodedPacket(data, packet.isKey === false ? 'delta' : 'key',
 			packet.timestamp, packet.duration, index, packet.size);
 		this.demuxer.checkDisposed();
@@ -483,22 +495,25 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 			let pending = this.indexedPackets.get(index);
 			if (!pending) {
 				const lookup = this.demuxer.indexedPacket(
-					index, this.info, this.getCodec() === 'avc', signal, prefetchBytes,
+					index, this.info, this.hasTemporalIndex(), signal, prefetchBytes,
 				);
 				pending = lookup.then(async (klv) => {
 					signal?.throwIfAborted();
 					if (!klv) return null;
 					const location = this.indexedLocation(klv, index);
 					location.prefetchEnd = klv.prefetchEnd;
-					if (this.getCodec() === 'avc') {
-						const timing = await this.demuxer.resolveDecode(index, this.info);
+					if (this.hasTemporalIndex()) {
+						const timing = await this.demuxer.resolveDecode(index, this.info, signal);
 						const { numerator, denominator } = this.info.rate;
 						location.timestamp = timing.presentation * denominator / numerator;
 						location.isKey = timing.isKey;
 						location.requiresParameters = timing.requiresParameters;
+						location.pictureType = timing.pictureType;
+						location.key = timing.key;
 					}
+					const validated = await this.validateIndexedPacket(location, signal);
 					if (index === this.info.editUnitCount - 1) this.indexedEnd = true;
-					return location;
+					return validated;
 				});
 				// Bound sparse random-access state independently of the sequential scan's exact packet list.
 				if (this.indexedPackets.size >= 256) {
@@ -519,11 +534,11 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 
 	async location(index: number, signal?: AbortSignal, prefetchBytes = 0): Promise<PacketLocation | null> {
 		signal?.throwIfAborted();
-		if (this.getCodec() === 'avc' && index >= this.info.editUnitCount) return null;
+		if (this.hasTemporalIndex() && index >= this.info.editUnitCount) return null;
 		const location = await this.indexed(index, signal, prefetchBytes);
 		if (location) return location;
-		requireMxf(this.getCodec() !== 'avc',
-			'AVC requires a supported temporal index; scanning cannot recover timing');
+		requireMxf(!this.hasTemporalIndex(),
+			'AVC/MPEG-2 requires a supported temporal index; scanning cannot recover timing');
 		await this.demuxer.scanUntil(() => this.info.packets.length > index, signal);
 		return this.info.packets[index] ?? null;
 	}
@@ -531,14 +546,14 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 	getFirstPacket(options: PacketRetrievalOptions) { return this.packet(0, options); }
 	async getPacket(timestamp: number, options: PacketRetrievalOptions) {
 		if (timestamp < 0) return null;
-		if (this.getCodec() === 'avc' && this.info.editUnitCount === 0) return null;
+		if (this.hasTemporalIndex() && this.info.editUnitCount === 0) return null;
 		if (this.canUseIndex() && this.info.editUnitCount > 0) {
 			const { numerator, denominator } = this.info.rate;
 			let index = Math.min(this.info.editUnitCount - 1, Math.floor(timestamp * numerator / denominator));
 			if (index * denominator / numerator > timestamp) index--;
 			if (index + 1 < this.info.editUnitCount && (index + 1) * denominator / numerator <= timestamp) index++;
-			if (this.getCodec() === 'avc') {
-				return this.packet(await this.demuxer.resolvePresentation(index, this.info), options);
+			if (this.hasTemporalIndex()) {
+				return this.packet(await this.demuxer.resolvePresentation(index, this.info, options.signal), options);
 			}
 			if (await this.indexed(index, options.signal, options.prefetchBytes)) return this.packet(index, options);
 		}
@@ -619,9 +634,12 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 			&& hex(d.properties.get(P.codec) ?? new Uint8Array()) === '060e2b340401010a0401020201322001';
 		this.avc = container === AVC_CONTAINER || info.legacyAvc;
 		this.htj2k = container === HTJ2K_CONTAINER;
+		info.mpeg2 = container === MPEG2_CONTAINER;
 		requireMxf(this.avc
 			? [0x28, 0x51].includes(d.kind)
-			: this.htj2k ? d.kind === 0x29 : d.kind === 0x28 && container === PRORES_CONTAINER,
+			: info.mpeg2
+				? d.kind === 0x51
+				: this.htj2k ? d.kind === 0x29 : d.kind === 0x28 && container === PRORES_CONTAINER,
 		'unsupported picture descriptor or frame wrapping');
 		const profile = Number.parseInt(coding.slice(28, 30), 16);
 		if (this.avc) {
@@ -630,6 +648,17 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 			'unsupported AVC picture coding');
 			requireMxf(info.indexSid !== 0, 'AVC requires a temporal index');
 			this.codec = 'avc';
+		} else if (info.mpeg2) {
+			requireMxf(coding === '060e2b34040101030401020201030300'
+				&& uint(property(d, P.profileAndLevel), 1) === 0x44,
+			'MPEG-2 requires Main Profile / High Level picture coding');
+			requireMxf(uint(property(d, P.componentDepth), 4) === 8
+				&& uint(property(d, P.horizontalSubsampling), 4) === 2
+				&& uint(property(d, P.verticalSubsampling), 4) === 2,
+			'MPEG-2 requires 8-bit 4:2:0');
+			requireMxf(uint(property(d, P.closedGop), 1) === 1, 'MPEG-2 requires closed GOP metadata');
+			requireMxf(info.indexSid !== 0, 'MPEG-2 requires a temporal index');
+			this.codec = 'mpeg2';
 		} else if (this.htj2k) {
 			requireMxf(coding === '060e2b340401010d0401020203010801', 'unsupported HTJ2K picture coding');
 			const layout = property(d, P.pixelLayout, 16);
@@ -652,7 +681,7 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 		requireMxf(equalRationals(rate, info.rate), 'picture rate mismatch');
 		const number = info.trackNumber;
 		requireMxf((number >>> 24) === 0x15
-			&& ((number >>> 8) & 255) === (this.avc ? 0x05 : this.htj2k ? 0x08 : 0x17),
+			&& ((number >>> 8) & 255) === (this.avc || info.mpeg2 ? 0x05 : this.htj2k ? 0x08 : 0x17),
 		'unsupported picture essence key');
 		this.width = uint(property(d, P.width), 4);
 		this.height = uint(property(d, P.height), 4);
@@ -677,8 +706,13 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 	}
 
 	getType() { return 'video' as const; }
-	getCodec() { return this.avc ? 'avc' as const : this.htj2k ? 'htj2k' as const : 'prores' as const; }
-	override getHasOnlyKeyPackets() { return !this.avc; }
+	getCodec() {
+		return this.info.mpeg2
+			? 'mpeg2' as const
+			: this.avc ? 'avc' as const : this.htj2k ? 'htj2k' as const : 'prores' as const;
+	}
+
+	override getHasOnlyKeyPackets() { return !this.hasTemporalIndex(); }
 	getInternalCodecId() { return property(this.info.descriptor, P.pictureCoding).slice(); }
 	getCodedWidth() { return this.width; }
 	getCodedHeight() { return this.height; }
@@ -697,8 +731,47 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 			timestamp: index * this.info.rate.denominator / this.info.rate.numerator, duration };
 	}
 
-	protected override async readPacket(packet: PacketLocation) {
-		const data = await super.readPacket(packet);
+	private async mpeg2Header(packet: PacketLocation, signal?: AbortSignal) {
+		const bytes = await this.demuxer.bytes(packet.offset, Math.min(packet.size, MPEG2_HEADER_LIMIT),
+			undefined, false, signal);
+		const header = parseMpeg2Headers(bytes);
+		requireMxf(header.pictureType === packet.pictureType, 'MPEG-2 index picture flags disagree with essence');
+		requireMxf(header.sequence === packet.isKey, 'MPEG-2 key requires in-band sequence/GOP headers and I picture');
+		const { numerator, denominator } = this.info.rate;
+		requireMxf(header.temporalReference === Math.round(packet.timestamp * numerator / denominator) - packet.key!,
+			'MPEG-2 temporal reference disagrees with index');
+		if (header.sequence) {
+			requireMxf(header.width === this.width && header.height === this.height
+				&& Math.abs(header.frameRate - numerator / denominator) < 1e-9,
+			'MPEG-2 sequence geometry or rate disagrees with descriptor');
+			const squareWidth = header.aspect === 1
+				? this.width
+				: this.height * [0, 0, 4 / 3, 16 / 9, 2.21][header.aspect]!;
+			requireMxf(Math.abs(squareWidth - this.squareWidth) < 1e-9,
+				'MPEG-2 sequence aspect disagrees with descriptor');
+		}
+		return header;
+	}
+
+	protected override async validateIndexedPacket(location: PacketLocation, signal?: AbortSignal) {
+		if (this.info.mpeg2) {
+			await this.mpeg2Header(location, signal);
+		}
+		return location;
+	}
+
+	protected override async readPacket(packet: PacketLocation, signal?: AbortSignal) {
+		const data = await super.readPacket(packet, signal);
+		if (this.info.mpeg2) {
+			const header = parseMpeg2Headers(data);
+			for (let i = header.sliceOffset; i + 4 <= data.length; i++) {
+				if (data[i] === 0 && data[i + 1] === 0 && data[i + 2] === 1) {
+					const code = data[i + 3]!;
+					requireMxf((code >= 1 && code <= 0xaf) || (code === 0xb7 && i + 4 === data.length),
+						'MPEG-2 requires one complete frame-wrapped picture');
+				}
+			}
+		}
 		if (this.info.legacyAvc && !packet.isKey) {
 			const types = [...iterateNalUnitsInAnnexB(data)].map(nal => extractNalUnitTypeForAvc(data[nal.offset]!));
 			if (packet.requiresParameters || types.includes(7) || types.includes(8)) {
@@ -721,6 +794,13 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 	}
 
 	getColorSpace(): Promise<VideoColorSpaceInit> {
+		if (this.info.mpeg2) {
+			return this.headerPromise ??= (async () => {
+				const first = await this.location(0);
+				requireMxf(first?.isKey, 'MPEG-2 must start with a closed GOP key');
+				return (await this.mpeg2Header(first)).colorSpace;
+			})();
+		}
 		if (this.htj2k) {
 			return Promise.resolve({ primaries: 'bt709', transfer: 'bt709', matrix: 'rgb', fullRange: true });
 		}
@@ -782,14 +862,14 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 	}
 
 	override async getKeyPacket(timestamp: number, options: PacketRetrievalOptions) {
-		if (!this.avc) return super.getKeyPacket(timestamp, options);
-		let packet = await this.getPacket(timestamp, { metadataOnly: true });
+		if (!this.hasTemporalIndex()) return super.getKeyPacket(timestamp, options);
+		let packet = await this.getPacket(timestamp, { ...options, metadataOnly: true });
 		while (packet) {
-			const timing = await this.demuxer.resolveDecode(packet.sequenceNumber, this.info);
+			const timing = await this.demuxer.resolveDecode(packet.sequenceNumber, this.info, options.signal);
 			const key = await this.packet(timing.key, options);
 			if (!key || key.timestamp <= timestamp) return key;
 			if (timing.key === 0) return null;
-			packet = await this.packet(timing.key - 1, { metadataOnly: true });
+			packet = await this.packet(timing.key - 1, { ...options, metadataOnly: true });
 		}
 		return null;
 	}
@@ -797,12 +877,12 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 	override async getNextKeyPacket(
 		packet: EncodedPacket, options: PacketRetrievalOptions,
 	): Promise<EncodedPacket | null> {
-		if (!this.avc) return super.getNextKeyPacket(packet, options);
+		if (!this.hasTemporalIndex()) return super.getNextKeyPacket(packet, options);
 		const index = this.packetIndices.get(packet);
 		if (index === undefined) throw new Error('Packet does not belong to this track.');
 		if (this.info.legacyAvc) return null;
 		for (let i = index + 1; i < this.info.editUnitCount; i++) {
-			const timing = await this.demuxer.resolveDecode(i, this.info);
+			const timing = await this.demuxer.resolveDecode(i, this.info, options.signal);
 			if (timing.isKey) return this.packet(i, options);
 		}
 		return null;

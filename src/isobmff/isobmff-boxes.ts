@@ -1892,6 +1892,7 @@ const videoCodecToBoxName = (codec: VideoCodec, fullCodecString: string) => {
 		case 'av1': return 'av01';
 		case 'prores': return fullCodecString;
 		case 'htj2k': throw new Error('HTJ2K muxing is not supported.');
+		case 'mpeg2': throw new Error('MPEG-2 muxing is not supported.');
 	}
 };
 
@@ -1906,6 +1907,7 @@ const VIDEO_CODEC_TO_CONFIGURATION_BOX: Record<
 	av1: av1C,
 	prores: null,
 	htj2k: null,
+	mpeg2: null,
 };
 
 const audioCodecToBoxName = (codec: AudioCodec, fullCodecString: string, isQuickTime: boolean): string => {

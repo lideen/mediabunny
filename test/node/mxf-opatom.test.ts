@@ -12,6 +12,70 @@ import { assert } from '../../src/misc.js';
 
 describe('given a single-file Doremi-layout OPAtom AVC stream', () => {
 	describe('when adjacent index segments share a body partition without terminal sentinel entries', () => {
+		it('should cancel the next-segment boundary read without continuing unowned navigation', async () => {
+			// Keep the next segment's entries outside structural prefetch so the boundary lookup owns the read.
+			const fixture = makeOpAtomMxf({ standard: true, splitIndex: 1, indexPadding: 8192 });
+			const nextEntries = fixture.data.length - 11 * 11;
+			let entered!: () => void;
+			let release!: () => void;
+			const blocked = new Promise<void>((resolve) => {
+				entered = resolve;
+			});
+			const gate = new Promise<void>((resolve) => {
+				release = resolve;
+			});
+			let bodyHandled!: () => void;
+			const handled = new Promise<void>((resolve) => {
+				bodyHandled = resolve;
+			});
+			let bodyPulls = 0;
+			let pause = true;
+			let requests = 0;
+			using input = new Input({ source: new UrlSource('https://fixture.invalid/split.mxf', {
+				rangePolicy: { minimumRequestSize: 1 }, maxCacheSize: 0, getRetryDelay: () => null,
+				fetchFn: async (_, init) => {
+					const match = /^bytes=(\d+)-(\d+)$/.exec(new Headers(init?.headers).get('Range')!);
+					assert(match);
+					const start = Number(match[1]);
+					const end = Math.min(Number(match[2]) + 1, fixture.data.length);
+					requests++;
+					if (pause && start === nextEntries) {
+						pause = false;
+						init?.signal?.addEventListener('abort', bodyHandled, { once: true });
+						entered();
+						await gate;
+						return new Response(new ReadableStream<Uint8Array>({
+							pull(controller) {
+								bodyPulls++;
+								controller.enqueue(fixture.data.slice(start, end));
+								controller.close();
+								bodyHandled();
+							},
+							cancel() { bodyHandled(); },
+						}, { highWaterMark: 0 }), { status: 206,
+							headers: { 'Content-Range': `bytes ${start}-${end - 1}/${fixture.data.length}` } });
+					}
+					return new Response(fixture.data.slice(start, end), { status: 206,
+						headers: { 'Content-Range': `bytes ${start}-${end - 1}/${fixture.data.length}` } });
+				},
+			}), formats: [MXF] });
+			const sink = new EncodedPacketSink((await input.getPrimaryVideoTrack())!);
+			const controller = new AbortController();
+			const pending = sink.getFirstPacket({ metadataOnly: true, signal: controller.signal });
+			const rejected = expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+			await blocked;
+			const before = requests;
+			controller.abort();
+			release();
+			await rejected;
+			await handled;
+			expect(bodyPulls).toBe(0);
+			expect(requests).toBe(before);
+			const packet = (await sink.getFirstPacket())!;
+			expect([packet.sequenceNumber, packet.timestamp, packet.type]).toEqual([0, 0, 'key']);
+			expect(packet.data).toEqual(fixture.payloads[0]);
+		});
+
 		it.each([false, true])('should traverse the index split with standard AVC %s', async (standard) => {
 			const fixture = makeOpAtomMxf({ standard, splitIndex: true });
 			using input = new Input({ source: new BufferSource(fixture.data), formats: [MXF] });

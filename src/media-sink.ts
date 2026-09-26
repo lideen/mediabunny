@@ -1243,6 +1243,9 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 			this.customDecoderInitialization = this.customDecoderCallSerializer.call(() => this.customDecoder!.init());
 			void this.customDecoderInitialization.catch(error => onError(error));
 		} else {
+			if (codec === 'mpeg2') {
+				throw new Error('MPEG-2 requires a registered custom decoder.');
+			}
 			if (reduced || codec === 'htj2k') {
 				throw new Error('HTJ2K requires a registered custom decoder.');
 			}
@@ -2100,6 +2103,9 @@ export class VideoSampleSink extends BaseMediaSampleSink<VideoSample> {
 			throw new Error('Reduced resolution requires an HTJ2K track with bounded packet reads.');
 		}
 		if (!(await this._track.canDecode())) {
+			if (await this._track.getCodec() === 'mpeg2') {
+				throw new Error('MPEG-2 requires a registered custom decoder.');
+			}
 			if (typeof VideoDecoder === 'undefined') {
 				throw new Error(missingWebCodecsClassMessage('VideoDecoder'));
 			}

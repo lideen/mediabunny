@@ -941,6 +941,7 @@ const computeVideoBitrate = (codec: VideoCodec, width: number, height: number, f
 		vp8: 1.2, // Slightly less efficient than AVC
 		prores: 220_000_000 / referenceBitrate, // Apple ProRes white paper claims 220 Mbps for 1080p 422 HQ @30Hz
 		htj2k: 1,
+		mpeg2: 1,
 	};
 
 	const codecAdjustedBitrate = baseBitrate * codecEfficiencyFactors[codec];
@@ -1127,7 +1128,7 @@ export const canEncodeVideo = async (
 				return true;
 			}
 		}
-		if (codec === 'htj2k' || typeof VideoEncoder === 'undefined') {
+		if (codec === 'htj2k' || codec === 'mpeg2' || typeof VideoEncoder === 'undefined') {
 			return false;
 		}
 

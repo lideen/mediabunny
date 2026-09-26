@@ -51,6 +51,7 @@ export const VIDEO_CODECS = [
 	'vp8',
 	'prores',
 	'htj2k',
+	'mpeg2',
 ] as const;
 /**
  * List of known PCM (uncompressed) audio codecs, ordered by encoding preference.
@@ -339,8 +340,8 @@ export const buildVideoCodecString = (
 		}
 
 		return bestFourCc;
-	} else if (codec === 'htj2k') {
-		return 'htj2k';
+	} else if (codec === 'htj2k' || codec === 'mpeg2') {
+		return codec;
 	} else {
 		assertNever(codec);
 	}
@@ -584,8 +585,8 @@ export const extractVideoCodecString = (trackInfo: {
 		return string;
 	} else if (codec === 'prores') {
 		return proresFormat ?? 'apch';
-	} else if (codec === 'htj2k') {
-		return 'htj2k';
+	} else if (codec === 'htj2k' || codec === 'mpeg2') {
+		return codec;
 	} else if (codec !== null) {
 		assertNever(codec);
 	}
@@ -875,8 +876,8 @@ export const parsePcmCodec = (codec: PcmAudioCodec) => {
 };
 
 export const inferCodecFromCodecString = (codecString: string): MediaCodec | null => {
-	if (codecString === 'htj2k') {
-		return 'htj2k';
+	if (codecString === 'htj2k' || codecString === 'mpeg2') {
+		return codecString;
 	}
 	// Video codecs
 	if (codecString.startsWith('avc1') || codecString.startsWith('avc3')) {

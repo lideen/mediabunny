@@ -23,7 +23,7 @@ type Partition = MxfPartition & { offset: number; packEnd: number; end: number; 
 	index: Region; end: number;
 }>; bodyStart?: Promise<number>; segments?: Promise<Segment[]>; };
 type IndexedTrack = { bodySid: number; indexSid: number; trackNumber: number;
-	rate: ReturnType<typeof rational>; editUnitCount: number; legacyAvc: boolean; opAtom: boolean; };
+	rate: ReturnType<typeof rational>; editUnitCount: number; legacyAvc: boolean; opAtom: boolean; mpeg2: boolean; };
 type Segment = {
 	start: number; duration: number; rate: ReturnType<typeof rational>; byteCount: number;
 	bodySid: number; indexSid: number; slices: number; positions: number;
@@ -92,57 +92,80 @@ export class MxfIndex {
 		() => this.partitions(signal), signal);
 	}
 
-	private async entry(s: Segment, index: number) {
+	private async entry(s: Segment, index: number, signal?: AbortSignal) {
 		const relative = index - s.start;
 		const start = Math.floor(relative / 128) * 128;
 		const count = Math.min(128, s.entryCount - start);
 		const key = `${s.entries}:${start}`;
-		let pending = this.entryWindows.get(key);
-		if (!pending) {
-			pending = this.reader.bytes(s.entries + start * s.entrySize, count * s.entrySize);
-			if (this.entryWindows.size >= 16) this.entryWindows.delete(this.entryWindows.keys().next().value!);
-			this.entryWindows.set(key, pending);
-		}
-		const bytes = await pending;
+		const bytes = await this.cached(() => this.entryWindows.get(key), (value) => {
+			if (!value) {
+				this.entryWindows.delete(key);
+			} else {
+				if (this.entryWindows.size >= 16) {
+					this.entryWindows.delete(this.entryWindows.keys().next().value!);
+				}
+				this.entryWindows.set(key, value);
+			}
+		}, () => this.readerFor(signal).bytes(s.entries + start * s.entrySize, count * s.entrySize), signal);
 		return bytes.subarray((relative - start) * s.entrySize, (relative - start + 1) * s.entrySize);
 	}
 
-	private async temporalEntries(start: number, end: number, track: IndexedTrack) {
+	private async temporalEntries(start: number, end: number, track: IndexedTrack, signal?: AbortSignal) {
+		const codec = track.mpeg2 ? 'MPEG-2' : 'AVC';
 		const entries = new Map<number, Uint8Array>();
-		for (const p of await this.getDirectory()) {
+		for (const p of await this.getDirectory(signal)) {
 			if (!p.indexSize || p.indexSid !== track.indexSid) continue;
-			for (const s of await this.segments(p)) {
+			for (const s of await this.segments(p, signal)) {
 				if (s.bodySid !== track.bodySid || s.start >= end || s.start + s.duration <= start) continue;
 				requireMxf(equalRationals(s.rate, track.rate) && !s.positions && !s.byteCount
 					&& s.deltas.some(delta => delta.position === 255)
-					&& s.start + s.duration <= track.editUnitCount, 'unsupported AVC temporal index');
+					&& s.start + s.duration <= track.editUnitCount, `unsupported ${codec} temporal index`);
 				for (let i = Math.max(start, s.start); i < Math.min(end, s.start + s.duration); i++) {
-					const entry = await this.entry(s, i);
-					requireMxf(!(entry[2]! & 0x08), 'AVC temporal offset overflow is unsupported');
+					const entry = await this.entry(s, i, signal);
+					requireMxf(!(entry[2]! & 0x08), `${codec} temporal offset overflow is unsupported`);
 					const previous = entries.get(i);
 					requireMxf(!previous || hex(previous) === hex(entry), 'conflicting repeated index entries');
 					entries.set(i, entry);
 				}
 			}
 		}
-		for (let i = start; i < end; i++) requireMxf(entries.has(i), 'missing AVC temporal index entry');
+		for (let i = start; i < end; i++) {
+			requireMxf(entries.has(i), `missing ${codec} temporal index entry`);
+		}
 		return entries;
 	}
 
-	async resolvePresentation(presentation: number, track: IndexedTrack) {
-		const entry = (await this.temporalEntries(presentation, presentation + 1, track)).get(presentation)!;
+	async resolvePresentation(presentation: number, track: IndexedTrack, signal?: AbortSignal) {
+		const entry = (await this.temporalEntries(presentation, presentation + 1, track, signal)).get(presentation)!;
 		const decode = presentation + (entry[0]! << 24 >> 24);
-		requireMxf(decode >= 0 && decode < track.editUnitCount, 'AVC temporal offset outside track');
+		requireMxf(decode >= 0 && decode < track.editUnitCount,
+			`${track.mpeg2 ? 'MPEG-2' : 'AVC'} temporal offset outside track`);
 		return decode;
 	}
 
-	async resolveDecode(decode: number, track: IndexedTrack) {
+	async resolveDecode(decode: number, track: IndexedTrack, signal?: AbortSignal) {
 		// ST 377-1: d = p + TemporalOffset[p], not p = d + TemporalOffset[d].
 		const entries = await this.temporalEntries(Math.max(0, decode - 127),
-			Math.min(track.editUnitCount, decode + 129), track);
+			Math.min(track.editUnitCount, decode + 129), track, signal);
 		const matches = [...entries].filter(([p, entry]) => p + (entry[0]! << 24 >> 24) === decode);
-		requireMxf(matches.length === 1, 'AVC temporal index must have a unique inverse');
+		requireMxf(matches.length === 1, `${track.mpeg2 ? 'MPEG-2' : 'AVC'} temporal index must have a unique inverse`);
 		const entry = entries.get(decode)!;
+		if (track.mpeg2) {
+			const key = decode + (entry[1]! << 24 >> 24);
+			requireMxf(key >= 0 && key <= decode, 'MPEG-2 key frame offset outside closed GOP');
+			const keyEntry = (await this.temporalEntries(key, key + 1, track, signal)).get(key)!;
+			requireMxf(keyEntry[2] === 0xc0 && keyEntry[1] === 0 && keyEntry[0] === 0,
+				'MPEG-2 requires an unreordered sequence-header random access point');
+			requireMxf(![...entries].some(([i, value]) => i > key && i <= decode && value[2] === 0xc0),
+				'MPEG-2 key frame offset skips an intervening key');
+			const pictureType = entry[2] === 0xc0 ? 1 : entry[2] === 0x22 ? 2 : entry[2] === 0x33 ? 3 : 0;
+			requireMxf(pictureType && (decode === key) === (pictureType === 1), 'unsupported MPEG-2 picture flags');
+			const presentation = matches[0]![0];
+			requireMxf(presentation >= key
+				&& ![...entries].some(([i, value]) => i > decode && i <= presentation && value[2] === 0xc0),
+			'MPEG-2 temporal reordering crosses a closed GOP boundary');
+			return { presentation, key, isKey: decode === key, pictureType };
+		}
 		if (track.legacyAvc) {
 			// These producers store positive GOP distances, contrary to ST 381-3. Validate the
 			// observed layout, but never use its recovery pictures as decoder restart keys.
@@ -154,14 +177,14 @@ export class MxfIndex {
 				&& ![...entries].some(([i, value]) => i > access && i <= decode && value[2] === 0xc0),
 			'legacy AVC GOP distance disagrees with access point');
 			requireMxf(decode === access || [0x22, 0x33].includes(entry[2]!), 'unsupported legacy AVC picture flags');
-			const first = (await this.temporalEntries(0, 1, track)).get(0)!;
+			const first = (await this.temporalEntries(0, 1, track, signal)).get(0)!;
 			requireMxf(first[0] === 0 && first[1] === 0 && first[2] === 0xc0,
 				'legacy AVC must start at an unreordered access point');
 			return { presentation: matches[0]![0], key: 0, isKey: decode === 0, requiresParameters: decode === access };
 		}
 		const key = decode + (entry[1]! << 24 >> 24);
 		requireMxf(key >= 0 && key <= decode, 'AVC key frame offset outside supported closed GOP');
-		const keyEntry = (await this.temporalEntries(key, key + 1, track)).get(key)!;
+		const keyEntry = (await this.temporalEntries(key, key + 1, track, signal)).get(key)!;
 		requireMxf((keyEntry[2]! & 0xb7) === 0x84 && keyEntry[1] === 0,
 			'AVC requires an IDR random access point, not an open GOP or recovery point');
 		requireMxf(keyEntry[2]! & 0x40, 'AVC random access requires an in-band SPS flag');
@@ -425,7 +448,7 @@ export class MxfIndex {
 			if (count === 2) streamEnd = uint(entry.subarray(s.entrySize + 3, s.entrySize + 11), 8);
 			else if (track.opAtom && index + 1 < track.editUnitCount) {
 				// An index segment can end inside a body partition without a terminal entry.
-				const next = (await this.temporalEntries(index + 1, index + 2, track)).get(index + 1)!;
+				const next = (await this.temporalEntries(index + 1, index + 2, track, signal)).get(index + 1)!;
 				streamEnd = uint(next.subarray(3, 11), 8);
 			}
 		}

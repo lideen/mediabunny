@@ -144,7 +144,7 @@ export const canDecodeVideo = async (
 	};
 	resolvedOptions.description ??= guessDescriptionForVideo(resolvedOptions);
 
-	if (codec === 'htj2k') {
+	if (codec === 'htj2k' || codec === 'mpeg2') {
 		// Buffer descriptions do not serialize their bytes into the memoization key.
 		return customVideoDecoders.some(x => x.supports(codec, resolvedOptions));
 	}

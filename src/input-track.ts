@@ -865,7 +865,7 @@ export class InputVideoTrack extends InputTrack {
 				return true;
 			}
 
-			if (codec === 'htj2k' || typeof VideoDecoder === 'undefined') {
+			if (codec === 'htj2k' || codec === 'mpeg2' || typeof VideoDecoder === 'undefined') {
 				return false;
 			}
 
