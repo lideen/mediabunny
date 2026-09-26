@@ -638,7 +638,8 @@ export class MpegTsInputFormat extends InputFormat {
 
 /**
  * Experimental MXF input for finalized OP1a with progressive frame-wrapped ProRes, HTJ2K RGB,
- * MPEG-2 Main Profile / High or High-1440 Level 4:2:0, or 8-bit 4:2:0 AVC
+ * MPEG-2 Main Profile / High or High-1440 Level 4:2:0, frame-picture 4:2:2 Profile / High Level MPEG-2,
+ * or 8-bit 4:2:0 AVC
  * and packed PCM,
  * plus a limited single-file, video-only OPAtom AVC subset.
  * Requires a seekable source with known size. Only simple, untrimmed source clips are supported.

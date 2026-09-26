@@ -23,7 +23,8 @@ type Partition = MxfPartition & { offset: number; packEnd: number; end: number; 
 	index: Region; end: number;
 }>; bodyStart?: Promise<number>; segments?: Promise<Segment[]>; };
 type IndexedTrack = { bodySid: number; indexSid: number; trackNumber: number;
-	rate: ReturnType<typeof rational>; editUnitCount: number; legacyAvc: boolean; opAtom: boolean; mpeg2: boolean; };
+	rate: ReturnType<typeof rational>; editUnitCount: number; legacyAvc: boolean; opAtom: boolean; mpeg2: boolean;
+	mpeg2OpenGop?: boolean; };
 type Segment = {
 	start: number; duration: number; rate: ReturnType<typeof rational>; byteCount: number;
 	bodySid: number; indexSid: number; slices: number; positions: number;
@@ -167,6 +168,28 @@ export class MxfIndex {
 		const matches = [...entries].filter(([p, entry]) => p + (entry[0]! << 24 >> 24) === decode);
 		requireMxf(matches.length === 1, `${track.mpeg2 ? 'MPEG-2' : 'AVC'} temporal index must have a unique inverse`);
 		const entry = entries.get(decode)!;
+		if (track.mpeg2OpenGop) {
+			const previous = new Map([...entries].filter(([ordinal]) => ordinal <= decode));
+			const starts = [...previous].filter(([, value]) => value[2] === 0xc0 || value[2] === 0x40);
+			const gopStart = starts.at(-1)?.[0];
+			requireMxf(gopStart !== undefined, 'MPEG-2 GOP start exceeds bounded dependency search');
+			const dependencyAnchor = decode + (entry[1]! << 24 >> 24);
+			const dependency = previous.get(dependencyAnchor);
+			requireMxf(dependency && [0xc0, 0x40].includes(dependency[2]!) && dependency[1] === 0,
+				'MPEG-2 dependency anchor is not an indexed I picture');
+			const pictureType = [0xc0, 0x40].includes(entry[2]!)
+				? 1
+				: entry[2] === 0x22
+					? 2
+					: [0x13, 0x33].includes(entry[2]!) ? 3 : 0;
+			requireMxf(pictureType && (pictureType === 1
+				? dependencyAnchor === decode
+				: dependencyAnchor <= gopStart), 'unsupported MPEG-2 dependency flags');
+			requireMxf(dependencyAnchor === gopStart || dependencyAnchor === starts.at(-2)?.[0],
+				'MPEG-2 dependency skips an intervening GOP');
+			return { presentation: matches[0]![0], key: gopStart, isKey: pictureType === 1, pictureType,
+				gopStart, dependencyAnchor, indexFlags: entry[2]! };
+		}
 		if (track.mpeg2) {
 			const key = decode + (entry[1]! << 24 >> 24);
 			requireMxf(key >= 0 && key <= decode, 'MPEG-2 key frame offset outside closed GOP');

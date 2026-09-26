@@ -89,6 +89,7 @@ export const makeMxf = (options: {
 	videoOnly?: boolean;
 	opAtom?: boolean;
 	legacyAvc?: boolean;
+	staticDmTrackNumber?: number;
 	htj2k?: { data: Uint8Array; bits: number; width?: number; height?: number };
 } = {}) => {
 	const rate = options.editRate
@@ -125,13 +126,21 @@ export const makeMxf = (options: {
 		set(0x2f, 1, { 0x3b03: ref(2) }),
 		set(0x18, 2, { 0x1901: batch(ref(3), ref(4)), 0x1902: batch(ref(5)) }),
 		set(0x36, 3, { 0x4401: umid(3),
-			0x4403: options.videoOnly ? batch(ref(10)) : batch(ref(10), ref(20), ref(30)) }),
+			0x4403: batch(ref(10), ...(options.videoOnly ? [] : [ref(20), ref(30)]),
+				...(options.staticDmTrackNumber === undefined ? [] : [ref(900)])) }),
 		set(0x37, 4, { 0x4401: umid(4),
 			0x4403: options.videoOnly ? batch(ref(13)) : batch(ref(13), ref(23), ref(33)),
 			0x4701: ref(options.videoOnly ? 16 : 6) }),
 		set(0x23, 5, { 0x2701: umid(4), 0x3f07: integer(1, 4), 0x3f06: integer(options.indexSid ?? 0, 4) }),
 		...(options.videoOnly ? [] : [set(0x44, 6, { 0x3f01: batch(ref(36), ref(16), ref(26)) })]),
 	];
+	if (options.staticDmTrackNumber !== undefined) {
+		const definition = bytes('060e2b34040101010103020110000000');
+		sets.push(set(0x3a, 900, { 0x4801: integer(4, 4),
+			0x4804: integer(options.staticDmTrackNumber, 4), 0x4803: ref(901) }),
+		set(0x0f, 901, { 0x0201: definition, 0x1001: batch(ref(902)) }),
+		set(0x41, 902, { 0x0201: definition }));
+	}
 	for (let i = 1; i <= (options.videoOnly ? 1 : 3); i++) {
 		const base = i * 10;
 		const definition = i === 1 ? picture : sound;

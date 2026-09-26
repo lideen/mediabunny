@@ -43,6 +43,18 @@ class PacketDecoder {
     return this.#decoder.decode(input, timestamp, duration).map(takeTimedFrame);
   }
 
+  discardLeadingB(input) {
+    validateInput(input);
+    if (input.byteLength > this.maxPacketBytes) {
+      throw new RangeError('ResourceLimit: packet bytes');
+    }
+    const report = this.#decoder.discardLeadingB(input);
+    try {
+      return { validation: 'headers-only', packetId: report.packetId,
+        temporalReference: report.temporalReference, anchorTemporalReference: report.anchorTemporalReference };
+    } finally { report.free(); }
+  }
+
   drain() {
     const output = this.#decoder.drain();
     return output === undefined ? undefined : takeTimedFrame(output);

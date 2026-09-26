@@ -8,6 +8,9 @@ export interface PacketDecoder {
 	readonly maxFrameBytes: number;
 	readonly maxReferenceBytes: number;
 	decode(input: Uint8Array, timing: { timestamp: number; duration: number }): TimedFrame[];
+	discardLeadingB(input: Uint8Array): {
+		validation: 'headers-only'; packetId: bigint; temporalReference: number; anchorTemporalReference: number;
+	};
 	drain(): TimedFrame | undefined;
 	finishSegment(): TimedFrame | undefined;
 	reset(): void;

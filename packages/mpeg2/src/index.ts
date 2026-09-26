@@ -19,7 +19,7 @@ const loadModule = () => modulePromise ??= WebAssembly.compile(wasmBinary)
 	});
 
 /**
- * Progressive 8-bit 4:2:0 packet decoder. Complete pictures must arrive in decode order with in-band restart headers.
+ * 8-bit 4:2:0/4:2:2 frame-picture decoder. Complete pictures arrive in decode order with in-band restart headers.
  * Normally installed through {@link registerMpeg2Decoder}; direct users supply the inherited config and callbacks.
  * Calls must be serialized. Flush finishes an intentional selection, not a stream-integrity check.
  * @group \@mediabunny/mpeg2
@@ -31,7 +31,10 @@ export class Mpeg2Decoder extends CustomVideoDecoder {
 	/** @internal */
 	private closed = false;
 
-	/** Accepts canonical MPEG-2 configurations within the native padded-frame budget. */
+	/**
+	 * Rejects dimensions that cannot fit even I420. Native parsing enforces the actual chroma-specific padded-frame
+	 * budget before allocation; a configuration without in-band chroma information cannot prove I422 will fit.
+	 */
 	static override supports(codec: VideoCodec, config: VideoDecoderConfig) {
 		const width = config.codedWidth;
 		const height = config.codedHeight;
@@ -72,6 +75,11 @@ export class Mpeg2Decoder extends CustomVideoDecoder {
 		this.emit(outputs);
 	}
 
+	/** Applies persistent headers of an unrequested initial leading B picture without reconstructing its pixels. */
+	override decodePreroll(packet: EncodedPacket) {
+		this.activeDecoder().discardLeadingB(packet.data);
+	}
+
 	/** @internal */
 	private emit(outputs: TimedFrame[]) {
 		try {
@@ -79,7 +87,7 @@ export class Mpeg2Decoder extends CustomVideoDecoder {
 				if (this.closed) {
 					break;
 				}
-				if (!frame || !frame.progressiveSequence || !frame.progressive || frame.chromaFormat !== 'yuv420p'
+				if (!frame || !['yuv420p', 'yuv422p'].includes(frame.chromaFormat)
 					|| frame.width !== this.config.codedWidth || frame.height !== this.config.codedHeight) {
 					throw new Error('Unsupported MPEG-2 output format or dimensions');
 				}
@@ -91,7 +99,11 @@ export class Mpeg2Decoder extends CustomVideoDecoder {
 				data.set(cb, y.length);
 				data.set(cr, y.length + cb.length);
 				const sample = new VideoSample(data, {
-					format: 'I420', codedWidth: frame.width, codedHeight: frame.height,
+					format: frame.chromaFormat === 'yuv422p' ? 'I422' : 'I420',
+					codedWidth: frame.width, codedHeight: frame.height,
+					scan: frame.progressive
+						? 'progressive'
+						: frame.topFieldFirst ? 'interlaced-top-first' : 'interlaced-bottom-first',
 					layout: [
 						{ offset: 0, stride: frame.yStride },
 						{ offset: y.length, stride: frame.cbStride },

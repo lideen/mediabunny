@@ -53,6 +53,7 @@ export class PacketVideoDecoder {
     free(): void;
     [Symbol.dispose](): void;
     decode(input: Uint8Array, timestamp: number, duration: number): TimedPacketFrame[];
+    discardLeadingB(input: Uint8Array): PrerollDiscardReport;
     drain(): TimedPacketFrame | undefined;
     finishSegment(): TimedPacketFrame | undefined;
     constructor(max_packet_bytes: number, max_frame_bytes: number);
@@ -60,6 +61,18 @@ export class PacketVideoDecoder {
     readonly maxFrameBytes: number;
     readonly maxPacketBytes: number;
     readonly maxReferenceBytes: number;
+}
+
+/**
+ * Header-only discard receipt. No decoded frame or timing is associated with it.
+ */
+export class PrerollDiscardReport {
+    private constructor();
+    free(): void;
+    [Symbol.dispose](): void;
+    readonly anchorTemporalReference: number;
+    readonly packetId: bigint;
+    readonly temporalReference: number;
 }
 
 /**
@@ -103,7 +116,11 @@ export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_decodedbatch_free: (a: number, b: number) => void;
     readonly __wbg_decodedframe_free: (a: number, b: number) => void;
+    readonly __wbg_get_prerolldiscardreport_anchorTemporalReference: (a: number) => number;
+    readonly __wbg_get_prerolldiscardreport_packetId: (a: number) => bigint;
+    readonly __wbg_get_prerolldiscardreport_temporalReference: (a: number) => number;
     readonly __wbg_packetvideodecoder_free: (a: number, b: number) => void;
+    readonly __wbg_prerolldiscardreport_free: (a: number, b: number) => void;
     readonly __wbg_timedpacketframe_free: (a: number, b: number) => void;
     readonly __wbg_videodecoder_free: (a: number, b: number) => void;
     readonly decode: (a: number, b: number, c: number) => [number, number, number];
@@ -134,6 +151,7 @@ export interface InitOutput {
     readonly decodedframe_width: (a: number) => number;
     readonly decodedframe_yStride: (a: number) => number;
     readonly packetvideodecoder_decode: (a: number, b: number, c: number, d: number, e: number) => [number, number, number, number];
+    readonly packetvideodecoder_discardLeadingB: (a: number, b: number, c: number) => [number, number, number];
     readonly packetvideodecoder_drain: (a: number) => [number, number, number];
     readonly packetvideodecoder_finishSegment: (a: number) => [number, number, number];
     readonly packetvideodecoder_maxFrameBytes: (a: number) => number;

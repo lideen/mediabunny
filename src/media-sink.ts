@@ -27,7 +27,7 @@ import {
 	ReducedVideoDecodeRequest, VideoDecodePacketReader, PreparedVideoDecodeInput,
 } from './custom-coder';
 import { InputDisposedError } from './input';
-import { InputAudioTrack, InputTrack, InputVideoTrack } from './input-track';
+import { InputAudioTrack, InputTrack, InputVideoTrack, VideoDecodeStartPlan } from './input-track';
 import {
 	AnyIterable,
 	assert,
@@ -524,6 +524,8 @@ export class EncodedPacketSink {
 abstract class DecoderWrapper<
 	MediaSample extends VideoSample | AudioSample,
 > {
+	onDequeue?: () => void;
+
 	constructor(
 		public onSample: (sample: MediaSample) => unknown,
 		public onError: (error: unknown) => unknown,
@@ -531,6 +533,11 @@ abstract class DecoderWrapper<
 
 	abstract getDecodeQueueSize(): number;
 	abstract decode(packet: EncodedPacket): void;
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	decodePreroll(packet: EncodedPacket): void {
+		throw new Error('Decoder does not support header-only preroll.');
+	}
+
 	abstract flush(): Promise<void>;
 	abstract close(): void;
 	cancel() {}
@@ -560,6 +567,29 @@ export abstract class BaseMediaSampleSink<
 	abstract _createPacketSink(): EncodedPacketSink;
 
 	/** @internal */
+	private async decodeStartPlan(timestamp: number, sink: EncodedPacketSink, options: PacketRetrievalOptions,
+		fallbackToFirst: boolean): Promise<VideoDecodeStartPlan> {
+		if (this._track instanceof InputVideoTrack && this._track._backing.getDecodeStartPlan) {
+			return this._track._backing.getDecodeStartPlan(timestamp, options);
+		}
+		return { startPacket: await sink.getKeyPacket(timestamp, options)
+			?? (fallbackToFirst ? await sink.getFirstKeyPacket(options) : null), headerOnlyPreroll: [] };
+	}
+
+	/** @internal */
+	private feedPacket(decoder: DecoderWrapper<MediaSample>, packet: EncodedPacket,
+		plan: VideoDecodeStartPlan, minimumTimestamp: number) {
+		if (plan.headerOnlyPreroll.includes(packet.sequenceNumber)) {
+			if (!(packet.timestamp < minimumTimestamp)) {
+				throw new Error('Decode plan attempts to discard a requested picture.');
+			}
+			decoder.decodePreroll(packet);
+		} else {
+			decoder.decode(packet);
+		}
+	}
+
+	/** @internal */
 	protected mediaSamplesInRange(
 		startTimestamp = -Infinity,
 		endTimestamp = Infinity,
@@ -578,7 +608,10 @@ export abstract class BaseMediaSampleSink<
 		let ended = false;
 		let terminated = false;
 		let decoder: DecoderWrapper<MediaSample> | null = null;
-		const navigation = this._metadataOnlyForDecode ? new AbortController() : null;
+		const navigation = this._metadataOnlyForDecode
+			|| (this._track instanceof InputVideoTrack && this._track._backing.getDecodeStartPlan)
+			? new AbortController()
+			: null;
 
 		// This stores errors that are "out of band" in the sense that they didn't occur in the normal flow of this
 		// method but instead in a different context. This error should not go unnoticed and must be bubbled up to
@@ -643,16 +676,18 @@ export abstract class BaseMediaSampleSink<
 				}
 			});
 
+			decoder.onDequeue = () => onQueueDequeue();
 			if (terminated) {
 				decoder.cancel();
 				return;
 			}
 			const packetSink = this._createPacketSink();
-			const keyPacket = await packetSink.getKeyPacket(startTimestamp, packetRetrievalOptions)
-				?? await packetSink.getFirstKeyPacket(packetRetrievalOptions);
+			const plan = await this.decodeStartPlan(startTimestamp, packetSink, packetRetrievalOptions, true);
+			const keyPacket = plan.startPacket;
 
 			let currentPacket: EncodedPacket | null = keyPacket;
 			const prepare = decoder.startRangePreparation();
+			const planned = this._track instanceof InputVideoTrack && !!this._track._backing.getDecodeStartPlan;
 			const boundedIntraPreparation = prepare && await this._track.getCodec() === 'htj2k';
 
 			// B-frames make it exceedingly difficult to properly define an upper bound for packet iteration if an end
@@ -663,14 +698,14 @@ export abstract class BaseMediaSampleSink<
 			// it.
 			const endPacket = undefined;
 
-			const packets = prepare
+			const packets = prepare || planned
 				? null
 				: packetSink.packets(keyPacket ?? undefined, endPacket, packetRetrievalOptions);
 			if (packets) await packets.next(); // Skip the start packet as we already have it
 
 			while (currentPacket && !ended && !hasOutOfBandError && !this._track.input._disposed) {
 				if (boundedIntraPreparation && currentPacket.timestamp >= endTimestamp) break;
-				const maxQueueSize = computeMaxQueueSize(sampleQueue.length);
+				const maxQueueSize = planned ? 2 : computeMaxQueueSize(sampleQueue.length);
 				if (sampleQueue.length + decoder.getDecodeQueueSize() > maxQueueSize) {
 					({ promise: queueDequeue, resolve: onQueueDequeue } = promiseWithResolvers());
 					await queueDequeue;
@@ -681,7 +716,7 @@ export abstract class BaseMediaSampleSink<
 					await decoder.waitForPreparationCapacity();
 					if (ended || terminated || hasOutOfBandError || this._track.input._disposed) break;
 				}
-				decoder.decode(currentPacket);
+				this.feedPacket(decoder, currentPacket, plan, startTimestamp);
 				if (prepare) {
 					if (boundedIntraPreparation && currentPacket.timestamp + currentPacket.duration >= endTimestamp) {
 						break;
@@ -692,6 +727,10 @@ export abstract class BaseMediaSampleSink<
 					continue;
 				}
 
+				if (planned) {
+					currentPacket = await packetSink.getNextPacket(currentPacket, packetRetrievalOptions);
+					continue;
+				}
 				const packetResult = await packets!.next();
 				if (packetResult.done) {
 					break;
@@ -805,7 +844,10 @@ export abstract class BaseMediaSampleSink<
 		let decoderIsFlushed = false;
 		let terminated = false;
 		let decoder: DecoderWrapper<MediaSample> | null = null;
-		const navigation = this._metadataOnlyForDecode ? new AbortController() : null;
+		const navigation = this._metadataOnlyForDecode
+			|| (this._track instanceof InputVideoTrack && this._track._backing.getDecodeStartPlan)
+			? new AbortController()
+			: null;
 
 		// This stores errors that are "out of band" in the sense that they didn't occur in the normal flow of this
 		// method but instead in a different context. This error should not go unnoticed and must be bubbled up to
@@ -866,6 +908,7 @@ export abstract class BaseMediaSampleSink<
 				}
 			});
 
+			decoder.onDequeue = () => onQueueDequeue();
 			if (terminated) {
 				decoder.cancel();
 				return;
@@ -873,6 +916,8 @@ export abstract class BaseMediaSampleSink<
 			const packetSink = this._createPacketSink();
 			let lastPacket: EncodedPacket | null = null;
 			let lastKeyPacket: EncodedPacket | null = null;
+			let lastPlan: VideoDecodeStartPlan = { startPacket: null, headerOnlyPreroll: [] };
+			let selectionMinimum = Infinity;
 
 			// The end sequence number (inclusive) in the next batch of packets that will be decoded. The batch starts
 			// at the last key frame and goes until this sequence number.
@@ -885,7 +930,7 @@ export abstract class BaseMediaSampleSink<
 
 				// Start at the current key packet
 				let currentPacket = lastKeyPacket;
-				decoder.decode(currentPacket);
+				this.feedPacket(decoder, currentPacket, lastPlan, selectionMinimum);
 
 				while (currentPacket.sequenceNumber < maxSequenceNumber) {
 					const maxQueueSize = computeMaxQueueSize(sampleQueue.length);
@@ -902,11 +947,12 @@ export abstract class BaseMediaSampleSink<
 					const nextPacket = await packetSink.getNextPacket(currentPacket, retrievalOptions);
 					assert(nextPacket);
 
-					decoder.decode(nextPacket);
+					this.feedPacket(decoder, nextPacket, lastPlan, selectionMinimum);
 					currentPacket = nextPacket;
 				}
 
 				maxSequenceNumber = -1;
+				selectionMinimum = Infinity;
 			};
 
 			const flushDecoder = async () => {
@@ -952,9 +998,12 @@ export abstract class BaseMediaSampleSink<
 					}
 					continue;
 				}
-				const keyPacket = targetPacket && await packetSink.getKeyPacket(timestamp, retrievalOptions);
+				const plan = targetPacket
+					? await this.decodeStartPlan(timestamp, packetSink, retrievalOptions, false)
+					: { startPacket: null, headerOnlyPreroll: [] };
+				const keyPacket = plan.startPacket;
 
-				if (!keyPacket) {
+				if (!keyPacket || !targetPacket) {
 					if (maxSequenceNumber !== -1) {
 						await decodePackets();
 						await flushDecoder();
@@ -978,10 +1027,12 @@ export abstract class BaseMediaSampleSink<
 				}
 
 				timestampsOfInterest.push(targetPacket.timestamp);
+				selectionMinimum = Math.min(selectionMinimum, targetPacket.timestamp);
 				maxSequenceNumber = Math.max(targetPacket.sequenceNumber, maxSequenceNumber);
 
 				lastPacket = targetPacket;
 				lastKeyPacket = keyPacket;
+				lastPlan = plan;
 			}
 
 			await intraFlush;
@@ -1084,6 +1135,7 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 	closeStarted = false;
 
 	override cancel() {
+		if (this.customDecoder?.decodePreroll) this.closed = true;
 		if (this.reduced) {
 			this.closed = true;
 			this.reducedReadAbort.abort();
@@ -1163,6 +1215,7 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 			} finally {
 				this.preparationCount--;
 				this.customDecoderQueueSize--;
+				this.onDequeue?.();
 				this.preparationJobs.delete(job);
 				this.preparationCapacity.resolve();
 				this.preparationCapacity = promiseWithResolvers<void>();
@@ -1343,6 +1396,19 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 		}
 	}
 
+	override decodePreroll(packet: EncodedPacket) {
+		if (!this.customDecoder?.decodePreroll) {
+			throw new Error('Decoder does not support header-only preroll.');
+		}
+		this.customDecoderQueueSize++;
+		void this.customDecoderCallSerializer.call(async () => {
+			if (!this.closed) await this.customDecoder!.decodePreroll!(packet);
+		}).catch(error => this.onError(error)).finally(() => {
+			this.customDecoderQueueSize--;
+			this.onDequeue?.();
+		});
+	}
+
 	decode(packet: EncodedPacket) {
 		if (this.preparationEnabled) {
 			this.decodeWithPreparation(packet);
@@ -1374,7 +1440,10 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 					}
 				})
 				.catch(error => this.onError(error))
-				.finally(() => this.customDecoderQueueSize--);
+				.finally(() => {
+					this.customDecoderQueueSize--;
+					this.onDequeue?.();
+				});
 		} else {
 			assert(this.decoder);
 
@@ -2669,7 +2738,10 @@ class AudioDecoderWrapper extends DecoderWrapper<AudioSample> {
 			void this.customDecoderCallSerializer
 				.call(() => this.customDecoder!.decode(packet))
 				.catch(error => this.onError(error))
-				.finally(() => this.customDecoderQueueSize--);
+				.finally(() => {
+					this.customDecoderQueueSize--;
+					this.onDequeue?.();
+				});
 		} else {
 			assert(this.decoder);
 

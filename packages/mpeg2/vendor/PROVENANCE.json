@@ -1,11 +1,11 @@
 {
   "sourceRepository": "mpeg2-rs (user-supplied local repository)",
-  "sourceCommit": "4aa77ea2d6bcc6a5904790d72bea54e2f18000f3",
+  "sourceCommit": "1a9e585a52dcce079ca2543abe59aef50551f59a",
   "permission": "User-authorized private local integration only. No public distribution license selected. No npm publication or upstream distribution authorized.",
   "buildRecord": {
-    "path": "oracle-output/finish-segment/build-provenance.json",
-    "sha256": "f9fc2701e6d49ebf861c4fd9d5156a16328e82fa021646c6f0c7bc1136ef7273",
-    "baseCommit": "8d8e4f41369be6e4d3cb72271b4eb73bd8b80d8d",
+    "path": "oracle-output/preroll/final-build-provenance.json",
+    "sha256": "303c2c1210c737ecbfc01188f1df65134e2d1a77d193c7a6c94b20d31f4c3e9a",
+    "baseCommit": "4aa77ea2d6bcc6a5904790d72bea54e2f18000f3",
     "note": "Build preceded final source commit; selected compiler input hashes checked against that commit.",
     "tools": {
       "rustc": {
@@ -56,24 +56,24 @@
       "sha256": "4f29cfc04cd22c5188668986c059c3fadc99fa40ce67072cd0c71fa44fd8987f"
     },
     "crates/wasm/js/index.mjs": {
-      "bytes": 4520,
-      "sha256": "97dc9894053ecef20f2852029d448950ec651765bfba3537056e7d920b09cc65"
+      "bytes": 4975,
+      "sha256": "7fc979b850e5c0b5dd9aec5557da7e8303279a4de98caa330faa33df42192da5"
     },
     "crates/wasm/src/lib.rs": {
-      "bytes": 14533,
-      "sha256": "e7d7a68bdbdbbbd19aac93da1a4ed3a2537a37938faf1acda362744b4c4264bb"
+      "bytes": 15780,
+      "sha256": "85a8d6607e6e83a239a1a0ed1060f80aa3c44fee35b6cc00e3cb70b2d9135099"
     },
     "src/bits.rs": {
       "bytes": 2137,
       "sha256": "d12ca391f8b83f22656f503070528f572effd0b1eba10fa3b2cb336def6cb04c"
     },
     "src/decoder.rs": {
-      "bytes": 55412,
-      "sha256": "6275ad54729a558adc963f875d181515587424a12b43d162725b29e1c3405c83"
+      "bytes": 61023,
+      "sha256": "d866d413414a4aa87adb1666b61cb74464d77e9bf9fdf630b9f69cb3d3a058d8"
     },
     "src/lib.rs": {
-      "bytes": 6495,
-      "sha256": "5e3fba6f4a39adf62957010788aede0953db0a34b72d58b34ed7855363cd422c"
+      "bytes": 6761,
+      "sha256": "0a7371899e463ae780ab76fdf8b42660138b2ad56e9fe1c9654960a488f7b9ea"
     },
     "src/motion.rs": {
       "bytes": 9425,
@@ -95,23 +95,23 @@
   "files": {
     "js/index.mjs": {
       "source": "crates/wasm/js/index.mjs",
-      "bytes": 4520,
-      "sha256": "97dc9894053ecef20f2852029d448950ec651765bfba3537056e7d920b09cc65"
+      "bytes": 4975,
+      "sha256": "7fc979b850e5c0b5dd9aec5557da7e8303279a4de98caa330faa33df42192da5"
     },
     "pkg/mpeg2_wasm.js": {
       "source": "crates/wasm/pkg/mpeg2_wasm.js",
-      "bytes": 20761,
-      "sha256": "2c3f866faafd2996be07296c8914f8b1e09e8af6d2cc470ca37b3e0b5be28625"
+      "bytes": 22772,
+      "sha256": "f39fd77f03ade8555978a9a133fabec05e00a210f971c1be867a7c1af271fd92"
     },
     "pkg/mpeg2_wasm.d.ts": {
       "source": "crates/wasm/pkg/mpeg2_wasm.d.ts",
-      "bytes": 7884,
-      "sha256": "40c825c623cc819eb6b3b72af52979b8a6c924b525bec79d0bca6ce3067e4200"
+      "bytes": 8712,
+      "sha256": "7d3949290bd58e7da30dbe27ecc42ceff2726d7a29426e3c8a691d18f7837cdd"
     },
     "pkg/mpeg2_wasm_bg.wasm": {
       "source": "crates/wasm/pkg/mpeg2_wasm_bg.wasm",
-      "bytes": 144915,
-      "sha256": "85cdf25a0ea5a94ffb28dee6930972f8a4424dca8e63ade45a91d0678a752a2f"
+      "bytes": 150344,
+      "sha256": "c9caeab946aa20774c8404066bfe6dcc2bb5a8aac0be670e7ffa2d83df0cfe08"
     }
   },
   "localAdditions": [

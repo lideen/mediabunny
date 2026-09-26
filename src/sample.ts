@@ -205,11 +205,20 @@ const VIDEO_SAMPLE_PIXEL_FORMATS_SET = new Set(VIDEO_SAMPLE_PIXEL_FORMATS);
 export type VideoSamplePixelFormat = typeof VIDEO_SAMPLE_PIXEL_FORMATS[number];
 
 /**
- * Metadata used for VideoSample initialization.
+ * Scan structure and, for woven interlaced pictures, temporal field order. Unknown does not imply progressive.
+ * @group Samples
+ * @public
+ */
+export type VideoSampleScan = 'unknown' | 'progressive' | 'interlaced-top-first' | 'interlaced-bottom-first';
+
+/**
+ * Initialization options for a video sample.
  * @group Samples
  * @public
  */
 export type VideoSampleInit = {
+	/** Scan structure of the stored picture. Defaults to unknown; does not request deinterlacing. */
+	scan?: VideoSampleScan;
 	/**
 	 * The internal pixel format in which the frame is stored.
 	 * [See pixel formats](https://www.w3.org/TR/webcodecs/#pixel-format)
@@ -297,6 +306,8 @@ export class VideoSample implements Disposable {
 	readonly colorSpace!: VideoSampleColorSpace;
 	/** The encode options to use when this sample is passed to an encoder. */
 	readonly encodeOptions!: DeepReadonly<VideoEncoderEncodeOptions>;
+	/** Scan structure of this picture. Canvas and VideoFrame conversion do not deinterlace or retain this metadata. */
+	readonly scan!: VideoSampleScan;
 
 	/** The width of the frame in pixels. */
 	get codedWidth() {
@@ -368,6 +379,10 @@ export class VideoSample implements Disposable {
 		data: VideoFrame | CanvasImageSource | AllowSharedBufferSource | VideoSampleResource,
 		init?: VideoSampleInit,
 	) {
+		if (init?.scan !== undefined
+			&& !['unknown', 'progressive', 'interlaced-top-first', 'interlaced-bottom-first'].includes(init.scan)) {
+			throw new TypeError('Invalid video sample scan structure.');
+		}
 		if (
 			data instanceof ArrayBuffer
 			|| (typeof SharedArrayBuffer !== 'undefined' && data instanceof SharedArrayBuffer)
@@ -687,6 +702,7 @@ export class VideoSample implements Disposable {
 			);
 		}
 
+		this.scan = init?.scan ?? 'unknown';
 		this.encodeOptions = init?.encodeOptions ?? {};
 
 		this.pixelAspectRatio = simplifyRational({
@@ -706,6 +722,7 @@ export class VideoSample implements Disposable {
 
 		if (this._data instanceof VideoSampleResource) {
 			return new VideoSample(this._data, {
+				scan: this.scan,
 				timestamp: this.timestamp,
 				duration: this.duration,
 				rotation: this.rotation,
@@ -714,6 +731,7 @@ export class VideoSample implements Disposable {
 			});
 		} else if (isVideoFrame(this._data)) {
 			return new VideoSample(this._data.clone(), {
+				scan: this.scan,
 				timestamp: this.timestamp,
 				duration: this.duration,
 				rotation: this.rotation,
@@ -724,6 +742,7 @@ export class VideoSample implements Disposable {
 			assert(this._layout);
 
 			return new VideoSample(this._data, {
+				scan: this.scan,
 				format: this.format!,
 				layout: this._layout,
 				codedWidth: this.codedWidth,
@@ -743,6 +762,7 @@ export class VideoSample implements Disposable {
 			});
 		} else {
 			return new VideoSample(this._data, {
+				scan: this.scan,
 				format: this.format!,
 				codedWidth: this.codedWidth,
 				codedHeight: this.codedHeight,

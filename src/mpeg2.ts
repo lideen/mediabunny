@@ -18,7 +18,7 @@ const requireMpeg2: (condition: unknown, message: string) => asserts condition =
 	}
 };
 
-// This bounded subset excludes user data and scalable extensions before the first slice.
+// Only headers before the first slice are inspected; scalable extensions remain unsupported.
 // Two sequence quantization matrices fit alongside the sequence/GOP/picture headers.
 export const MPEG2_HEADER_LIMIT = 512;
 
@@ -34,6 +34,13 @@ export const parseMpeg2Headers = (data: Uint8Array) => {
 	let gop = false;
 	let closedGop = false;
 	let profileAndLevel = 0;
+	let progressiveSequence = false;
+	let chromaFormat = 0;
+	let progressive = false;
+	let topFieldFirst = false;
+	let extendedHeaders = false;
+	let framePredFrameDct = false;
+	let chroma420Type = false;
 	let pictureType = 0;
 	let temporalReference = 0;
 	let pictureExtension = false;
@@ -47,7 +54,8 @@ export const parseMpeg2Headers = (data: Uint8Array) => {
 			requireMpeg2(pictureType && pictureExtension, 'MPEG-2 requires complete picture headers');
 			requireMpeg2(!sequence || (sequenceExtension && gop), 'MPEG-2 requires sequence extension and GOP');
 			return { width, height, frameRate, aspect, sequence, pictureType, temporalReference, colorSpace,
-				closedGop, profileAndLevel, sliceOffset: offset };
+				closedGop, profileAndLevel, progressiveSequence, chromaFormat, progressive, topFieldFirst,
+				extendedHeaders, framePredFrameDct, chroma420Type, sliceOffset: offset };
 		}
 		let end = offset + 4;
 		while (end + 3 <= data.length
@@ -112,8 +120,11 @@ export const parseMpeg2Headers = (data: Uint8Array) => {
 				requireMpeg2(sequence && !sequenceExtension && !gop && !pictureType,
 					'misplaced MPEG-2 sequence extension');
 				profileAndLevel = read(8);
-				requireMpeg2([0x44, 0x46].includes(profileAndLevel) && read(1) === 1 && read(2) === 1,
-					'MPEG-2 requires progressive Main Profile / High or High-1440 Level 4:2:0');
+				progressiveSequence = read(1) === 1;
+				chromaFormat = read(2);
+				requireMpeg2(([0x44, 0x46].includes(profileAndLevel) && progressiveSequence && chromaFormat === 1)
+					|| (profileAndLevel === 0x82 && chromaFormat === 2),
+				'unsupported MPEG-2 profile, chroma or progressive sequence');
 				width += read(2) * 4096;
 				height += read(2) * 4096;
 				read(12);
@@ -140,15 +151,35 @@ export const parseMpeg2Headers = (data: Uint8Array) => {
 				requireMpeg2(pictureType && !pictureExtension, 'misplaced MPEG-2 picture extension');
 				read(16);
 				read(2);
-				requireMpeg2(read(2) === 3 && read(1) === 0 && read(1) === 1,
-					'MPEG-2 requires progressive frame pictures');
+				requireMpeg2(read(2) === 3, 'MPEG-2 requires frame pictures');
+				topFieldFirst = read(1) === 1;
+				framePredFrameDct = read(1) === 1;
 				read(4);
-				requireMpeg2(read(1) === 0 && read(1) === 1 && read(1) === 1 && read(1) === 0,
-					'MPEG-2 repeated fields or nonprogressive pictures are unsupported');
+				requireMpeg2(read(1) === 0, 'MPEG-2 repeated fields are unsupported');
+				chroma420Type = read(1) === 1;
+				progressive = read(1) === 1;
+				requireMpeg2(read(1) === 0, 'MPEG-2 composite display is unsupported');
 				pictureExtension = true;
+			} else if (extension === 3) {
+				extendedHeaders = true;
+				requireMpeg2(pictureExtension, 'misplaced MPEG-2 quant matrix extension');
+				for (let matrix = 0; matrix < 4; matrix++) {
+					if (read(1)) {
+						for (let i = 0; i < 64; i++) {
+							const weight = read(8);
+							requireMpeg2(weight > 0 && (matrix % 2 !== 0 || i !== 0 || weight === 8),
+								'invalid MPEG-2 quant matrix weight');
+						}
+					}
+				}
 			} else {
 				requireMpeg2(false, 'unsupported MPEG-2 extension');
 			}
+		} else if (code === 0xb2) {
+			requireMpeg2(sequenceExtension || pictureExtension, 'unsupported MPEG-2 header before first slice');
+			extendedHeaders = true;
+			offset = end;
+			continue;
 		} else {
 			requireMpeg2(false, 'unsupported MPEG-2 header before first slice');
 		}

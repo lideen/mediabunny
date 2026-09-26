@@ -92,6 +92,11 @@ export abstract class CustomVideoDecoder {
 	abstract init(): MaybePromise<void>;
 	/** Decodes the provided encoded packet. */
 	abstract decode(packet: EncodedPacket): MaybePromise<void>;
+	/**
+	 * Consumes an unrequested preroll packet's headers without reconstructing or emitting its picture.
+	 * Preserves persistent codec state. Does not imply entropy validation. Unsupported decoders must omit this method.
+	 */
+	decodePreroll?(packet: EncodedPacket): MaybePromise<void>;
 	/** Optional reduced decoding. Never receives a partial EncodedPacket or falls back to full decoding. */
 	decodeReduced?(reader: VideoDecodePacketReader, request: ReducedVideoDecodeRequest): MaybePromise<void>;
 	/** Optional pair with decodePrepared. Must not allocate native decoder state or emit samples. */

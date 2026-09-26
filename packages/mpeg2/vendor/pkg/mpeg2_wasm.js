@@ -275,6 +275,19 @@ export class PacketVideoDecoder {
         return v2;
     }
     /**
+     * @param {Uint8Array} input
+     * @returns {PrerollDiscardReport}
+     */
+    discardLeadingB(input) {
+        const ptr0 = passArray8ToWasm0(input, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.packetvideodecoder_discardLeadingB(this.__wbg_ptr, ptr0, len0);
+        if (ret[2]) {
+            throw takeFromExternrefTable0(ret[1]);
+        }
+        return PrerollDiscardReport.__wrap(ret[0]);
+    }
+    /**
      * @returns {TimedPacketFrame | undefined}
      */
     drain() {
@@ -333,6 +346,50 @@ export class PacketVideoDecoder {
     }
 }
 if (Symbol.dispose) PacketVideoDecoder.prototype[Symbol.dispose] = PacketVideoDecoder.prototype.free;
+
+/**
+ * Header-only discard receipt. No decoded frame or timing is associated with it.
+ */
+export class PrerollDiscardReport {
+    static __wrap(ptr) {
+        const obj = Object.create(PrerollDiscardReport.prototype);
+        obj.__wbg_ptr = ptr;
+        PrerollDiscardReportFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        PrerollDiscardReportFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_prerolldiscardreport_free(ptr, 0);
+    }
+    /**
+     * @returns {number}
+     */
+    get anchorTemporalReference() {
+        const ret = wasm.__wbg_get_prerolldiscardreport_anchorTemporalReference(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {bigint}
+     */
+    get packetId() {
+        const ret = wasm.__wbg_get_prerolldiscardreport_packetId(this.__wbg_ptr);
+        return BigInt.asUintN(64, ret);
+    }
+    /**
+     * @returns {number}
+     */
+    get temporalReference() {
+        const ret = wasm.__wbg_get_prerolldiscardreport_temporalReference(this.__wbg_ptr);
+        return ret;
+    }
+}
+if (Symbol.dispose) PrerollDiscardReport.prototype[Symbol.dispose] = PrerollDiscardReport.prototype.free;
 
 /**
  * Transport owner consumed by the JS facade; taking its frame transfers pixel ownership.
@@ -499,6 +556,9 @@ const DecodedFrameFinalization = (typeof FinalizationRegistry === 'undefined')
 const PacketVideoDecoderFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_packetvideodecoder_free(ptr, 1));
+const PrerollDiscardReportFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_prerolldiscardreport_free(ptr, 1));
 const TimedPacketFrameFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_timedpacketframe_free(ptr, 1));

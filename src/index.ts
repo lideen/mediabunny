@@ -274,6 +274,7 @@ export {
 	AudioSampleResource,
 	VideoSample,
 	type VideoSampleInit,
+	type VideoSampleScan,
 	type VideoSamplePixelFormat,
 	VideoSampleColorSpace,
 	VideoSampleResource,
