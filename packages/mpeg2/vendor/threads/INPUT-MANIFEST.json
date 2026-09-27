@@ -1,0 +1,70 @@
+{
+  "scalar/js/index.mjs": {
+    "bytes": 4975,
+    "sha256": "7fc979b850e5c0b5dd9aec5557da7e8303279a4de98caa330faa33df42192da5"
+  },
+  "scalar/js/threaded-runtime.mjs": {
+    "bytes": 182,
+    "sha256": "e84013661c1af77c81e4c479f18fd793a0959c430491631bdf60c13f4b3105a3"
+  },
+  "scalar/js/threaded-worker.mjs": {
+    "bytes": 4191,
+    "sha256": "2579053032a003cf81703963f80e9e701769b8e80fe43096571ed9032a4e93dc"
+  },
+  "scalar/js/threaded.d.ts": {
+    "bytes": 2056,
+    "sha256": "18626be62c93392a1d44ee8fd9a4dc6077bb94f046fe55f15e4fc65b8c837265"
+  },
+  "scalar/js/threaded.mjs": {
+    "bytes": 8389,
+    "sha256": "504353db5e318594da2d3edc0a290e666b4e4850948b220349e42f5d27f4eafd"
+  },
+  "scalar/pkg/mpeg2_wasm.d.ts": {
+    "bytes": 8712,
+    "sha256": "7d3949290bd58e7da30dbe27ecc42ceff2726d7a29426e3c8a691d18f7837cdd"
+  },
+  "scalar/pkg/mpeg2_wasm.js": {
+    "bytes": 22772,
+    "sha256": "f39fd77f03ade8555978a9a133fabec05e00a210f971c1be867a7c1af271fd92"
+  },
+  "scalar/pkg/mpeg2_wasm_bg.wasm": {
+    "bytes": 155437,
+    "sha256": "7b26778cd36ec110c9d03cddeca96113f580f67b4364497472994cf41ca1766b"
+  },
+  "scalar/pkg/mpeg2_wasm_bg.wasm.d.ts": {
+    "bytes": 4240,
+    "sha256": "2579697264a424efa2679ad051fe03352c81877b1ea356fc8be718b07a116032"
+  },
+  "shared/helper-adaptation.json": {
+    "bytes": 586,
+    "sha256": "b5b8f4873b1b7f898dbdba5de6ca721e04e0e4fc71fbe53bc5f6c59d7ced5efa"
+  },
+  "shared/js/index.mjs": {
+    "bytes": 4975,
+    "sha256": "7fc979b850e5c0b5dd9aec5557da7e8303279a4de98caa330faa33df42192da5"
+  },
+  "shared/js/threaded-runtime.mjs": {
+    "bytes": 182,
+    "sha256": "e84013661c1af77c81e4c479f18fd793a0959c430491631bdf60c13f4b3105a3"
+  },
+  "shared/pkg/mpeg2_wasm.d.ts": {
+    "bytes": 10038,
+    "sha256": "9b0d0070b26bcc74f69f9eb92fe13d0ece9feecc79fab9f257650e4aad84e448"
+  },
+  "shared/pkg/mpeg2_wasm.js": {
+    "bytes": 27298,
+    "sha256": "430f5d39b7f6e0a5abb1648c27a62ae06161a73f4a73d6ee428bad5f9655e40b"
+  },
+  "shared/pkg/mpeg2_wasm_bg.wasm": {
+    "bytes": 340576,
+    "sha256": "b85deeac3eb872f735a5546ae2d2bf19db01c9fabb79218a636cd9f682156708"
+  },
+  "shared/pkg/mpeg2_wasm_bg.wasm.d.ts": {
+    "bytes": 4837,
+    "sha256": "de20c75050d10613f05e1b6c96d0f0b1a0f983d9c0282360d0af586ca93b9ef5"
+  },
+  "shared/pkg/snippets/wasm-bindgen-rayon-38edf6e439f6d70d/src/workerHelpers.no-bundler.js": {
+    "bytes": 3180,
+    "sha256": "e335cb4321a3a05f21951f81cd2890d9da8161c182466ef006ebfe9c430c1f48"
+  }
+}

@@ -51,6 +51,11 @@ export function readResponse(value: unknown, request: WorkerRequest, width: numb
 	}
 	const frames = value['frames'];
 	const maxFrames = request.op === 'decode' ? 2 : request.op === 'flush' ? 1 : 0;
+	return readFrames(frames, maxFrames, width, height);
+}
+
+/** Shared output boundary for embedded-worker replies and the slice-pool facade. */
+export function readFrames(frames: unknown, maxFrames: number, width: number, height: number): WorkerFrame[] {
 	requireProtocol(Array.isArray(frames) && frames.length <= maxFrames, 'invalid output count');
 	const buffers = new Set<ArrayBuffer>();
 	for (const frame of frames as unknown[]) {

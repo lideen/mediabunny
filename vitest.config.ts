@@ -4,6 +4,14 @@ import { defineConfig } from 'vitest/config';
 import path from 'node:path';
 
 export default defineConfig({
+	// Thread runtime modules must be served unchanged, not rewritten for the test-runner realm.
+	publicDir: path.resolve(__dirname, 'packages/mpeg2/dist'),
+	server: {
+		headers: {
+			'Cross-Origin-Opener-Policy': 'same-origin',
+			'Cross-Origin-Embedder-Policy': 'require-corp',
+		},
+	},
 	resolve: {
 		alias: {
 			'@mediabunny/mpeg2': path.resolve(__dirname, './packages/mpeg2/dist/bundles/mediabunny-mpeg2.mjs'),
@@ -39,6 +47,7 @@ export default defineConfig({
 					name: 'browser',
 					root: 'test',
 					include: ['browser/**/*.test.ts'],
+					exclude: ['browser/mpeg2-threads.test.ts'],
 					browser: {
 						enabled: true,
 						provider: 'webdriverio',
@@ -54,6 +63,21 @@ export default defineConfig({
 							},
 						}],
 						headless: false, // A bunch of features need the head
+						screenshotFailures: false,
+					},
+				},
+			},
+			{
+				extends: true,
+				test: {
+					name: 'browser-threads',
+					root: 'test',
+					include: ['browser/mpeg2-threads.test.ts'],
+					browser: {
+						enabled: true,
+						provider: 'webdriverio',
+						instances: [{ browser: 'chrome' }],
+						headless: false,
 						screenshotFailures: false,
 					},
 				},

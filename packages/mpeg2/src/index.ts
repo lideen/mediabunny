@@ -11,6 +11,7 @@ import { CustomVideoDecoder, EncodedPacket, registerDecoder, VideoCodec, VideoSa
 import { createPacketDecoder, init, type PacketDecoder, type TimedFrame } from '../vendor/js/index.mjs';
 import wasmBinary from '../vendor/pkg/mpeg2_wasm_bg.wasm';
 import { Mpeg2WorkerDecoder } from './worker-decoder.js';
+import { Mpeg2ThreadedDecoder } from './threaded-decoder.js';
 
 let modulePromise: Promise<unknown> | null = null;
 const loadModule = () => modulePromise ??= WebAssembly.compile(wasmBinary)
@@ -153,7 +154,7 @@ class RegisteredMpeg2WorkerDecoder extends Mpeg2WorkerDecoder {
 	}
 }
 
-let registeredMode: boolean | null = null;
+let registeredMode: { useWorker: boolean; threadCount: number; runtimeUrl?: string } | null = null;
 
 /**
  * Options for private MPEG-2 decoder registration.
@@ -163,6 +164,10 @@ let registeredMode: boolean | null = null;
 export type Mpeg2DecoderOptions = {
 	/** Decode in an embedded browser worker. Requires Worker and CSP permission for blob workers. Default: false. */
 	useWorker?: boolean;
+	/** Slice-pool workers, excluding one coordinator. Default: 1 (no slice pool). */
+	threadCount?: 1 | 2 | 4;
+	/** Absolute URL of the separately served shared build's js/threaded-runtime.mjs. Required for 2/4. */
+	threadedRuntimeUrl?: string | URL;
 };
 
 /**
@@ -176,13 +181,40 @@ export const registerMpeg2Decoder = (options: Mpeg2DecoderOptions = {}) => {
 		|| (options.useWorker !== undefined && typeof options.useWorker !== 'boolean')) {
 		throw new TypeError('MPEG-2 useWorker must be a boolean.');
 	}
-	const useWorker = options.useWorker ?? false;
+	const threadCount = options.threadCount ?? 1;
+	if (threadCount !== 1 && threadCount !== 2 && threadCount !== 4) {
+		throw new TypeError('MPEG-2 threadCount must be 1, 2 or 4.');
+	}
+	if (threadCount > 1 && options.useWorker === false) {
+		throw new TypeError('MPEG-2 slice threads require worker mode.');
+	}
+	let runtimeUrl: string | undefined;
+	if (options.threadedRuntimeUrl !== undefined) {
+		if (threadCount === 1) throw new TypeError('MPEG-2 threadedRuntimeUrl requires threadCount 2 or 4.');
+		if (typeof options.threadedRuntimeUrl !== 'string' && !(options.threadedRuntimeUrl instanceof URL)) {
+			throw new TypeError('MPEG-2 threadedRuntimeUrl must be an absolute URL.');
+		}
+		runtimeUrl = new URL(options.threadedRuntimeUrl).href;
+	}
+	const useWorker = options.useWorker ?? threadCount > 1;
 	if (registeredMode !== null) {
-		if (registeredMode !== useWorker) {
+		if (registeredMode.useWorker !== useWorker || registeredMode.threadCount !== threadCount
+			|| registeredMode.runtimeUrl !== runtimeUrl) {
 			throw new Error('MPEG-2 decoder was already registered with a different mode');
 		}
 		return;
 	}
-	registerDecoder(useWorker ? RegisteredMpeg2WorkerDecoder : Mpeg2Decoder);
-	registeredMode = useWorker;
+	if (threadCount === 2 || threadCount === 4) {
+		const poolSize = threadCount;
+		class RegisteredThreadedDecoder extends Mpeg2ThreadedDecoder {
+			constructor() { super(poolSize, runtimeUrl); }
+			static override supports(codec: VideoCodec, config: VideoDecoderConfig) {
+				return Mpeg2Decoder.supports(codec, config);
+			}
+		}
+		registerDecoder(RegisteredThreadedDecoder);
+	} else {
+		registerDecoder(useWorker ? RegisteredMpeg2WorkerDecoder : Mpeg2Decoder);
+	}
+	registeredMode = { useWorker, threadCount, runtimeUrl };
 };

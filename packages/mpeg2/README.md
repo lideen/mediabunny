@@ -19,6 +19,77 @@ input.dispose();
 
 Registration is explicit and idempotent. Neither core nor `@mediabunny/server` registers this decoder. MXF remains opt-in and outside `ALL_FORMATS`. There is no native WebCodecs fallback, FFmpeg fallback, encoder, or muxer.
 
+## Optional slice pool
+
+Registration accepts `threadCount: 1 | 2 | 4`. The default remains `1`:
+`registerMpeg2Decoder()` decodes directly, and `{ useWorker: true }` uses the existing
+embedded serial worker without shared memory. Counts `2` and `4` imply worker mode;
+combining either with explicit `useWorker: false` throws. Registration compares the
+effective worker mode, thread count and runtime URL, rejecting conflicting repeats.
+
+Parallel mode requires an absolute `threadedRuntimeUrl` pointing to the shared build's
+`js/threaded-runtime.mjs`. The adjacent `threaded.mjs` facade and `threaded-worker.mjs`
+coordinator are resolved from that URL. Serve the complete private `js/` and `pkg/`
+asset tree unchanged, including the generated Rayon snippets. These are separate
+assets, not embedded in the default bundle. `npm run build` copies the runtime to
+`packages/mpeg2/dist/threads/`; copy that entire directory to your application's
+static asset directory. The package also exposes these files as `@mediabunny/mpeg2/threads/*`.
+Do not ask an application bundler to rewrite the generated worker modules or flatten
+the directory structure. Both ESM and global bundles use the same explicit asset URL.
+
+```ts
+registerMpeg2Decoder({
+    threadCount: 4,
+    threadedRuntimeUrl: new URL('/mpeg2-threads/js/threaded-runtime.mjs', location.href),
+});
+```
+
+The page must be cross-origin isolated and support `SharedArrayBuffer` and `Worker`.
+Serve it with `Cross-Origin-Opener-Policy: same-origin` and
+`Cross-Origin-Embedder-Policy: require-corp`, with the assets on the same origin.
+CSP must permit scripts and connections to those assets, WebAssembly compilation
+(`'wasm-unsafe-eval'`) and both same-origin module workers and `blob:` workers.
+Missing capabilities, runtime URL, assets or initialization reject; there is no
+whole-backend fallback. Individual ineligible slice layouts still use the Rust kernel's
+serial path inside the requested backend. Two/four pool workers require **three/five
+total workers per decoder**, including the coordinator, with separate decoder memory.
+No hardware-concurrency clamping or shared global pool is performed.
+
+The optional shared module is 340,576 bytes, SHA-256
+`b85deeac3eb872f735a5546ae2d2bf19db01c9fabb79218a636cd9f682156708`.
+Its `PROVENANCE.json` records the reviewed input manifest and source-file mapping.
+The Rayon helper has a controlled Apache-2.0 adaptation that forwards asynchronous
+child initialization rejection to the Worker's error event. `helper-adaptation.json`
+records original/patched hashes and the adaptation script identity. The supplied
+tree is `mpeg2-slice-parallel-20260927/review-fixes/integration-ready/`.
+The reviewed threaded source commit is `1efaf69d5120c2d8b538a96b485f256817541a37`.
+Recorded source hashes match that commit; the build preceded it, and provenance
+retains the original dirty-build base rather than claiming a post-commit rebuild.
+`NOTICE.txt` and `licenses/` retain the locked dependencies' license texts. These
+licenses do not authorize distribution of the combined private MPEG-2 package.
+The accepted scalar f64 transform remains in use; no fixed-IDCT build is included.
+
+Historical captured-media public-sink measurements (five warm ABBA rounds, seven measured rounds,
+14 observations per mode/workload) found paired lifetime wall-time reductions of
+38.0%/39.8% for SWAT/Live with two pool workers and 61.6%/64.0% with four. The
+60-frame authored IPB selection improved 22.4%/42.1%. Short progressive 720p
+selections regressed 28.9%/13.5%, so the pool is opt-in, not automatically selected.
+These unpaced runs included Input construction, startup, output copies and disposal,
+but no canvas rendering. They do not establish sustained playback rates. Each
+shared WASM instance has a 256 MiB maximum; observed linear-memory allocation is
+not total process memory or evidence of reclamation after termination. Those timings
+precede the final coordinator reply-loss and Rayon child-startup failure fixes.
+The WASM kernels are identical, but the historical JS runtime hashes are not the
+final runtime hashes. Correctness and lifecycle validation were repeated after refresh;
+the timing campaign was not relabeled or repeated.
+
+The built ESM/global paths matched the frozen scalar's complete frame pixels,
+timing and scan metadata across six captured/authored selections, including backward
+open-GOP selections and clones held after disposal. Cancellation during initialization,
+decode and segment finish, capability rejection and partial startup failure were
+checked separately. The `browser-threads` Vitest project serves built runtime files
+unchanged and checks real-worker lifecycle and independent pixel goldens.
+
 ## Optional browser worker
 
 `registerMpeg2Decoder({ useWorker: true })` selects an embedded browser worker instead of main-thread decoding. Omitting the option retains direct decoding. Repeating the same mode is idempotent; changing modes after registration throws. Worker mode does not silently fall back to direct decoding if Worker support, initialization or CSP permission is missing. Applications that need a different mode must decide before registration in a fresh registry/application context.

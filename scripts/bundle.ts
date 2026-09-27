@@ -1,6 +1,6 @@
 import * as esbuild from 'esbuild';
 import process from 'node:process';
-import { readFileSync, readdirSync } from 'node:fs';
+import { cpSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import PluginExternalGlobal from 'esbuild-plugin-external-global';
 import { inlineWorkerPlugin } from './esbuild/inlined-workers.js';
 
@@ -343,6 +343,10 @@ const mpeg2Variants = await createVariants(
 		plugins: [mpeg2WorkerPlugin],
 	},
 );
+
+// Preserve import.meta.url and Rayon snippet paths in the separately served private runtime.
+rmSync('packages/mpeg2/dist/threads', { recursive: true, force: true });
+cpSync('packages/mpeg2/vendor/threads', 'packages/mpeg2/dist/threads', { recursive: true });
 
 const serverVariants = await createVariants(
 	'packages/server/src/index.ts',

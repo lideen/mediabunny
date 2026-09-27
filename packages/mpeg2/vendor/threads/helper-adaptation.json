@@ -1,0 +1,10 @@
+{
+  "dependency": "wasm-bindgen-rayon",
+  "version": "1.3.0",
+  "license": "Apache-2.0",
+  "path": "snippets/wasm-bindgen-rayon-38edf6e439f6d70d/src/workerHelpers.no-bundler.js",
+  "originalSha256": "9801503f464f848c6c7405462fca9a5c721556904c5fee5ee0afcb0887ea1b7f",
+  "patchedSha256": "e335cb4321a3a05f21951f81cd2890d9da8161c182466ef006ebfe9c430c1f48",
+  "reason": "Forward async child initialization rejection through Worker error instead of waiting for the parent operation deadline.",
+  "adaptationScriptSha256": "d0985fdeab7a3c9f188159607bf54d1e4fc5bb1c457b0c8e688e1184ca6ad96d"
+}
