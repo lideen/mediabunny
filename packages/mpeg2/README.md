@@ -43,7 +43,7 @@ The adapter outputs owned planar I420 or I422 `VideoSample`s. Native per-picture
 
 Packet timing passes directly to `decode(bytes, { timestamp, duration })`. The native decoder associates delayed frames with their packets and returns display-ordered timed output. The adapter neither sorts temporal references nor maintains a timestamp map, packet history, or second operation queue.
 
-In direct mode, the embedded 150,344-byte module is compiled lazily, shared between decoder instances in that realm, and loaded without fetches. Worker mode initializes a separate WASM environment per decoder worker. Each decoder owns its own native references. Input and padded frame budgets are 8 MiB each; native reference storage is bounded to 24 MiB per decoder. Width is at most 4096 and height at most 2304, subject to the tighter padded-frame budget. There is no 64-picture lifetime cap. Authored tests and bounded local 1080p I422 selections provide targeted evidence, not general MPEG-2 conformance certification.
+In direct mode, the embedded 155,437-byte default-scalar module is compiled lazily, shared between decoder instances in that realm, and loaded without fetches. Worker mode initializes a separate WASM environment per decoder worker. Each decoder owns its own native references. Input and padded frame budgets are 8 MiB each; native reference storage is bounded to 24 MiB per decoder. Width is at most 4096 and height at most 2304, subject to the tighter padded-frame budget. There is no 64-picture lifetime cap. Authored tests and bounded local 1080p I422 selections provide targeted evidence, not general MPEG-2 conformance certification.
 
 ## Selection lifecycle
 
@@ -59,8 +59,8 @@ Malformed native pictures throw sticky errors. A failed finish does not reset aw
 
 `vendor/PROVENANCE.json` records the source commit, source/compiler hashes, dependency license metadata, original build-record hash, and every copied artifact hash. Upstream files are unmodified; only `vendor/js/index.d.mts` is an adapter-authored declaration for the used facade API. The license-header checker visits `src` only, never `vendor`. Bundle banners retain the distribution restriction and exact WASM identity.
 
-- Source commit: `1a9e585a52dcce079ca2543abe59aef50551f59a`.
-- WASM SHA-256: `c9caeab946aa20774c8404066bfe6dcc2bb5a8aac0be670e7ffa2d83df0cfe08`.
+- Source commit: `3d38fca7df512389384b93697b7dd8cab4a3b49d`, accepted default scalar optimizations. Later tools-only commits do not change the decoder source identity; experimental autovectorized and factorized builds are excluded.
+- WASM SHA-256: `7b26778cd36ec110c9d03cddeca96113f580f67b4364497472994cf41ca1766b`.
 - Build tools: Rust 1.98.1 and wasm-bindgen 0.2.129. The supplied build occurred before the final commit; compiler-input hashes were checked against that commit. No Rust rebuild or source modification is part of this package integration.
 
 `test/node/mpeg2.test.ts` imports the actual bundled package and verifies all 18 authored MXF frames against independent FFmpeg FAANI plane hashes, PCM hashes, individual and batched backward selections, native error behavior, timing, ownership, close during initialization, and more than 64 packets without reset. Browser canvas rendering requires separate real-browser verification; Node planar equality is not a canvas color-conversion proof.

@@ -1,12 +1,12 @@
 {
   "sourceRepository": "mpeg2-rs (user-supplied local repository)",
-  "sourceCommit": "1a9e585a52dcce079ca2543abe59aef50551f59a",
+  "sourceCommit": "3d38fca7df512389384b93697b7dd8cab4a3b49d",
   "permission": "User-authorized private local integration only. No public distribution license selected. No npm publication or upstream distribution authorized.",
   "buildRecord": {
-    "path": "oracle-output/preroll/final-build-provenance.json",
-    "sha256": "303c2c1210c737ecbfc01188f1df65134e2d1a77d193c7a6c94b20d31f4c3e9a",
-    "baseCommit": "4aa77ea2d6bcc6a5904790d72bea54e2f18000f3",
-    "note": "Build preceded final source commit; selected compiler input hashes checked against that commit.",
+    "path": "mpeg2-ac-vlc-20260927/final-build-provenance.json",
+    "sha256": "ede69967ea0f8b343ee772bf87c0b1fbc2bd67221867ed42c949660ff76567a5",
+    "baseCommit": "3dcd954ada95f35d822a997d3c24797e7fcd2ba7",
+    "note": "Accepted default scalar build preceded source commit 3d38fca; all recorded src/ files, manifests, facade, WASM wrapper and build script hashes checked against that commit and current files before copying. Later tools-only HEAD is not the decoder source identity. No experimental autovectorized or factorized build is included.",
     "tools": {
       "rustc": {
         "version": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: aarch64-apple-darwin\nrelease: 1.98.1\nLLVM version: 22.1.8",
@@ -64,8 +64,12 @@
       "sha256": "85a8d6607e6e83a239a1a0ed1060f80aa3c44fee35b6cc00e3cb70b2d9135099"
     },
     "src/bits.rs": {
-      "bytes": 2137,
-      "sha256": "d12ca391f8b83f22656f503070528f572effd0b1eba10fa3b2cb336def6cb04c"
+      "bytes": 3055,
+      "sha256": "e4c0c4d988c8834f0cd870739d1c18f417fd3c671aa21f43c1516a9c76f214d6"
+    },
+    "src/bits/tests.rs": {
+      "bytes": 2540,
+      "sha256": "93102510a6b55a943021c7e2f0831e0a1eac64be27dab6d89be344c444d51984"
     },
     "src/decoder.rs": {
       "bytes": 61023,
@@ -80,12 +84,20 @@
       "sha256": "2794b77bbc30cc6d36ba514c36c8a3033084b4a58692ffba8fe99ab72764e110"
     },
     "src/transform.rs": {
-      "bytes": 6350,
-      "sha256": "706a239e5b5833a20a12b1f6cc3559160cd29cdf6cb532d5625ec8940117031c"
+      "bytes": 9702,
+      "sha256": "8fc9091b7f3dc624fc9f728c16f664495f6fe82c7458fbfdc987fbc562eff8e6"
     },
     "src/vlc.rs": {
-      "bytes": 15748,
-      "sha256": "51ed45a88f3ed8a4a1564a1c36556f5ff6c09594c9ca6600c6dcc327088a9fb8"
+      "bytes": 17975,
+      "sha256": "a2811bbc1182c9e4f695afe39559327a400ec4da50156aa98886df5ceea3dfe7"
+    },
+    "src/vlc/frozen.rs": {
+      "bytes": 11291,
+      "sha256": "415e79c6e7ef2e77bed03baa0537ee896759c890f54884fb5c9796544fc10948"
+    },
+    "src/vlc/tests.rs": {
+      "bytes": 3594,
+      "sha256": "43b5c192a410b1c78cdc9fe65421792005cfd1b454073922a1626723ca25c541"
     },
     "tools/build-wasm.sh": {
       "bytes": 478,
@@ -110,8 +122,8 @@
     },
     "pkg/mpeg2_wasm_bg.wasm": {
       "source": "crates/wasm/pkg/mpeg2_wasm_bg.wasm",
-      "bytes": 150344,
-      "sha256": "c9caeab946aa20774c8404066bfe6dcc2bb5a8aac0be670e7ffa2d83df0cfe08"
+      "bytes": 155437,
+      "sha256": "7b26778cd36ec110c9d03cddeca96113f580f67b4364497472994cf41ca1766b"
     }
   },
   "localAdditions": [
