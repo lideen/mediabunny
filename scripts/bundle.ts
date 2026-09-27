@@ -301,6 +301,27 @@ const mpeg2Notice = `/* Private local integration. NOT FOR PUBLIC DISTRIBUTION.
  * MPL-2.0 applies only to the Mediabunny adapter source. See packages/mpeg2/vendor/PROVENANCE.json.
  * WASM SHA-256: c9caeab946aa20774c8404066bfe6dcc2bb5a8aac0be670e7ffa2d83df0cfe08
  */`;
+
+const mpeg2WorkerPlugin: esbuild.Plugin = {
+	name: 'embedded-mpeg2-worker',
+	setup(build) {
+		build.onResolve({ filter: /^#mpeg2-worker-source$/ }, () => ({
+			path: 'mpeg2-worker', namespace: 'embedded-mpeg2-worker',
+		}));
+		build.onLoad({ filter: /.*/, namespace: 'embedded-mpeg2-worker' }, async () => {
+			const worker = await esbuild.build({
+				entryPoints: ['packages/mpeg2/src/worker-entry.ts'],
+				bundle: true, write: false, metafile: true, format: 'iife', platform: 'browser', target: 'es2021',
+				loader: { '.wasm': 'binary' }, banner: { js: mpeg2Notice }, legalComments: 'inline',
+				define: { 'import.meta.url': '""' },
+			});
+			return {
+				contents: `export default ${JSON.stringify(worker.outputFiles[0]!.text)};`,
+				loader: 'js', watchFiles: Object.keys(worker.metafile.inputs),
+			};
+		});
+	},
+};
 const mpeg2Variants = await createVariants(
 	'packages/mpeg2/src/index.ts',
 	'MediabunnyMpeg2',
@@ -311,7 +332,7 @@ const mpeg2Variants = await createVariants(
 		define: { 'import.meta.url': '""' },
 		banner: { js: mpeg2Notice },
 		legalComments: 'inline',
-		plugins: [PluginExternalGlobal.externalGlobalPlugin({ mediabunny: 'Mediabunny' })],
+		plugins: [mpeg2WorkerPlugin, PluginExternalGlobal.externalGlobalPlugin({ mediabunny: 'Mediabunny' })],
 	},
 	{
 		loader: { '.wasm': 'binary' },
@@ -319,6 +340,7 @@ const mpeg2Variants = await createVariants(
 		platform: 'neutral',
 		banner: { js: mpeg2Notice },
 		legalComments: 'inline',
+		plugins: [mpeg2WorkerPlugin],
 	},
 );
 

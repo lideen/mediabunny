@@ -10,6 +10,7 @@ import { CustomVideoDecoder, EncodedPacket, registerDecoder, VideoCodec, VideoSa
 	type VideoSampleInit } from 'mediabunny';
 import { createPacketDecoder, init, type PacketDecoder, type TimedFrame } from '../vendor/js/index.mjs';
 import wasmBinary from '../vendor/pkg/mpeg2_wasm_bg.wasm';
+import { Mpeg2WorkerDecoder } from './worker-decoder.js';
 
 let modulePromise: Promise<unknown> | null = null;
 const loadModule = () => modulePromise ??= WebAssembly.compile(wasmBinary)
@@ -146,16 +147,42 @@ export class Mpeg2Decoder extends CustomVideoDecoder {
 	}
 }
 
-let registered = false;
+class RegisteredMpeg2WorkerDecoder extends Mpeg2WorkerDecoder {
+	static override supports(codec: VideoCodec, config: VideoDecoderConfig) {
+		return Mpeg2Decoder.supports(codec, config);
+	}
+}
+
+let registeredMode: boolean | null = null;
 
 /**
- * Registers the private MPEG-2 WASM decoder. Does not enable implicit MXF input, encoding, or muxing.
+ * Options for private MPEG-2 decoder registration.
  * @group \@mediabunny/mpeg2
  * @public
  */
-export const registerMpeg2Decoder = () => {
-	if (!registered) {
-		registerDecoder(Mpeg2Decoder);
-		registered = true;
+export type Mpeg2DecoderOptions = {
+	/** Decode in an embedded browser worker. Requires Worker and CSP permission for blob workers. Default: false. */
+	useWorker?: boolean;
+};
+
+/**
+ * Registers the private MPEG-2 WASM decoder. Repeating the same mode is idempotent; a conflicting mode throws.
+ * Worker mode never silently falls back to direct decoding. Does not enable implicit MXF input, encoding, or muxing.
+ * @group \@mediabunny/mpeg2
+ * @public
+ */
+export const registerMpeg2Decoder = (options: Mpeg2DecoderOptions = {}) => {
+	if (!options || typeof options !== 'object'
+		|| (options.useWorker !== undefined && typeof options.useWorker !== 'boolean')) {
+		throw new TypeError('MPEG-2 useWorker must be a boolean.');
 	}
+	const useWorker = options.useWorker ?? false;
+	if (registeredMode !== null) {
+		if (registeredMode !== useWorker) {
+			throw new Error('MPEG-2 decoder was already registered with a different mode');
+		}
+		return;
+	}
+	registerDecoder(useWorker ? RegisteredMpeg2WorkerDecoder : Mpeg2Decoder);
+	registeredMode = useWorker;
 };
