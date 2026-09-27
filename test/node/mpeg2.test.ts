@@ -92,6 +92,20 @@ describe('given the private MPEG-2 WASM extension', () => {
 	});
 
 	describe('when decoding every picture and the accompanying PCM', () => {
+		it('should preserve owned pixels through the copying path without structuredClone', async () => {
+			registerMpeg2Decoder();
+			using input = inputFor();
+			vi.stubGlobal('structuredClone', undefined);
+			try {
+				const track = (await input.getPrimaryVideoTrack())!;
+				using sample = (await new VideoSampleSink(track).getSample(0))!;
+				input.dispose();
+				await verify(sample, 0);
+			} finally {
+				vi.unstubAllGlobals();
+			}
+		});
+
 		it('should match FAANI planes and ffprobe audio, retaining samples after disposal', async () => {
 			registerMpeg2Decoder();
 			const input = inputFor();

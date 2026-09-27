@@ -6,7 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { CustomVideoDecoder, EncodedPacket, registerDecoder, VideoCodec, VideoSample } from 'mediabunny';
+import { CustomVideoDecoder, EncodedPacket, registerDecoder, VideoCodec, VideoSample,
+	type VideoSampleInit } from 'mediabunny';
 import { createPacketDecoder, init, type PacketDecoder, type TimedFrame } from '../vendor/js/index.mjs';
 import wasmBinary from '../vendor/pkg/mpeg2_wasm_bg.wasm';
 
@@ -98,7 +99,7 @@ export class Mpeg2Decoder extends CustomVideoDecoder {
 				data.set(y);
 				data.set(cb, y.length);
 				data.set(cr, y.length + cb.length);
-				const sample = new VideoSample(data, {
+				const sampleInit = {
 					format: frame.chromaFormat === 'yuv422p' ? 'I422' : 'I420',
 					codedWidth: frame.width, codedHeight: frame.height,
 					scan: frame.progressive
@@ -110,7 +111,10 @@ export class Mpeg2Decoder extends CustomVideoDecoder {
 						{ offset: y.length + cb.length, stride: frame.crStride },
 					],
 					timestamp, duration, colorSpace: this.config.colorSpace ?? {},
-				});
+				} satisfies VideoSampleInit;
+				const sample = typeof globalThis.structuredClone === 'function'
+					? VideoSample.fromTransferredBuffer(data.buffer, sampleInit)
+					: new VideoSample(data, sampleInit);
 				try {
 					this.onSample(sample);
 				} catch (error) {

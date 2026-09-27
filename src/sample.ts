@@ -712,6 +712,71 @@ export class VideoSample implements Disposable {
 		finalizationRegistry?.register(this, { type: 'video', data: this._data }, this);
 	}
 
+	/**
+	 * Creates a sample by transferring a complete raw-pixel ArrayBuffer into it instead of copying its bytes.
+	 * On success, `data` and all views of it are detached. Use a dedicated buffer, not shared or borrowed storage.
+	 * Metadata is validated before transfer; validation failures leave the buffer attached. Requires structuredClone
+	 * with ArrayBuffer transfer support. The ordinary constructor continues to copy its input.
+	 * Layout offsets refer to the start of the entire buffer. Passing `view.buffer` transfers all of its storage,
+	 * not just the view's range. Layout entries are snapshotted. Overlapping source planes are permitted if each
+	 * plane is in bounds; unlike copy destinations, reading overlapping source regions does not overwrite pixels.
+	 */
+	static fromTransferredBuffer(
+		data: ArrayBuffer,
+		init: SetRequired<VideoSampleInit, 'format' | 'codedWidth' | 'codedHeight' | 'timestamp'>,
+	) {
+		if (!(data instanceof ArrayBuffer)) {
+			throw new TypeError('data must be an ArrayBuffer.');
+		}
+		if (typeof globalThis.structuredClone !== 'function') {
+			throw new Error('VideoSample.fromTransferredBuffer requires structuredClone with transfer support.');
+		}
+		// Constructing a view rejects detached buffers, including detached zero-length buffers.
+		const sourceByteLength = new Uint8Array(data).byteLength;
+		const options = { ...init, _doNotCopy: true };
+		const { codedWidth, codedHeight } = options;
+		if (!Number.isSafeInteger(codedWidth) || codedWidth <= 0
+			|| !Number.isSafeInteger(codedHeight) || codedHeight <= 0) {
+			throw new TypeError('codedWidth and codedHeight must be positive safe integers.');
+		}
+		const sample = new VideoSample(data, options);
+		try {
+			const rect = sample.visibleRect;
+			if (![rect.left, rect.top, rect.width, rect.height, rect.left + rect.width, rect.top + rect.height]
+				.every(Number.isSafeInteger)
+				|| rect.left < 0 || rect.top < 0 || rect.width <= 0 || rect.height <= 0
+				|| rect.left + rect.width > codedWidth || rect.top + rect.height > codedHeight) {
+				throw new TypeError('visibleRect must be an integer pixel region within the coded dimensions.');
+			}
+			const planes = getPlaneConfigs(options.format);
+			const layout = sample._layout!.map(({ offset, stride }) => ({ offset, stride }));
+			if (layout.length !== planes.length) {
+				throw new TypeError('layout must specify exactly one entry for each source plane.');
+			}
+			for (let i = 0; i < planes.length; i++) {
+				const plane = planes[i]!;
+				const { offset, stride } = layout[i]!;
+				const rowBytes = Math.ceil(codedWidth / plane.widthDivisor) * plane.sampleBytes;
+				const rows = Math.ceil(codedHeight / plane.heightDivisor);
+				const lastRowOffset = stride * (rows - 1);
+				const end = offset + lastRowOffset + rowBytes;
+				if (![offset, stride, rowBytes, rows, lastRowOffset, offset + lastRowOffset, end]
+					.every(Number.isSafeInteger)
+					|| offset < 0 || stride < rowBytes || end > sourceByteLength) {
+					throw new TypeError('Source plane layout exceeds the buffer or has an invalid offset or stride.');
+				}
+			}
+			sample._layout = layout;
+			sample._data = new Uint8Array(globalThis.structuredClone(data, { transfer: [data] }));
+			finalizationRegistry?.unregister(sample);
+			finalizationRegistry?.register(sample, { type: 'video', data: sample._data }, sample);
+			return sample;
+		} catch (error) {
+			sample.close();
+			throw error;
+		}
+	}
+
 	/** Clones this video sample. */
 	clone() {
 		if (this._closed) {
