@@ -66,8 +66,8 @@ describe('given the private MPEG-2 WASM extension', () => {
 				const data = ArrayBuffer.isView(bytes)
 					? new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 					: new Uint8Array(bytes);
-				expect(data.byteLength).toBe(155437);
-				expect(hash(data)).toBe('7b26778cd36ec110c9d03cddeca96113f580f67b4364497472994cf41ca1766b');
+				expect(data.byteLength).toBe(154501);
+				expect(hash(data)).toBe('63e39b72085e2eccca4b70c87b6a30ad581a37e8b2007945dab01e7294bb61ce');
 				await gate;
 				return compile(bytes);
 			});

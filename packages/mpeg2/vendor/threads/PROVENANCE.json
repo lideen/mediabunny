@@ -1,9 +1,9 @@
 {
   "permission": "Private local integration only. UNLICENSED mpeg2-rs code; no public distribution authorized.",
-  "sourceBaseCommit": "d1e132da12ac34583b3d8926f9b42bcabc9bca14",
-  "sourceCommit": "1efaf69d5120c2d8b538a96b485f256817541a37",
-  "sourceState": "Build preceded final reviewed source commit. Recorded runtime, compiler source and adaptation-script hashes were checked against this commit; sourceBaseCommit preserves the original dirty-build base. This does not claim a post-commit rebuild.",
-  "inputManifestSha256": "1b032078e87d11c8260e716f76898830c679c2f2683ba877c836651f62c5ddbd",
+  "sourceBaseCommit": "1efaf69d5120c2d8b538a96b485f256817541a37",
+  "sourceCommit": "1fafe8f611afab696ce8b90d2d54b46f4c252789",
+  "sourceState": "All other recorded source inputs match the reviewed commit. None of the three changed documentation files are compiled through source includes or package manifests. Build predates the commit; original sourceHashes and supplied manifest are retained.",
+  "inputManifestSha256": "02520db9cb0b0fa32119016d26e4aac65b7789f8f1875e336d66e7d2f729d57e",
   "mapping": "Shared tree copied unchanged from the reviewed integration-ready handoff, including its controlled Apache-2.0 Rayon helper adaptation. Scalar threaded facade and coordinator placed adjacent to shared/js/index.mjs with unchanged relative imports. No duplicate scalar WASM.",
   "files": {
     "js/threaded-worker.mjs": {
@@ -48,8 +48,8 @@
     },
     "pkg/mpeg2_wasm_bg.wasm": {
       "source": "shared/pkg/mpeg2_wasm_bg.wasm",
-      "bytes": 340576,
-      "sha256": "b85deeac3eb872f735a5546ae2d2bf19db01c9fabb79218a636cd9f682156708"
+      "bytes": 343457,
+      "sha256": "70f0b778a1c26200065482ef97a7a8e38394d1e4720743ffc6e4e9df0579491f"
     },
     "pkg/mpeg2_wasm_bg.wasm.d.ts": {
       "source": "shared/pkg/mpeg2_wasm_bg.wasm.d.ts",
@@ -342,7 +342,7 @@
     }
   ],
   "cargoLockSha256": "8a0b7af14bf2c0541425b8421410b2a85ff32f336b730901c2946fba6ce1049d",
-  "inputSource": "mpeg2-slice-parallel-20260927/review-fixes/integration-ready/manifest.json",
+  "inputSource": "mpeg2-first-principles-20260927/integration/integration-ready-final/manifest.json",
   "helperAdaptation": {
     "dependency": "wasm-bindgen-rayon",
     "version": "1.3.0",
@@ -354,177 +354,41 @@
     "adaptationScriptSha256": "d0985fdeab7a3c9f188159607bf54d1e4fc5bb1c457b0c8e688e1184ca6ad96d"
   },
   "sourceHashes": {
-    "src/reconstruction.rs": {
-      "bytes": 5622,
-      "sha256": "4e7db42a5c4724ee091dd9a8853637658fbf35975c346418606f7e74ed63a800"
+    "docs/DC_PATTERNS.md": {
+      "bytes": 10647,
+      "sha256": "26049b100f0f22ced97dea586f124393a84a4b0ffdafa9cb63f9bf9e8c7c94d7"
     },
-    "src/lib.rs": {
-      "bytes": 7090,
-      "sha256": "d142409b4f9fa3819b2de3c604295a88adf52b8d955a3a8e197142e397afdd31"
+    "docs/FIRST_PRINCIPLES.md": {
+      "bytes": 12724,
+      "sha256": "95ea964d9a3c0c99f8f51ec885399f5521cad52026316545688a6e95e4ebe794"
     },
-    "src/decoder.rs": {
-      "bytes": 61181,
-      "sha256": "515a13a82282876f190fd3d3d89a59ee32852c1e4494d5232226b06252f419e5"
-    },
-    "src/bits.rs": {
-      "bytes": 3055,
-      "sha256": "e4c0c4d988c8834f0cd870739d1c18f417fd3c671aa21f43c1516a9c76f214d6"
-    },
-    "src/vlc.rs": {
-      "bytes": 17975,
-      "sha256": "a2811bbc1182c9e4f695afe39559327a400ec4da50156aa98886df5ceea3dfe7"
-    },
-    "src/transform.rs": {
-      "bytes": 9702,
-      "sha256": "8fc9091b7f3dc624fc9f728c16f664495f6fe82c7458fbfdc987fbc562eff8e6"
-    },
-    "src/motion.rs": {
-      "bytes": 9494,
-      "sha256": "e7e5b81dcc8b8d96f3358d8a45f34d58ca1336da6c618e8ccb0cf89218ae4ae3"
-    },
-    "src/decoder/slice_parallel.rs": {
-      "bytes": 3479,
-      "sha256": "1117ecd55ec0f9d4f81784784c97c4967de88cc52cd1c959a099563188f096b0"
-    },
-    "src/vlc/tests.rs": {
-      "bytes": 3594,
-      "sha256": "43b5c192a410b1c78cdc9fe65421792005cfd1b454073922a1626723ca25c541"
-    },
-    "src/vlc/frozen.rs": {
-      "bytes": 11291,
-      "sha256": "415e79c6e7ef2e77bed03baa0537ee896759c890f54884fb5c9796544fc10948"
-    },
-    "src/bits/tests.rs": {
-      "bytes": 2540,
-      "sha256": "93102510a6b55a943021c7e2f0831e0a1eac64be27dab6d89be344c444d51984"
-    },
-    "src/transform/fixed.rs": {
-      "bytes": 4003,
-      "sha256": "1e6431606d8c804f05ed75654d92170a3628ffe8bdf6bd71296c049a2f1b4305"
-    },
-    "src/transform/fixed_entry.rs": {
-      "bytes": 176,
-      "sha256": "de8d736a6034d81f79622670fc6d9dc63939afd6b6a25f51ada949b45e358341"
-    },
-    "crates/wasm/src/lib.rs": {
-      "bytes": 15931,
-      "sha256": "5668cfdcd8f12b5f27432beff397b9dbe5474869f70786be3265bf5687ca6b87"
-    },
-    "crates/wasm/src/threading.rs": {
-      "bytes": 647,
-      "sha256": "eab546abc1c2ae693eefe99e7f12c02b7d3f355860b6596127aa7353dceded05"
-    },
-    "Cargo.toml": {
-      "bytes": 400,
-      "sha256": "46fa4429edbb852653748e3e928acac2ebd3b10b4af1c7a78c87fe35a3a2417e"
-    },
-    "Cargo.lock": {
-      "bytes": 1558,
-      "sha256": "88d2abb2b8b13966d58a31a86c0cd6cbcd88b3668bed2836a17a6e67e29f6dd9"
-    },
-    "crates/wasm/Cargo.toml": {
-      "bytes": 605,
-      "sha256": "8c908b59e78f94bfdc9a8e53e77b1a7e2ebc6b5cabd38449db17c80c89ee84be"
-    },
-    "crates/wasm/Cargo.lock": {
-      "bytes": 6844,
-      "sha256": "8a0b7af14bf2c0541425b8421410b2a85ff32f336b730901c2946fba6ce1049d"
-    },
-    "crates/wasm/js/threaded.mjs": {
-      "bytes": 8389,
-      "sha256": "504353db5e318594da2d3edc0a290e666b4e4850948b220349e42f5d27f4eafd"
-    },
-    "crates/wasm/js/threaded-worker.mjs": {
-      "bytes": 4191,
-      "sha256": "2579053032a003cf81703963f80e9e701769b8e80fe43096571ed9032a4e93dc"
-    },
-    "crates/wasm/js/threaded-runtime.mjs": {
-      "bytes": 182,
-      "sha256": "e84013661c1af77c81e4c479f18fd793a0959c430491631bdf60c13f4b3105a3"
-    },
-    "crates/wasm/js/threaded.d.ts": {
-      "bytes": 2056,
-      "sha256": "18626be62c93392a1d44ee8fd9a4dc6077bb94f046fe55f15e4fc65b8c837265"
-    },
-    "tests/slice_parallel.rs": {
-      "bytes": 2939,
-      "sha256": "57accc143b488cb80d59217777ab02c43131c454ffd01c0fb14a94faf47b59ac"
-    },
-    "tools/adapt-rayon-worker.py": {
-      "bytes": 1846,
-      "sha256": "d0985fdeab7a3c9f188159607bf54d1e4fc5bb1c457b0c8e688e1184ca6ad96d"
-    },
-    "tools/build-wasm-threads.sh": {
-      "bytes": 1794,
-      "sha256": "f118287283a9584247fa3c248527c933c64c004fa9526c9cf3dd700f09d72f8d"
-    },
-    "tools/thread-probe/Cargo.lock": {
-      "bytes": 6761,
-      "sha256": "32db6df3b76c57b97ed5879b4b63b8baae3f9f8443e552ea5446d2f1c3d15e94"
-    },
-    "tools/thread-probe/Cargo.toml": {
-      "bytes": 440,
-      "sha256": "9dd620d8f9fed374a600fb52891a28a28d3414e2d925ba4b8fb9b696c5759404"
-    },
-    "tools/thread-probe/capabilities.html": {
-      "bytes": 2795,
-      "sha256": "36808d5b939be78cd21eb5d19231c76d195ac7e4482ccbb9d63813005a3a8200"
-    },
-    "tools/thread-probe/coordinator.mjs": {
-      "bytes": 8675,
-      "sha256": "ad3999cca47e1b8df6e85bb7f2002b171b8917d54eb73c3ba47d48e99b49e7e6"
-    },
-    "tools/thread-probe/facade.html": {
-      "bytes": 4415,
-      "sha256": "33758602d4cb3a8b2ff6d5a93468e1348f2cc042f9f6c2b093d39107f57952d0"
-    },
-    "tools/thread-probe/index.html": {
-      "bytes": 2720,
-      "sha256": "1eb9b7b6294c2393bb1b063eff95a24bbe98d1db9bc21714125deaa2e1e3ef50"
-    },
-    "tools/thread-probe/lifecycle.html": {
-      "bytes": 6177,
-      "sha256": "4f841c10c27075c34dd7cad1affd9c6465bbe5434fd9595c531dca1bc66b00f2"
-    },
-    "tools/thread-probe/measure-facade.html": {
-      "bytes": 3355,
-      "sha256": "a1ad1aa981dcb34482c29b45b9be80d1409a429bde7190349eeda850554c42f0"
-    },
-    "tools/thread-probe/measure-native.py": {
-      "bytes": 1500,
-      "sha256": "16e3cfb492718140472f3d83db4cf0462b2cffb59596ff01d783a0927a2243eb"
-    },
-    "tools/thread-probe/measure.html": {
-      "bytes": 2767,
-      "sha256": "eb94eddadb24f7372cfc1ebd6317abba1b897e27228e6a083ac33a3512851e8b"
-    },
-    "tools/thread-probe/prepare-corpus.mjs": {
-      "bytes": 2070,
-      "sha256": "dcea196b1f0661336844f9c1a3c6e525b0f45ed2f5e36e568abcf5f14631dfa3"
-    },
-    "tools/thread-probe/serve.py": {
-      "bytes": 729,
-      "sha256": "1b9ccd7f7ff5dcfc7979f63e64c292f6edcca0e0976daf2bcc2ba0aa868aae47"
-    },
-    "tools/thread-probe/src/lib.rs": {
-      "bytes": 1081,
-      "sha256": "fb7b8c8e82e4307ebab6e9a2d889a1145351cfbfd4842dd5d4f47d8a12a1f841"
-    },
-    "tools/thread-probe/summarize.py": {
-      "bytes": 2928,
-      "sha256": "6c11b8d929e78e569db53af5bff90bb752131d3ed3681664ee27dea2f4adf8ff"
-    },
-    "tools/thread-probe/terminal-failures.html": {
-      "bytes": 5617,
-      "sha256": "70e837a09504e443f71203c898c90475c8bc0d062d86a81215614487891ef576"
+    "tools/check-dc-patterns.mjs": {
+      "bytes": 2168,
+      "sha256": "124d26d835086bb860043f278f7429a6cc4bbe11ba9c65b6c27e424845ca9633"
     },
     ".gitignore": {
       "bytes": 77,
       "sha256": "2657bf78f525c324f94d73137f1b6e8824d0ac80a359859e06abe396953daa6c"
     },
+    "Cargo.lock": {
+      "bytes": 1558,
+      "sha256": "88d2abb2b8b13966d58a31a86c0cd6cbcd88b3668bed2836a17a6e67e29f6dd9"
+    },
+    "Cargo.toml": {
+      "bytes": 400,
+      "sha256": "46fa4429edbb852653748e3e928acac2ebd3b10b4af1c7a78c87fe35a3a2417e"
+    },
     "README.md": {
       "bytes": 19290,
       "sha256": "d6ed79a67527aadb72fd90ee721926733f53fc205174f1683fda3e528b793dd3"
+    },
+    "crates/wasm/Cargo.lock": {
+      "bytes": 6844,
+      "sha256": "8a0b7af14bf2c0541425b8421410b2a85ff32f336b730901c2946fba6ce1049d"
+    },
+    "crates/wasm/Cargo.toml": {
+      "bytes": 605,
+      "sha256": "8c908b59e78f94bfdc9a8e53e77b1a7e2ebc6b5cabd38449db17c80c89ee84be"
     },
     "crates/wasm/README.md": {
       "bytes": 17516,
@@ -534,9 +398,33 @@
       "bytes": 4975,
       "sha256": "7fc979b850e5c0b5dd9aec5557da7e8303279a4de98caa330faa33df42192da5"
     },
+    "crates/wasm/js/threaded-runtime.mjs": {
+      "bytes": 182,
+      "sha256": "e84013661c1af77c81e4c479f18fd793a0959c430491631bdf60c13f4b3105a3"
+    },
+    "crates/wasm/js/threaded-worker.mjs": {
+      "bytes": 4191,
+      "sha256": "2579053032a003cf81703963f80e9e701769b8e80fe43096571ed9032a4e93dc"
+    },
+    "crates/wasm/js/threaded.d.ts": {
+      "bytes": 2056,
+      "sha256": "18626be62c93392a1d44ee8fd9a4dc6077bb94f046fe55f15e4fc65b8c837265"
+    },
+    "crates/wasm/js/threaded.mjs": {
+      "bytes": 8389,
+      "sha256": "504353db5e318594da2d3edc0a290e666b4e4850948b220349e42f5d27f4eafd"
+    },
     "crates/wasm/package.json": {
       "bytes": 103,
       "sha256": "f31ccace59275233988b04426fd932eb51f514e80969965d43601baa3e1ef5b9"
+    },
+    "crates/wasm/src/lib.rs": {
+      "bytes": 15931,
+      "sha256": "5668cfdcd8f12b5f27432beff397b9dbe5474869f70786be3265bf5687ca6b87"
+    },
+    "crates/wasm/src/threading.rs": {
+      "bytes": 647,
+      "sha256": "eab546abc1c2ae693eefe99e7f12c02b7d3f355860b6596127aa7353dceded05"
     },
     "crates/wasm/tests/idct-browser.html": {
       "bytes": 2778,
@@ -610,6 +498,10 @@
       "bytes": 9593,
       "sha256": "fd9bc9c1a93d98249dba8853fe76ddf38fe41358d68aeb12d601994ba55dee73"
     },
+    "docs/SLICE_THREADS.md": {
+      "bytes": 30625,
+      "sha256": "0eb865383e45faa85089c031106a4eee9ee77c27aca818c93ee44c9f68016b2b"
+    },
     "docs/SPARSE_IDCT.md": {
       "bytes": 7423,
       "sha256": "9d0eae51fe3ea342df2007034108263d94f8948ea69824ccdc048f13c70681d4"
@@ -629,6 +521,58 @@
     "rust-toolchain.toml": {
       "bytes": 123,
       "sha256": "9500030ccefd0bab631fb7f1763f79f4103eca3a344c36cf15be869e330683bb"
+    },
+    "src/bits.rs": {
+      "bytes": 3055,
+      "sha256": "e4c0c4d988c8834f0cd870739d1c18f417fd3c671aa21f43c1516a9c76f214d6"
+    },
+    "src/bits/tests.rs": {
+      "bytes": 2540,
+      "sha256": "93102510a6b55a943021c7e2f0831e0a1eac64be27dab6d89be344c444d51984"
+    },
+    "src/decoder.rs": {
+      "bytes": 61181,
+      "sha256": "515a13a82282876f190fd3d3d89a59ee32852c1e4494d5232226b06252f419e5"
+    },
+    "src/decoder/slice_parallel.rs": {
+      "bytes": 3640,
+      "sha256": "80c26fe178c133751874219c2befd24dc409511b9f7e918152c7c3dcd86d3be5"
+    },
+    "src/lib.rs": {
+      "bytes": 7090,
+      "sha256": "d142409b4f9fa3819b2de3c604295a88adf52b8d955a3a8e197142e397afdd31"
+    },
+    "src/motion.rs": {
+      "bytes": 9494,
+      "sha256": "e7e5b81dcc8b8d96f3358d8a45f34d58ca1336da6c618e8ccb0cf89218ae4ae3"
+    },
+    "src/reconstruction.rs": {
+      "bytes": 5622,
+      "sha256": "4e7db42a5c4724ee091dd9a8853637658fbf35975c346418606f7e74ed63a800"
+    },
+    "src/transform.rs": {
+      "bytes": 11038,
+      "sha256": "ceb2092f416d9662c1c8f2c8ec1b905fb4857b790967df952382b29f25f40835"
+    },
+    "src/transform/fixed.rs": {
+      "bytes": 4003,
+      "sha256": "1e6431606d8c804f05ed75654d92170a3628ffe8bdf6bd71296c049a2f1b4305"
+    },
+    "src/transform/fixed_entry.rs": {
+      "bytes": 176,
+      "sha256": "de8d736a6034d81f79622670fc6d9dc63939afd6b6a25f51ada949b45e358341"
+    },
+    "src/vlc.rs": {
+      "bytes": 17975,
+      "sha256": "a2811bbc1182c9e4f695afe39559327a400ec4da50156aa98886df5ceea3dfe7"
+    },
+    "src/vlc/frozen.rs": {
+      "bytes": 11291,
+      "sha256": "415e79c6e7ef2e77bed03baa0537ee896759c890f54884fb5c9796544fc10948"
+    },
+    "src/vlc/tests.rs": {
+      "bytes": 3594,
+      "sha256": "43b5c192a410b1c78cdc9fe65421792005cfd1b454073922a1626723ca25c541"
     },
     "tests/ac_modes.rs": {
       "bytes": 3097,
@@ -2374,6 +2318,14 @@
       "bytes": 6431,
       "sha256": "2354115a74b34b292a56d92b81445f8ff309aa0efe5d3fb0eec0619add99585d"
     },
+    "tests/slice_parallel.rs": {
+      "bytes": 10109,
+      "sha256": "5c24ee21ee531f46dce26b15cfca0c55e0ff7ac0b1f6cda4a572999f7bbb46fb"
+    },
+    "tools/adapt-rayon-worker.py": {
+      "bytes": 1846,
+      "sha256": "d0985fdeab7a3c9f188159607bf54d1e4fc5bb1c457b0c8e688e1184ca6ad96d"
+    },
     "tools/benchmark-idct.mjs": {
       "bytes": 7069,
       "sha256": "332858633bd03b086d31d9f0fbd1bc5f47be193e64fa7cb778928ce956ea8065"
@@ -2385,6 +2337,10 @@
     "tools/build-wasm-idct-experiment.sh": {
       "bytes": 1647,
       "sha256": "d72b554b46e4da843faf808753ef6e606c62025887e0bc39890deb2269dd53f6"
+    },
+    "tools/build-wasm-threads.sh": {
+      "bytes": 1794,
+      "sha256": "f118287283a9584247fa3c248527c933c64c004fa9526c9cf3dd700f09d72f8d"
     },
     "tools/build-wasm.sh": {
       "bytes": 478,
@@ -2502,9 +2458,108 @@
       "bytes": 1632,
       "sha256": "4afee8a08b55a6317accdfe7b47f31d2e380ced1cd98df8c9e299ea8b52e283d"
     },
+    "tools/thread-probe/Cargo.lock": {
+      "bytes": 6761,
+      "sha256": "32db6df3b76c57b97ed5879b4b63b8baae3f9f8443e552ea5446d2f1c3d15e94"
+    },
+    "tools/thread-probe/Cargo.toml": {
+      "bytes": 440,
+      "sha256": "9dd620d8f9fed374a600fb52891a28a28d3414e2d925ba4b8fb9b696c5759404"
+    },
+    "tools/thread-probe/capabilities.html": {
+      "bytes": 2795,
+      "sha256": "36808d5b939be78cd21eb5d19231c76d195ac7e4482ccbb9d63813005a3a8200"
+    },
+    "tools/thread-probe/coordinator.mjs": {
+      "bytes": 8675,
+      "sha256": "ad3999cca47e1b8df6e85bb7f2002b171b8917d54eb73c3ba47d48e99b49e7e6"
+    },
+    "tools/thread-probe/facade.html": {
+      "bytes": 4415,
+      "sha256": "33758602d4cb3a8b2ff6d5a93468e1348f2cc042f9f6c2b093d39107f57952d0"
+    },
+    "tools/thread-probe/index.html": {
+      "bytes": 2720,
+      "sha256": "1eb9b7b6294c2393bb1b063eff95a24bbe98d1db9bc21714125deaa2e1e3ef50"
+    },
+    "tools/thread-probe/lifecycle.html": {
+      "bytes": 6177,
+      "sha256": "4f841c10c27075c34dd7cad1affd9c6465bbe5434fd9595c531dca1bc66b00f2"
+    },
+    "tools/thread-probe/measure-facade.html": {
+      "bytes": 3355,
+      "sha256": "a1ad1aa981dcb34482c29b45b9be80d1409a429bde7190349eeda850554c42f0"
+    },
+    "tools/thread-probe/measure-native.py": {
+      "bytes": 1500,
+      "sha256": "16e3cfb492718140472f3d83db4cf0462b2cffb59596ff01d783a0927a2243eb"
+    },
+    "tools/thread-probe/measure.html": {
+      "bytes": 2767,
+      "sha256": "eb94eddadb24f7372cfc1ebd6317abba1b897e27228e6a083ac33a3512851e8b"
+    },
+    "tools/thread-probe/prepare-corpus.mjs": {
+      "bytes": 2070,
+      "sha256": "dcea196b1f0661336844f9c1a3c6e525b0f45ed2f5e36e568abcf5f14631dfa3"
+    },
+    "tools/thread-probe/serve.py": {
+      "bytes": 729,
+      "sha256": "1b9ccd7f7ff5dcfc7979f63e64c292f6edcca0e0976daf2bcc2ba0aa868aae47"
+    },
+    "tools/thread-probe/src/lib.rs": {
+      "bytes": 1081,
+      "sha256": "fb7b8c8e82e4307ebab6e9a2d889a1145351cfbfd4842dd5d4f47d8a12a1f841"
+    },
+    "tools/thread-probe/summarize.py": {
+      "bytes": 2928,
+      "sha256": "6c11b8d929e78e569db53af5bff90bb752131d3ed3681664ee27dea2f4adf8ff"
+    },
+    "tools/thread-probe/terminal-failures.html": {
+      "bytes": 5617,
+      "sha256": "70e837a09504e443f71203c898c90475c8bc0d062d86a81215614487891ef576"
+    },
     "tools/verify-long-b-oracles.py": {
       "bytes": 2664,
       "sha256": "1cda86913ee2a5a2ef2ad4c5b730a3f35a3898752a1fb3bf2ced34a64aa36826"
+    }
+  },
+  "buildRecord": {
+    "path": "/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-first-principles-20260927/integration/final-build/build.json",
+    "bytes": 140984,
+    "sha256": "e9fa7cfba7a9d7db9f62a24de133a64a75f5aff837242185c67d67560efe1774",
+    "baseCommit": "1efaf69d5120c2d8b538a96b485f256817541a37",
+    "note": "All other recorded source inputs match the reviewed commit. None of the three changed documentation files are compiled through source includes or package manifests. Build predates the commit; original sourceHashes and supplied manifest are retained."
+  },
+  "postBuildDocumentationDifferences": {
+    "docs/DC_PATTERNS.md": {
+      "buildSnapshot": {
+        "bytes": 10647,
+        "sha256": "26049b100f0f22ced97dea586f124393a84a4b0ffdafa9cb63f9bf9e8c7c94d7"
+      },
+      "reviewedCommit": {
+        "bytes": 10633,
+        "sha256": "e202671cd59c3e777e0f3cd766d60c41dcb561c75962d0c2f8cf9c1cb7c91886"
+      }
+    },
+    "docs/FIRST_PRINCIPLES.md": {
+      "buildSnapshot": {
+        "bytes": 12724,
+        "sha256": "95ea964d9a3c0c99f8f51ec885399f5521cad52026316545688a6e95e4ebe794"
+      },
+      "reviewedCommit": {
+        "bytes": 13311,
+        "sha256": "29f20db4a7ac27834a738106c7358c1c33000b8b34e1f20b74143c1caebb68a4"
+      }
+    },
+    "docs/SLICE_THREADS.md": {
+      "buildSnapshot": {
+        "bytes": 30625,
+        "sha256": "0eb865383e45faa85089c031106a4eee9ee77c27aca818c93ee44c9f68016b2b"
+      },
+      "reviewedCommit": {
+        "bytes": 30651,
+        "sha256": "344c34e7cfcd964cafb82849f9a06cfe0d4c3282ddbdacedb91aa5dadb023196"
+      }
     }
   }
 }

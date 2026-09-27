@@ -81,19 +81,39 @@ serial path inside the requested backend. Two/four pool workers require **three/
 total workers per decoder**, including the coordinator, with separate decoder memory.
 Explicit counts are not clamped to hardware concurrency. There is no shared global pool.
 
-The optional shared module is 340,576 bytes, SHA-256
-`b85deeac3eb872f735a5546ae2d2bf19db01c9fabb79218a636cd9f682156708`.
+The optional shared module is 343,457 bytes, SHA-256
+`70f0b778a1c26200065482ef97a7a8e38394d1e4720743ffc6e4e9df0579491f`.
 Its `PROVENANCE.json` records the reviewed input manifest and source-file mapping.
 The Rayon helper has a controlled Apache-2.0 adaptation that forwards asynchronous
 child initialization rejection to the Worker's error event. `helper-adaptation.json`
 records original/patched hashes and the adaptation script identity. The supplied
-tree is `mpeg2-slice-parallel-20260927/review-fixes/integration-ready/`.
-The reviewed threaded source commit is `1efaf69d5120c2d8b538a96b485f256817541a37`.
-Recorded source hashes match that commit; the build preceded it, and provenance
-retains the original dirty-build base rather than claiming a post-commit rebuild.
+tree is `mpeg2-first-principles-20260927/integration/integration-ready-final/`.
+The reviewed source commit is `1fafe8f611afab696ce8b90d2d54b46f4c252789`.
+Compiler inputs match that commit. The build preceded it; provenance retains the
+original dirty-build base and source snapshot, with the three documentation-only
+post-build differences recorded explicitly. It does not claim a post-commit rebuild.
 `NOTICE.txt` and `licenses/` retain the locked dependencies' license texts. These
 licenses do not authorize distribution of the combined private MPEG-2 package.
-The accepted scalar f64 transform remains in use; no fixed-IDCT build is included.
+The accepted f64 transform remains in use with exact WASM-only DC/F63 patterns and
+a sixteen-row slice worklist. No fixed-IDCT, coefficient-bounds or certified-transform
+prototype is included. The companion Rust [first-principles report](../../../mpeg2-rs/docs/FIRST_PRINCIPLES.md)
+records all four experiment verdicts and their finite qualification boundaries.
+
+The combined consumer integration was compared against frozen production bundles
+from Mediabunny `3a6e0b8`, using five warm and seven measured old/new ABBA rounds.
+Both artifacts used identical core, transport, automatic-selection policy and owned
+output transfer. Explicit direct and four-thread modes avoided policy differences.
+Paired lifetime wall-time reductions were 8.64%/9.22%/8.52% for direct SWAT/Live/long-IPB
+and 11.35%/12.81%/13.12% for their four-thread counterparts. Progressive 720p and Cosmos
+also improved in both tested modes. These are combined public-sink observations,
+not sums of isolated kernel gains. Timing included Input setup, pool startup, every
+sample copy and disposal with observed termination calls. Media fetches, host-bundle
+loading, hashes and rendering were excluded; lazy runtime loading and initialization
+were inside timing. The browser process was reused, while local HTTP responses used
+`Cache-Control: no-store`; engine code-cache behavior was not measured. The 18–60-frame
+selections do not establish sustained playback or cold-browser startup performance.
+Full frame hashes, timing, scan, backward selections and held clones matched the
+old per-target output in direct/serial-worker/2/4 modes through ESM and global bundles.
 
 Historical captured-media public-sink measurements (five warm ABBA rounds, seven measured rounds,
 14 observations per mode/workload) found paired lifetime wall-time reductions of
@@ -141,7 +161,7 @@ The adapter outputs owned planar I420 or I422 `VideoSample`s. Native per-picture
 
 Packet timing passes directly to `decode(bytes, { timestamp, duration })`. The native decoder associates delayed frames with their packets and returns display-ordered timed output. The adapter neither sorts temporal references nor maintains a timestamp map, packet history, or second operation queue.
 
-In direct mode, the embedded 155,437-byte default-scalar module is compiled lazily, shared between decoder instances in that realm, and loaded without fetches. Worker mode initializes a separate WASM environment per decoder worker. Each decoder owns its own native references. Input and padded frame budgets are 8 MiB each; native reference storage is bounded to 24 MiB per decoder. Width is at most 4096 and height at most 2304, subject to the tighter padded-frame budget. There is no 64-picture lifetime cap. Authored tests and bounded local 1080p I422 selections provide targeted evidence, not general MPEG-2 conformance certification.
+In direct mode, the embedded 154,501-byte default-scalar module is compiled lazily, shared between decoder instances in that realm, and loaded without fetches. Worker mode initializes a separate WASM environment per decoder worker. Each decoder owns its own native references. Input and padded frame budgets are 8 MiB each; native reference storage is bounded to 24 MiB per decoder. Width is at most 4096 and height at most 2304, subject to the tighter padded-frame budget. There is no 64-picture lifetime cap. Authored tests and bounded local 1080p I422 selections provide targeted evidence, not general MPEG-2 conformance certification.
 
 ## Selection lifecycle
 
@@ -157,8 +177,8 @@ Malformed native pictures throw sticky errors. A failed finish does not reset aw
 
 `vendor/PROVENANCE.json` records the source commit, source/compiler hashes, dependency license metadata, original build-record hash, and every copied artifact hash. Upstream files are unmodified; only `vendor/js/index.d.mts` is an adapter-authored declaration for the used facade API. The license-header checker visits `src` only, never `vendor`. Bundle banners retain the distribution restriction and exact WASM identity.
 
-- Source commit: `3d38fca7df512389384b93697b7dd8cab4a3b49d`, accepted default scalar optimizations. Later tools-only commits do not change the decoder source identity; experimental autovectorized and factorized builds are excluded.
-- WASM SHA-256: `7b26778cd36ec110c9d03cddeca96113f580f67b4364497472994cf41ca1766b`.
-- Build tools: Rust 1.98.1 and wasm-bindgen 0.2.129. The supplied build occurred before the final commit; compiler-input hashes were checked against that commit. No Rust rebuild or source modification is part of this package integration.
+- Source commit: `1fafe8f611afab696ce8b90d2d54b46f4c252789`, accepted exact WASM DC/F63 patterns and sixteen-row shared worklist. Experimental fixed-IDCT, coefficient-bounds and certified-transform paths are excluded.
+- Scalar WASM SHA-256: `63e39b72085e2eccca4b70c87b6a30ad581a37e8b2007945dab01e7294bb61ce`.
+- The supplied build record pins compiler/tool identities and separate scalar/shared flags. It predates the final commit; all recorded inputs other than three identified Markdown documents match that commit. No Rust rebuild or source modification is part of this package integration.
 
 `test/node/mpeg2.test.ts` imports the actual bundled package and verifies all 18 authored MXF frames against independent FFmpeg FAANI plane hashes, PCM hashes, individual and batched backward selections, native error behavior, timing, ownership, close during initialization, and more than 64 packets without reset. Browser canvas rendering requires separate real-browser verification; Node planar equality is not a canvas color-conversion proof.
