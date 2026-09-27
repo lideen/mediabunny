@@ -21,9 +21,11 @@ Registration is explicit and idempotent. Neither core nor `@mediabunny/server` r
 
 ## Optional slice pool
 
-Registration accepts `threadCount: 1 | 2 | 4`. The default remains `1`:
-`registerMpeg2Decoder()` decodes directly, and `{ useWorker: true }` uses the existing
-embedded serial worker without shared memory. Counts `2` and `4` imply worker mode;
+Registration accepts optional `threadCount: 1 | 2 | 4`.
+`registerMpeg2Decoder()` still decodes directly, and `{ useWorker: true }` without a
+runtime URL uses the existing embedded serial worker without shared memory.
+Supplying a runtime URL enables automatic sizing when `threadCount` is omitted.
+Counts `2` and `4` imply worker mode;
 combining either with explicit `useWorker: false` throws. Registration compares the
 effective worker mode, thread count and runtime URL, rejecting conflicting repeats.
 
@@ -39,21 +41,45 @@ the directory structure. Both ESM and global bundles use the same explicit asset
 
 ```ts
 registerMpeg2Decoder({
-    threadCount: 4,
     threadedRuntimeUrl: new URL('/mpeg2-threads/js/threaded-runtime.mjs', location.href),
 });
 ```
 
-The page must be cross-origin isolated and support `SharedArrayBuffer` and `Worker`.
+Automatic pooling requires `crossOriginIsolated === true`, `SharedArrayBuffer` and
+`Worker`, and is disabled by `useWorker: false`. For a finite positive integer
+`navigator.hardwareConcurrency`, sizing uses `max(1, count - 1)` and selects the
+largest supported count, 1, 2 or 4, within that budget. Reported counts 1–2 select 1,
+3–4 select 2, and 5 or more select 4. Missing or invalid hints select 1. The browser
+may reduce its reported logical availability; this is not a current-load measure.
+Subtracting one is a sizing heuristic, not a reservation of a core. The four-thread
+cap bounds each decoder's pool to the supported sizes; it is not a claim that four
+threads are optimal for every stream or device.
+
+When prerequisites are unavailable, automatic selection chooses 1 before initialization.
+At count 1, `useWorker: true` selects the serial worker; otherwise decoding is direct.
+The supplied URL is still validated, normalized and compared on repeat registration.
+Choose one configuration before registration; explicit overrides include:
+
+```ts
+registerMpeg2Decoder({ threadedRuntimeUrl, threadCount: 1 }); // Direct, even when pooling is available.
+// Alternatively, force a supported pool size and reject if its requirements are unavailable:
+registerMpeg2Decoder({ threadedRuntimeUrl, threadCount: 4 });
+// Or suppress automatic pooling:
+registerMpeg2Decoder({ threadedRuntimeUrl, useWorker: false });
+```
+
+Explicit `threadCount` always wins. Explicit 2/4 never downgrade on an incapable page.
+For pooled decoding the page must be cross-origin isolated and support `SharedArrayBuffer` and `Worker`.
 Serve it with `Cross-Origin-Opener-Policy: same-origin` and
 `Cross-Origin-Embedder-Policy: require-corp`, with the assets on the same origin.
 CSP must permit scripts and connections to those assets, WebAssembly compilation
 (`'wasm-unsafe-eval'`) and both same-origin module workers and `blob:` workers.
-Missing capabilities, runtime URL, assets or initialization reject; there is no
-whole-backend fallback. Individual ineligible slice layouts still use the Rust kernel's
+Once pooling is selected, CSP, import, asset or initialization failures reject without
+retrying scalar decoding. Explicit pooling also rejects missing capabilities or runtime URL.
+Individual ineligible slice layouts still use the Rust kernel's
 serial path inside the requested backend. Two/four pool workers require **three/five
 total workers per decoder**, including the coordinator, with separate decoder memory.
-No hardware-concurrency clamping or shared global pool is performed.
+Explicit counts are not clamped to hardware concurrency. There is no shared global pool.
 
 The optional shared module is 340,576 bytes, SHA-256
 `b85deeac3eb872f735a5546ae2d2bf19db01c9fabb79218a636cd9f682156708`.
@@ -73,7 +99,8 @@ Historical captured-media public-sink measurements (five warm ABBA rounds, seven
 14 observations per mode/workload) found paired lifetime wall-time reductions of
 38.0%/39.8% for SWAT/Live with two pool workers and 61.6%/64.0% with four. The
 60-frame authored IPB selection improved 22.4%/42.1%. Short progressive 720p
-selections regressed 28.9%/13.5%, so the pool is opt-in, not automatically selected.
+selections regressed 28.9%/13.5%. The runtime URL remains an opt-in to automatic pooling,
+and callers can force count 1. The sizing policy is not a new measured speed claim.
 These unpaced runs included Input construction, startup, output copies and disposal,
 but no canvas rendering. They do not establish sustained playback rates. Each
 shared WASM instance has a 256 MiB maximum; observed linear-memory allocation is
@@ -92,7 +119,7 @@ unchanged and checks real-worker lifecycle and independent pixel goldens.
 
 ## Optional browser worker
 
-`registerMpeg2Decoder({ useWorker: true })` selects an embedded browser worker instead of main-thread decoding. Omitting the option retains direct decoding. Repeating the same mode is idempotent; changing modes after registration throws. Worker mode does not silently fall back to direct decoding if Worker support, initialization or CSP permission is missing. Applications that need a different mode must decide before registration in a fresh registry/application context.
+`registerMpeg2Decoder({ useWorker: true })` without a runtime URL selects an embedded browser worker instead of main-thread decoding. Calling `registerMpeg2Decoder()` without options retains direct decoding. Repeating the same effective configuration is idempotent; changing it after registration throws. Worker mode does not silently fall back to direct decoding if Worker support, initialization or CSP permission is missing. Applications that need a different mode must decide before registration in a fresh registry/application context.
 
 Each decoder creates one worker lazily during initialization. The existing custom-decoder serializer owns scheduling; the transport permits only one outstanding request and has no packet queue of its own. Packet transfers copy only the caller's visible packet bytes, never detaching the caller's storage. The worker uses the same private vendored WASM, returns at most two packed owned frame buffers per decode, and frees native frames before sending them. The host validates reply IDs, dimensions, format, scan, timing and packed plane bounds before constructing samples. Held samples and clones own storage independently of the worker.
 
