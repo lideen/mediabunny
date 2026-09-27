@@ -765,6 +765,7 @@ export abstract class BaseMediaSampleSink<
 
 		const track = this._track;
 		const closeSamples = () => {
+			options.signal?.removeEventListener('abort', onAbort);
 			navigation?.abort();
 			decoder?.cancel();
 			onQueueDequeue();
@@ -773,6 +774,14 @@ export abstract class BaseMediaSampleSink<
 				sample.close();
 			}
 		};
+		const onAbort = () => {
+			terminated = true;
+			ended = true;
+			closeSamples();
+			onQueueNotEmpty();
+		};
+		options.signal?.addEventListener('abort', onAbort, { once: true });
+		if (options.signal?.aborted) onAbort();
 
 		return {
 			async next() {
@@ -805,6 +814,7 @@ export abstract class BaseMediaSampleSink<
 					} else if (!decoderIsFlushed) {
 						await queueNotEmpty;
 					} else {
+						options.signal?.removeEventListener('abort', onAbort);
 						return { value: undefined, done: true };
 					}
 				}
@@ -820,6 +830,10 @@ export abstract class BaseMediaSampleSink<
 				return { value: undefined, done: true };
 			},
 			async throw(error) {
+				terminated = true;
+				ended = true;
+				closeSamples();
+				onQueueNotEmpty();
 				throw error;
 			},
 			[Symbol.asyncIterator]() {
@@ -1061,6 +1075,7 @@ export abstract class BaseMediaSampleSink<
 
 		const track = this._track;
 		const closeSamples = () => {
+			options.signal?.removeEventListener('abort', onAbort);
 			navigation?.abort();
 			decoder?.cancel();
 			onQueueDequeue();
@@ -1068,6 +1083,13 @@ export abstract class BaseMediaSampleSink<
 				sample?.close();
 			}
 		};
+		const onAbort = () => {
+			terminated = true;
+			closeSamples();
+			onQueueNotEmpty();
+		};
+		options.signal?.addEventListener('abort', onAbort, { once: true });
+		if (options.signal?.aborted) onAbort();
 
 		return {
 			async next() {
@@ -1097,6 +1119,7 @@ export abstract class BaseMediaSampleSink<
 					} else if (!decoderIsFlushed) {
 						await queueNotEmpty;
 					} else {
+						options.signal?.removeEventListener('abort', onAbort);
 						return { value: undefined, done: true };
 					}
 				}
@@ -1111,6 +1134,9 @@ export abstract class BaseMediaSampleSink<
 				return { value: undefined, done: true };
 			},
 			async throw(error) {
+				terminated = true;
+				closeSamples();
+				onQueueNotEmpty();
 				throw error;
 			},
 			[Symbol.asyncIterator]() {
@@ -1135,6 +1161,10 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 	closeStarted = false;
 
 	override cancel() {
+		if (this.customDecoder?.cancel) {
+			this.closed = true;
+			this.customDecoder.cancel();
+		}
 		if (this.customDecoder?.decodePreroll) this.closed = true;
 		if (this.reduced) {
 			this.closed = true;

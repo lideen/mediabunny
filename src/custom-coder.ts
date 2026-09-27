@@ -106,6 +106,13 @@ export abstract class CustomVideoDecoder {
 	decodePrepared?(input: PreparedVideoDecodeInput): MaybePromise<void>;
 	/** Decodes all remaining packets and then resolves. */
 	abstract flush(): MaybePromise<void>;
+	/**
+	 * Optional immediate cancellation of pending work. Called synchronously before serialized calls settle on abort
+	 * or disposal, never on normal flush. Must be idempotent, must not throw, and must cause pending operations to
+	 * settle without emitting more samples. Queued operations must not restart canceled resources. The core still
+	 * calls close() after the serialized work settles; implementations without this hook retain that close ordering.
+	 */
+	cancel?(): void;
 	/** Called when the decoder is no longer needed and its resources can be freed. */
 	abstract close(): MaybePromise<void>;
 }
