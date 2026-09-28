@@ -8,16 +8,15 @@
 
 import { CustomVideoDecoder, EncodedPacket, registerDecoder, VideoCodec, VideoSample,
 	type VideoSampleInit } from 'mediabunny';
-import { createMpeg2Decoder } from '../vendor/decoder/mpeg2-decoder.mjs';
+import { Decoder } from '../vendor/decoder/mpeg2-decoder.mjs';
 
-type PacketDecoder = Awaited<ReturnType<typeof createMpeg2Decoder>>;
-type TimedFrame = Awaited<ReturnType<PacketDecoder['decode']>>[number];
+type TimedFrame = Awaited<ReturnType<Decoder['decode']>>[number];
 
 const MAX_PACKET_BYTES = 8 * 1024 * 1024;
 const MAX_FRAME_BYTES = 8 * 1024 * 1024;
 
 class Mpeg2Decoder extends CustomVideoDecoder {
-	private decoder: PacketDecoder | null = null;
+	private decoder: Decoder | null = null;
 	private initialization: Promise<void> | null = null;
 	private closing: Promise<void> | null = null;
 	private abort = new AbortController();
@@ -53,7 +52,7 @@ class Mpeg2Decoder extends CustomVideoDecoder {
 	}
 
 	private async initialize() {
-		const decoder = await createMpeg2Decoder({
+		const decoder = await Decoder.create({
 			maxPacketBytes: MAX_PACKET_BYTES, maxFrameBytes: MAX_FRAME_BYTES, signal: this.abort.signal,
 		});
 		if (this.abort.signal.aborted) {
@@ -111,7 +110,7 @@ class Mpeg2Decoder extends CustomVideoDecoder {
 				}
 			}
 		} finally {
-			for (const { frame } of outputs) frame.free();
+			for (const { frame } of outputs) frame.clear();
 		}
 	}
 
@@ -147,7 +146,7 @@ class Mpeg2Decoder extends CustomVideoDecoder {
 		} catch (error) {
 			throw this.fail(error);
 		} finally {
-			output?.frame.free();
+			output?.frame.clear();
 		}
 	}
 
@@ -172,7 +171,7 @@ let registered = false;
  * Registers an MPEG-2 WASM decoder which Mediabunny will use automatically when applicable. Call this before
  * starting any decoding task, then use Mediabunny's sample sinks. Repeated registration is idempotent.
  *
- * The standalone decoder factory chooses execution at initialization and owns its embedded WASM and workers.
+ * The standalone Decoder chooses execution at initialization and owns its embedded WASM and workers.
  * Registration accepts no options and does not enable implicit MXF input, encoding, or muxing.
  * This private extension is not licensed for public distribution.
  * @group \@mediabunny/mpeg2

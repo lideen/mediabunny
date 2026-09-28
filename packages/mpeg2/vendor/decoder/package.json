@@ -1,0 +1,12 @@
+{
+  "name": "@mpeg2-rs/decoder",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./mpeg2-decoder.d.mts",
+      "import": "./mpeg2-decoder.mjs"
+    }
+  }
+}

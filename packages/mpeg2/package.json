@@ -4,7 +4,7 @@
   "version": "1.59.1",
   "private": true,
   "license": "UNLICENSED",
-  "description": "Private MPEG-2 decoder extension backed by the standalone decoder factory.",
+  "description": "Private MPEG-2 decoder extension backed by the standalone TypeScript Decoder.",
   "main": "./dist/bundles/mediabunny-mpeg2.mjs",
   "module": "./dist/bundles/mediabunny-mpeg2.mjs",
   "types": "./dist/modules/src/index.d.ts",

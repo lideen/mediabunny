@@ -23,9 +23,9 @@ Registration is explicit and idempotent. Neither core nor `@mediabunny/server` r
 
 ## Execution and standalone configuration
 
-The adapter calls the self-contained `createMpeg2Decoder` factory from `mpeg2-rs`
+The adapter calls the standalone `Decoder.create()` method from `mpeg2-rs`
 during each decoder's initialization. It supplies 8 MiB packet/frame budgets and an
-AbortSignal, but no execution override. The factory chooses its default:
+AbortSignal, but no execution override. `Decoder` chooses its default:
 
 | Environment | Execution |
 | --- | --- |
@@ -41,19 +41,23 @@ three/five total workers per decoder. There is no global shared pool or Node
 decoding task without retrying another backend.
 
 Advanced callers that supply elementary-picture packets use the separate
-[standalone factory contract](vendor/decoder/mpeg2-decoder.d.mts). Its `concurrency`
+`@mpeg2-rs/decoder` package at the `mpeg2-rs` repository root. Its generated
+[public declarations](vendor/decoder/mpeg2-decoder.d.mts) forward to
+[the TypeScript class declarations](vendor/decoder/types/index.d.ts). The vendored
+[package marker](vendor/decoder/package.json) preserves ESM resolution for those declarations.
+The `Decoder.create()` `concurrency`
 option supports `0` for direct, `1` for a serial worker, and `2`/`4` for slice pools.
-Those options belong to `createMpeg2Decoder`, not `registerMpeg2Decoder`. There is no
-registration configuration object, setter, or re-export of the factory here.
+Those options belong to `Decoder.create()`, not `registerMpeg2Decoder`. There is no
+registration configuration object, setter, or re-export of `Decoder` or `Frame` here.
 This is the same separation as Mediabunny's zero-argument ProRes registration and
 TurboRes's lower-level `Decoder.create` options. MPEG-2 parallelizes eligible slices,
 not independent frames; reference dependencies and delayed output remain stateful.
 
 ## Browser deployment
 
-The factory embeds the scalar/shared WASM and worker graph. ESM and global extension
+The standalone decoder embeds the scalar/shared WASM and worker graph. ESM and global extension
 bundles need no external runtime URL, worker URL, CDN or copied asset tree. The
-factory manages its Blob URLs and workers; Mediabunny does not build another
+standalone decoder manages its Blob URLs and workers; Mediabunny does not build another
 transport around it. Old vendored runtime trees remain audit material, not runtime
 dependencies or package exports.
 
@@ -140,13 +144,13 @@ decode and segment finish, capability rejection and partial startup failure were
 checked separately. The `browser-threads` Vitest project serves built runtime files
 unchanged and checks real-worker lifecycle and independent pixel goldens.
 
-## Factory ownership and cancellation
+## Decoder ownership and cancellation
 
-The adapter uses the existing custom-decoder serializer. It adds no packet queue or worker protocol. The standalone factory owns decoding, worker transport, cancellation and native resources. It returns owned planes; the adapter packs them into I420/I422 samples with Mediabunny timing, scan and color metadata, then frees every returned frame in `finally`.
+The adapter uses the existing custom-decoder serializer. It adds no packet queue or worker protocol. The standalone `Decoder` owns decoding, worker transport, cancellation and native resources. It returns owned `Frame` instances; the adapter packs their planes into I420/I422 samples with Mediabunny timing, scan and color metadata, then calls `Frame.clear()` on every returned frame in `finally`.
 
-Abort/disposal invokes the synchronous custom-decoder `cancel()` hook before awaiting serialized cleanup. The adapter aborts pending factory creation and cancels an active factory decoder immediately. Close awaits that same initialization promise, including factory cleanup. Shared scalar compilation can continue into the factory's cache after cancellation, but cannot allocate a decoder for the canceled request. Late initialization cannot attach a decoder or emit frames. Close is idempotent. Errors remain sticky per decoder, including adapter output/callback failures. Other custom decoders without `cancel()` retain their previous close ordering.
+Abort/disposal invokes the synchronous custom-decoder `cancel()` hook before awaiting serialized cleanup. The adapter aborts pending `Decoder.create()` initialization and cancels an active standalone decoder immediately. Close awaits that same initialization promise, including standalone cleanup. Shared scalar compilation can continue into the standalone cache after cancellation, but cannot allocate a decoder for the canceled request. Late initialization cannot attach a decoder or emit frames. Close is idempotent. Errors remain sticky per decoder, including adapter output/callback failures. Other custom decoders without `cancel()` retain their previous close ordering.
 
-`test/node/mpeg2-worker.test.ts` covers cancellation and startup-error propagation through the real factory and Input/sinks, blocking only worker startup. `test/node/sink-decoder-abort.test.ts` owns shared iterator cancellation and legacy close ordering. Browser tests cover real serial/pool initialization cancellation, default worker creation, I420/I422 pixels, backward open-GOP selections and held clones. The standalone factory's tests own concurrency policy, worker messages, transfer validation, lost replies, child startup and per-operation transport failure handling.
+`test/node/mpeg2-worker.test.ts` covers cancellation and startup-error propagation through the real standalone decoder and Input/sinks, blocking only worker startup. `test/node/sink-decoder-abort.test.ts` owns shared iterator cancellation and legacy close ordering. Browser tests cover real serial/pool initialization cancellation, default worker creation, I420/I422 pixels, backward open-GOP selections and held clones. The standalone decoder's tests own concurrency policy, worker messages, transfer validation, lost replies, child startup and per-operation transport failure handling.
 
 ### Historical worker responsiveness
 
@@ -158,7 +162,7 @@ The MXF subset includes progressive MPEG-2 Main Profile / High or High-1440 Leve
 
 Stored macroblock padding may exceed visible dimensions, with zero sampled/display offsets and matching sampled/display rectangles. Decoder configuration and owned planes use visible sequence dimensions. FrameLayout 1 descriptor heights are per-field and become full-frame heights. Sony D-10 remains unsupported. LXF uses a separate opt-in version-1 input with a narrower closed all-I contract; see `src/lxf/README.md`. Separate field pictures, repeated-field cadence, scalable coding, other profiles/levels and incomplete headers remain unsupported.
 
-The adapter outputs owned planar I420 or I422 `VideoSample`s. Native per-picture flags set `scan` to progressive, interlaced-top-first or interlaced-bottom-first. Interlaced samples retain woven lines at the original frame rate; no deinterlacing is performed. Canvas and VideoFrame conversions do not retain this scan metadata. The factory's `takeY`, `takeCb`, and `takeCr` return owned JS planes; the adapter combines them using the reported strides and frees each factory frame in `finally`. Held samples survive later decode, flush, close, and input disposal. Color metadata is forwarded from decoder configuration without filling in unspecified primaries or transfer.
+The adapter outputs owned planar I420 or I422 `VideoSample`s. Native per-picture flags set `scan` to progressive, interlaced-top-first or interlaced-bottom-first. Interlaced samples retain woven lines at the original frame rate; no deinterlacing is performed. Canvas and VideoFrame conversions do not retain this scan metadata. `Frame.takeY`, `Frame.takeCb`, and `Frame.takeCr` return owned JS planes; the adapter combines them using the reported strides and calls `Frame.clear()` in `finally`. Clearing is idempotent and preserves metadata and already-taken planes. Mediabunny's `VideoSample.close()` is unchanged. Held samples survive later decode, flush, close, and input disposal. Color metadata is forwarded from decoder configuration without filling in unspecified primaries or transfer.
 
 Packet timing passes directly to `decode(bytes, { timestamp, duration })`. The native decoder associates delayed frames with their packets and returns display-ordered timed output. The adapter neither sorts temporal references nor maintains a timestamp map, packet history, or second operation queue.
 
@@ -176,9 +180,9 @@ Capability checks retain the I420 geometry envelope. Native parsing enforces the
 
 ## Provenance and validation
 
-`vendor/decoder/PROVENANCE.json` identifies the self-contained factory bundle and its embedded runtimes. The earlier `vendor/PROVENANCE.json` and `vendor/threads/` records retain the native build history and qualified WASM identities. They do not identify the new JS bundle. The license-header checker visits `src` only, never `vendor`. Bundle banners retain the distribution restriction and WASM identities.
+`vendor/decoder/PROVENANCE.json` identifies the self-contained decoder bundle and its embedded runtimes. The earlier `vendor/PROVENANCE.json` and `vendor/threads/` records retain the native build history and qualified WASM identities. They do not identify the new JS bundle. The license-header checker visits `src` only, never `vendor`. Bundle banners retain the distribution restriction and WASM identities.
 
-The integrated factory module is 588,783 bytes, SHA-256 `57b577ebb4c4ffec36ba586e0b84f7b41d080bf67aaa66dcc6822402a57d6c09`. Its supplied provenance records the current JS source identities and packaging adaptations separately from the frozen WASM inputs. Packaging removes only the WASM `name` and `producers` custom sections and deduplicates the scalar base64 payload; it does not minify the inner worker/runtime JavaScript. The WASM header, standard sections and `target_features` bytes are unchanged, but the complete deployed binaries have different hashes. Stack traces may show function indices instead of names. The build copies the provenance, `NOTICE.txt` and all dependency licenses into `dist/decoder/`, which is included in the private package. No old external runtime tree is shipped.
+The integrated TypeScript decoder module is 591,931 bytes, SHA-256 `f367bc1fd8944ad4845bbf44bf26fe382065945e5319579d98ff1468fc2b9ee5`. The previous factory module was 588,783 bytes, SHA-256 `57b577ebb4c4ffec36ba586e0b84f7b41d080bf67aaa66dcc6822402a57d6c09`. Supplied provenance records TypeScript/JS source identities and packaging adaptations separately from the frozen WASM inputs. Packaging removes only the WASM `name` and `producers` custom sections and deduplicates the scalar base64 payload. The WASM header, standard sections and `target_features` bytes are unchanged, but the complete deployed binaries have different hashes. Stack traces may show function indices instead of names. The build copies only `PROVENANCE.json`, `NOTICE.txt` and dependency `licenses/` into `dist/decoder/`, which is included in the private package. Standalone declarations remain build inputs, not extension exports. No standalone global bundle, raw diagnostic runtime or old external runtime tree is shipped separately. Mediabunny consumes the complete artifact without rebuilding the producer or reading its qualified inputs.
 
 - Original WASM source commit: `3ccd64065dd45e6675b0a3602d1804315935b515`; original build base: `1fafe8f611afab696ce8b90d2d54b46f4c252789`.
 - Original scalar WASM SHA-256: `c06ed93c42aa17dfe45bcad2e55b6d14fca5e0c07b5bca1cc469b52999407b9b`.

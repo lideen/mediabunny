@@ -1,15 +1,20 @@
 {
   "schema": 1,
-  "built": "2026-09-28T13:36:41.245Z",
+  "built": "2026-09-28T16:33:19.384Z",
   "esbuild": {
     "version": "0.28.2",
     "license": "MIT",
     "role": "build-only dependency"
   },
+  "typescript": {
+    "version": "5.9.3",
+    "license": "Apache-2.0",
+    "role": "type checking and declaration generation only"
+  },
   "description": "Self-contained packaging derived from frozen WASM inputs. Only name/producers custom sections are removed; standard-section bytes are unchanged. Current working-tree JS is identified separately.",
   "binaryInputs": {
     "scalar": {
-      "path": "/Users/lideen/Code/arvid/code/mediabunny/packages/mpeg2/vendor",
+      "path": "/Users/lideen/Code/arvid/code/mpeg2-rs/vendor/wasm/scalar",
       "wasm": {
         "bytes": 144238,
         "sha256": "c06ed93c42aa17dfe45bcad2e55b6d14fca5e0c07b5bca1cc469b52999407b9b"
@@ -54,7 +59,7 @@
       }
     },
     "shared": {
-      "path": "/Users/lideen/Code/arvid/code/mediabunny/packages/mpeg2/vendor/threads",
+      "path": "/Users/lideen/Code/arvid/code/mpeg2-rs/vendor/wasm/shared",
       "wasm": {
         "bytes": 332988,
         "sha256": "32270a44364331fe90b2d22aeb590471c767a0bf4bd5c2e4e6346561e6ef7281"
@@ -112,33 +117,313 @@
       "bytes": 1222,
       "sha256": "00050fb0b4d164de73916e29d01da6e351d366e21f722e54a98152cd5cc744fa"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/js/decoder.mjs": {
-      "bytes": 7256,
-      "sha256": "80f3d8abcaf10407b404495858965323ded867b2610a6769777a9ab06965dbb7"
-    },
     "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/js/threaded.mjs": {
-      "bytes": 8308,
-      "sha256": "e47540c71ce3450200191aa79d3f7978b1ea8e27c6d39eda81202dc8b06d2cf1"
-    },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/js/decoder.d.mts": {
-      "bytes": 2835,
-      "sha256": "a8ff17bf0353bde28fba6e8d72daf0bb0322245a216d446d00fbdba9d1f29cfc"
+      "bytes": 8338,
+      "sha256": "e22789846c15d69f28a4b3b79c756da3b3a57713d11b5c53ff9e88f19859c3f4"
     },
     "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/build.mjs": {
-      "bytes": 10957,
-      "sha256": "1529e6c88bbf6dc87b6755c43c776ec1e390c0aeaf3edc637aceb05f47f978bd"
+      "bytes": 14480,
+      "sha256": "563449bcadae846833c70ab7c08b3c30b35a194ed5e05166ad13fe62735b9c05"
     },
     "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/packing.mjs": {
       "bytes": 3988,
       "sha256": "d6fed570acb3e571457198aaa2b2dc3d80b9e6f6d3155591db8129b60c9cdd16"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/package.json": {
-      "bytes": 505,
-      "sha256": "581e811191d7a86e733988322698575b32ec69d3a983342289a40d7f8818c057"
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/package.json": {
+      "bytes": 656,
+      "sha256": "d60fedccfae1eca4feb7fdfde38f3d328f4a6f46a354c97d61cbb5aa810d2d38"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/package-lock.json": {
-      "bytes": 14479,
-      "sha256": "6d26e32f6ebb7c11825b3001507c20f55906cfe34206580f67304e5cc0073794"
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/package-lock.json": {
+      "bytes": 14964,
+      "sha256": "bf2b6c6257e28ec7390fd2ecce3090d830938627addcbe21416b3b16b77d0a82"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/tsconfig.json": {
+      "bytes": 424,
+      "sha256": "95714a9231d34e5efcc79bd8ed62bdba81cf9324d85eeea519d544da551d2587"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/vendor/wasm/IMPORT.json": {
+      "bytes": 32017,
+      "sha256": "ac8e5a1b7dbcb609dc557d5de151afc74319420764bc9f915480cef7cf638e5e"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/src/bindings.d.ts": {
+      "bytes": 1043,
+      "sha256": "1a2e6e082f43732e14c97093a1a56aa0d11e72c89a19874cda97b1b461109e57"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/src/decoder.ts": {
+      "bytes": 8972,
+      "sha256": "68d88b6f5a6250a6efccb39d4cc00672a610a4a81edc7b4c8ba8be83576a22f8"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/src/frame.ts": {
+      "bytes": 2839,
+      "sha256": "d28bb35b23aa26bcdb83b89a048a1e76f6048e4ba00db8267c4ad9d4c3fe23f0"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/src/index.ts": {
+      "bytes": 194,
+      "sha256": "aa2f4ca6cf2e57c9b65c868f7fada1da2af21b98eefb6f8222de48cb6aa4838f"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/src/internal.ts": {
+      "bytes": 1640,
+      "sha256": "161ccf0af41db8aac795236d6bdc7f4220bbb476823a85544c888feaa7cbe4b7"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/src/types.ts": {
+      "bytes": 1112,
+      "sha256": "b123be9d2836b31a04405f0f97ce4b7128cfe13dfd2a4c4407258321eab7a435"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/vendor/wasm/scalar/pkg/mpeg2_wasm.d.ts": {
+      "bytes": 8712,
+      "sha256": "7d3949290bd58e7da30dbe27ecc42ceff2726d7a29426e3c8a691d18f7837cdd"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/typescript.js": {
+      "bytes": 9112572,
+      "sha256": "3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/bin/tsc": {
+      "bytes": 45,
+      "sha256": "8d5fa5bd883fec0979fc2004f1fe1d99aef40570155d550eadc0b03b55513bf0"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/tsc.js": {
+      "bytes": 267,
+      "sha256": "2cffde0b8c6760dfb0b5b0382bbb7e00ba6a8b2d981b9205b256a700a481d983"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/_tsc.js": {
+      "bytes": 6213092,
+      "sha256": "e8f349eabd48486bdb2bf9dc1a00c89d58297270c54b745838879e2859194419"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es5.d.ts": {
+      "bytes": 218439,
+      "sha256": "c430d44666289dae81f30fa7b2edebf186ecc91a2d4c71266ea6ae76388792e1"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.d.ts": {
+      "bytes": 1241,
+      "sha256": "45b7ab580deca34ae9729e97c13cfd999df04416a79116c3bfb483804f85ded4"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2016.d.ts": {
+      "bytes": 965,
+      "sha256": "3facaf05f0c5fc569c5649dd359892c98a85557e3e0c847964caeb67076f4d75"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.d.ts": {
+      "bytes": 1162,
+      "sha256": "e44bb8bbac7f10ecc786703fe0a6a4b952189f908707980ba8f3c8975a760962"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2018.d.ts": {
+      "bytes": 1088,
+      "sha256": "5e1c4c362065a6b95ff952c0eab010f04dcd2c3494e813b493ecfd4fcb9fc0d8"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2019.d.ts": {
+      "bytes": 1071,
+      "sha256": "68d73b4a11549f9c0b7d352d10e91e5dca8faa3322bfb77b661839c42b1ddec7"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.d.ts": {
+      "bytes": 1201,
+      "sha256": "5efce4fc3c29ea84e8928f97adec086e3dc876365e0982cc8479a07954a3efd4"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2021.d.ts": {
+      "bytes": 1036,
+      "sha256": "feecb1be483ed332fad555aff858affd90a48ab19ba7272ee084704eb7167569"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2022.d.ts": {
+      "bytes": 1108,
+      "sha256": "ee7bad0c15b58988daa84371e0b89d313b762ab83cb5b31b8a2d1162e8eb41c2"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.dom.d.ts": {
+      "bytes": 1874901,
+      "sha256": "080941d9f9ff9307f7e27a83bcd888b7c8270716c39af943532438932ec1d0b9"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.core.d.ts": {
+      "bytes": 22866,
+      "sha256": "c57796738e7f83dbc4b8e65132f11a377649c00dd3eee333f672b8f0a6bea671"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.collection.d.ts": {
+      "bytes": 5229,
+      "sha256": "dc2df20b1bcdc8c2d34af4926e2c3ab15ffe1160a63e58b7e09833f616efff44"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.generator.d.ts": {
+      "bytes": 2557,
+      "sha256": "515d0b7b9bea2e31ea4ec968e9edd2c39d3eebf4a2d5cbd04e88639819ae3b71"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.iterable.d.ts": {
+      "bytes": 18200,
+      "sha256": "0559b1f683ac7505ae451f9a96ce4c3c92bdc71411651ca6ddb0e88baaaad6a3"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.promise.d.ts": {
+      "bytes": 3200,
+      "sha256": "0dc1e7ceda9b8b9b455c3a2d67b0412feab00bd2f66656cd8850e8831b08b537"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.proxy.d.ts": {
+      "bytes": 5251,
+      "sha256": "ce691fb9e5c64efb9547083e4a34091bcbe5bdb41027e310ebba8f7d96a98671"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.reflect.d.ts": {
+      "bytes": 6493,
+      "sha256": "8d697a2a929a5fcb38b7a65594020fcef05ec1630804a33748829c5ff53640d0"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.symbol.d.ts": {
+      "bytes": 1649,
+      "sha256": "4ff2a353abf8a80ee399af572debb8faab2d33ad38c4b4474cff7f26e7653b8d"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.symbol.wellknown.d.ts": {
+      "bytes": 11010,
+      "sha256": "fb0f136d372979348d59b3f5020b4cdb81b5504192b1cacff5d1fbba29378aa1"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2016.array.include.d.ts": {
+      "bytes": 5204,
+      "sha256": "d15bea3d62cbbdb9797079416b8ac375ae99162a7fba5de2c6c505446486ac0a"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2016.intl.d.ts": {
+      "bytes": 1484,
+      "sha256": "68d18b664c9d32a7336a70235958b8997ebc1c3b8505f4f1ae2b7e7753b87618"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.arraybuffer.d.ts": {
+      "bytes": 915,
+      "sha256": "eb3d66c8327153d8fa7dd03f9c58d351107fe824c79e9b56b462935176cdf12a"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.date.d.ts": {
+      "bytes": 1916,
+      "sha256": "38f0219c9e23c915ef9790ab1d680440d95419ad264816fa15009a8851e79119"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.object.d.ts": {
+      "bytes": 2473,
+      "sha256": "69ab18c3b76cd9b1be3d188eaf8bba06112ebbe2f47f6c322b5105a6fbc45a2e"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.sharedmemory.d.ts": {
+      "bytes": 7209,
+      "sha256": "a680117f487a4d2f30ea46f1b4b7f58bef1480456e18ba53ee85c2746eeca012"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.string.d.ts": {
+      "bytes": 2378,
+      "sha256": "2f11ff796926e0832f9ae148008138ad583bd181899ab7dd768a2666700b1893"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.intl.d.ts": {
+      "bytes": 1449,
+      "sha256": "4de680d5bb41c17f7f68e0419412ca23c98d5749dcaaea1896172f06435891fc"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.typedarrays.d.ts": {
+      "bytes": 1542,
+      "sha256": "954296b30da6d508a104a3a0b5d96b76495c709785c1d11610908e63481ee667"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2018.asyncgenerator.d.ts": {
+      "bytes": 2692,
+      "sha256": "ac9538681b19688c8eae65811b329d3744af679e0bdfa5d842d0e32524c73e1c"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2018.asynciterable.d.ts": {
+      "bytes": 2257,
+      "sha256": "0a969edff4bd52585473d24995c5ef223f6652d6ef46193309b3921d65dd4376"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2018.intl.d.ts": {
+      "bytes": 3021,
+      "sha256": "9e9fbd7030c440b33d021da145d3232984c8bb7916f277e8ffd3dc2e3eae2bdb"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2018.promise.d.ts": {
+      "bytes": 1353,
+      "sha256": "811ec78f7fefcabbda4bfa93b3eb67d9ae166ef95f9bff989d964061cbf81a0c"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2018.regexp.d.ts": {
+      "bytes": 1232,
+      "sha256": "717937616a17072082152a2ef351cb51f98802fb4b2fdabd32399843875974ca"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2019.array.d.ts": {
+      "bytes": 3163,
+      "sha256": "d7e7d9b7b50e5f22c915b525acc5a49a7a6584cf8f62d0569e557c5cfc4b2ac2"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2019.object.d.ts": {
+      "bytes": 1473,
+      "sha256": "71c37f4c9543f31dfced6c7840e068c5a5aacb7b89111a4364b1d5276b852557"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2019.string.d.ts": {
+      "bytes": 1528,
+      "sha256": "576711e016cf4f1804676043e6a0a5414252560eb57de9faceee34d79798c850"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2019.symbol.d.ts": {
+      "bytes": 1006,
+      "sha256": "89c1b1281ba7b8a96efc676b11b264de7a8374c5ea1e6617f11880a13fc56dc6"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2019.intl.d.ts": {
+      "bytes": 958,
+      "sha256": "74f7fa2d027d5b33eb0471c8e82a6c87216223181ec31247c357a3e8e2fddc5b"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.bigint.d.ts": {
+      "bytes": 38185,
+      "sha256": "d6d7ae4d1f1f3772e2a3cde568ed08991a8ae34a080ff1151af28b7f798e22ca"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.date.d.ts": {
+      "bytes": 2956,
+      "sha256": "063600664504610fe3e99b717a1223f8b1900087fab0b4cad1496a114744f8df"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.promise.d.ts": {
+      "bytes": 1803,
+      "sha256": "934019d7e3c81950f9a8426d093458b65d5aff2c7c1511233c0fd5b941e608ab"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.sharedmemory.d.ts": {
+      "bytes": 5128,
+      "sha256": "52ada8e0b6e0482b728070b7639ee42e83a9b1c22d205992756fe020fd9f4a47"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.string.d.ts": {
+      "bytes": 2556,
+      "sha256": "3bdefe1bfd4d6dee0e26f928f93ccc128f1b64d5d501ff4a8cf3c6371200e5e6"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.symbol.wellknown.d.ts": {
+      "bytes": 1606,
+      "sha256": "59fb2c069260b4ba00b5643b907ef5d5341b167e7d1dbf58dfd895658bda2867"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.intl.d.ts": {
+      "bytes": 22438,
+      "sha256": "639e512c0dfc3fad96a84caad71b8834d66329a1f28dc95e3946c9b58176c73a"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.number.d.ts": {
+      "bytes": 1587,
+      "sha256": "368af93f74c9c932edd84c58883e736c9e3d53cec1fe24c0b0ff451f529ceab1"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2021.promise.d.ts": {
+      "bytes": 2262,
+      "sha256": "af3dd424cf267428f30ccfc376f47a2c0114546b55c44d8c0f1d57d841e28d74"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2021.string.d.ts": {
+      "bytes": 1592,
+      "sha256": "995c005ab91a498455ea8dfb63aa9f83fa2ea793c3d8aa344be4a1678d06d399"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2021.weakref.d.ts": {
+      "bytes": 3171,
+      "sha256": "959d36cddf5e7d572a65045b876f2956c973a586da58e5d26cde519184fd9b8a"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2021.intl.d.ts": {
+      "bytes": 8245,
+      "sha256": "965f36eae237dd74e6cca203a43e9ca801ce38824ead814728a2807b1910117d"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2022.array.d.ts": {
+      "bytes": 4676,
+      "sha256": "3925a6c820dcb1a06506c90b1577db1fdbf7705d65b62b99dce4be75c637e26b"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2022.error.d.ts": {
+      "bytes": 2379,
+      "sha256": "0a3d63ef2b853447ec4f749d3f368ce642264246e02911fcb1590d8c161b8005"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2022.intl.d.ts": {
+      "bytes": 7692,
+      "sha256": "8cdf8847677ac7d20486e54dd3fcf09eda95812ac8ace44b4418da1bbbab6eb8"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2022.object.d.ts": {
+      "bytes": 1085,
+      "sha256": "8444af78980e3b20b49324f4a16ba35024fef3ee069a0eb67616ea6ca821c47a"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2022.string.d.ts": {
+      "bytes": 1155,
+      "sha256": "3287d9d085fbd618c3971944b65b4be57859f5415f495b33a6adc994edd2f004"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2022.regexp.d.ts": {
+      "bytes": 1331,
+      "sha256": "b4b67b1a91182421f5df999988c690f14d813b9850b40acd06ed44691f6727ad"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.esnext.disposable.d.ts": {
+      "bytes": 6806,
+      "sha256": "51ad4c928303041605b4d7ae32e0c1ee387d43a24cd6f1ebf4a2699e1076d4fa"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.decorators.d.ts": {
+      "bytes": 13192,
+      "sha256": "8e7f8264d0fb4c5339605a15daadb037bf238c10b654bb3eee14208f860a32ea"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.decorators.legacy.d.ts": {
+      "bytes": 1326,
+      "sha256": "782dec38049b92d4e85c1585fbea5474a219c6984a35b004963b00beb1aab538"
     }
   },
   "packaging": {
@@ -196,12 +481,20 @@
   },
   "outputs": {
     "mpeg2-decoder.mjs": {
-      "bytes": 588783,
-      "sha256": "57b577ebb4c4ffec36ba586e0b84f7b41d080bf67aaa66dcc6822402a57d6c09"
+      "bytes": 591931,
+      "sha256": "f367bc1fd8944ad4845bbf44bf26fe382065945e5319579d98ff1468fc2b9ee5"
+    },
+    "mpeg2-decoder.iife.js": {
+      "bytes": 595396,
+      "sha256": "6e728c290f8add6814bc7200c036cb66a9c9f289250e6c74ddebb2e83f08bdba"
     },
     "mpeg2-decoder.d.mts": {
-      "bytes": 2835,
-      "sha256": "a8ff17bf0353bde28fba6e8d72daf0bb0322245a216d446d00fbdba9d1f29cfc"
+      "bytes": 34,
+      "sha256": "a90c69a8b72105e8dc8fe0b3bcd272f038ed255f7daf5ec6c1aefc293a1e84b2"
+    },
+    "package.json": {
+      "bytes": 210,
+      "sha256": "43b4dcace6335a2fd5e20eafcbe24ca8540868a7634f43c5bdaa3d9b6742f3bc"
     },
     "NOTICE.txt": {
       "bytes": 1357,
@@ -422,6 +715,26 @@
     "licenses/web-sys-0.3.106/LICENSE-MIT": {
       "bytes": 1057,
       "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    },
+    "types/decoder.d.ts": {
+      "bytes": 844,
+      "sha256": "25c7e0fb1721abc1a315c4e7fd811e42d2da48113f06e54b4cbd9855ba251443"
+    },
+    "types/frame.d.ts": {
+      "bytes": 1230,
+      "sha256": "731169c533a8fc9e50b1047e54d457b46336b38eae4cae02bfe55f1755ded5ba"
+    },
+    "types/index.d.ts": {
+      "bytes": 194,
+      "sha256": "aa2f4ca6cf2e57c9b65c868f7fada1da2af21b98eefb6f8222de48cb6aa4838f"
+    },
+    "types/internal.d.ts": {
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881"
+    },
+    "types/types.d.ts": {
+      "bytes": 1163,
+      "sha256": "fa5b764e16ca909cd3c8ba0b154cb62ae00310bc73df17ce2d3092d055455b3b"
     }
   }
 }

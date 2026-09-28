@@ -819,7 +819,7 @@ async function createPacketWorker({
   maxPacketBytes,
   maxFrameBytes,
   signal
-}, blobUrls = /* @__PURE__ */ new Set()) {
+}, blobUrls = /* @__PURE__ */ new Set(), materialize = ownFrame) {
   signal?.throwIfAborted();
   if (![1, 2, 4].includes(threadCount)) throw new RangeError("threadCount must be 1, 2 or 4");
   for (const [name, value, max] of [["packet", maxPacketBytes, MAX_INPUT_BYTES], ["frame", maxFrameBytes, MAX_FRAME_BYTES]]) {
@@ -985,7 +985,7 @@ async function createPacketWorker({
       const value = await send(operation, { input: copy, timing }, copy ? [copy.buffer] : []);
       if (failed) throw terminalError;
       if (closing) throw new DOMException("packet decoder closed during operation", "AbortError");
-      return operation === "decode" ? value.map(ownFrame) : value?.frame ? ownFrame(value) : value;
+      return operation === "decode" ? value.map(materialize) : value?.frame ? materialize(value) : value;
     } finally {
       busy = false;
     }
@@ -1032,7 +1032,90 @@ async function createPacketWorker({
   };
 }
 
-// js/decoder.mjs
+// ../../src/frame.ts
+var Frame = class _Frame {
+  width;
+  height;
+  chromaFormat;
+  codedWidth;
+  codedHeight;
+  chromaWidth;
+  chromaHeight;
+  yStride;
+  cbStride;
+  crStride;
+  progressive;
+  progressiveSequence;
+  topFieldFirst;
+  temporalReference;
+  frameRateNumerator;
+  frameRateDenominator;
+  pixelAspectNumerator;
+  pixelAspectDenominator;
+  colorPrimaries;
+  colorTransfer;
+  colorMatrix;
+  #y;
+  #cb;
+  #cr;
+  constructor(frame) {
+    if (frame.chromaFormat !== "yuv420p" && frame.chromaFormat !== "yuv422p") {
+      throw new Error(`Unsupported chroma format: ${frame.chromaFormat}`);
+    }
+    this.width = frame.width;
+    this.height = frame.height;
+    this.chromaFormat = frame.chromaFormat;
+    this.codedWidth = frame.codedWidth;
+    this.codedHeight = frame.codedHeight;
+    this.chromaWidth = frame.chromaWidth;
+    this.chromaHeight = frame.chromaHeight;
+    this.yStride = frame.yStride;
+    this.cbStride = frame.cbStride;
+    this.crStride = frame.crStride;
+    this.progressive = frame.progressive;
+    this.progressiveSequence = frame.progressiveSequence;
+    this.topFieldFirst = frame.topFieldFirst;
+    this.temporalReference = frame.temporalReference;
+    this.frameRateNumerator = frame.frameRateNumerator;
+    this.frameRateDenominator = frame.frameRateDenominator;
+    this.pixelAspectNumerator = frame.pixelAspectNumerator;
+    this.pixelAspectDenominator = frame.pixelAspectDenominator;
+    this.colorPrimaries = frame.colorPrimaries;
+    this.colorTransfer = frame.colorTransfer;
+    this.colorMatrix = frame.colorMatrix;
+    this.#y = frame.y;
+    this.#cb = frame.cb;
+    this.#cr = frame.cr;
+  }
+  /** @internal */
+  static fromTransfer(frame) {
+    return new _Frame(frame);
+  }
+  /** Transfers the owned plane. Repeated calls return an empty array. */
+  takeY() {
+    const plane = this.#y;
+    this.#y = new Uint8Array();
+    return plane;
+  }
+  takeCb() {
+    const plane = this.#cb;
+    this.#cb = new Uint8Array();
+    return plane;
+  }
+  takeCr() {
+    const plane = this.#cr;
+    this.#cr = new Uint8Array();
+    return plane;
+  }
+  /** Releases untaken planes. Idempotent; metadata and already-taken planes remain valid. */
+  clear() {
+    this.#y = this.#cb = this.#cr = new Uint8Array();
+  }
+};
+
+// ../../src/decoder.ts
+var MAX_PACKET_BYTES = 8 * 1024 * 1024;
+var MAX_FRAME_BYTES2 = 8 * 1024 * 1024;
 var scalarInitialization;
 function initializeScalar() {
   return scalarInitialization ??= init().catch((error) => {
@@ -1046,10 +1129,10 @@ function optionsFor(input) {
   for (const key of Reflect.ownKeys(input)) {
     if (!keys.includes(key)) throw new TypeError(`Unknown decoder option: ${String(key)}`);
   }
-  const { signal, maxPacketBytes = MAX_INPUT_BYTES, maxFrameBytes = MAX_FRAME_BYTES } = input;
+  const { signal, maxPacketBytes = MAX_PACKET_BYTES, maxFrameBytes = MAX_FRAME_BYTES2 } = input;
   if (signal !== void 0 && !(signal instanceof AbortSignal)) throw new TypeError("signal must be an AbortSignal");
   signal?.throwIfAborted();
-  for (const [name, value, max] of [["packet", maxPacketBytes, MAX_INPUT_BYTES], ["frame", maxFrameBytes, MAX_FRAME_BYTES]]) {
+  for (const [name, value, max] of [["packet", maxPacketBytes, MAX_PACKET_BYTES], ["frame", maxFrameBytes, MAX_FRAME_BYTES2]]) {
     if (!Number.isInteger(value) || value < 1 || value > max) throw new RangeError(`ResourceLimit: ${name} budget must be an integer in 1..=${max} bytes`);
   }
   const workers = typeof Worker === "function";
@@ -1058,7 +1141,7 @@ function optionsFor(input) {
   if (concurrency === void 0) {
     const hint = globalThis.navigator?.hardwareConcurrency;
     if (!workers) concurrency = 0;
-    else if (!shared || !Number.isSafeInteger(hint) || hint < 1) concurrency = 1;
+    else if (!shared || !Number.isSafeInteger(hint) || hint === void 0 || hint < 1) concurrency = 1;
     else concurrency = hint >= 4 ? 4 : hint >= 2 ? 2 : 1;
   }
   if (![0, 1, 2, 4].includes(concurrency)) throw new RangeError("concurrency must be 0, 1, 2 or 4");
@@ -1066,9 +1149,17 @@ function optionsFor(input) {
   if (concurrency > 1 && !shared) throw new Error("concurrency > 1 requires cross-origin isolation and SharedArrayBuffer");
   return { concurrency, maxPacketBytes, maxFrameBytes, signal };
 }
+function ownFrame2(output) {
+  return { timestamp: output.timestamp, duration: output.duration, frame: Frame.fromTransfer(output.frame) };
+}
+function clearOutput(output) {
+  output?.frame.clear();
+}
 async function directDecoder({ maxPacketBytes, maxFrameBytes, signal }) {
-  let decoder, runtime, terminalError, failed = false, closed = false, busy = false, rejectInitialization;
-  let moduleInitMs, decoderSetupMs;
+  let decoder;
+  let terminalError, failed = false, closed = false, busy = false;
+  let rejectInitialization;
+  let runtime, moduleInitMs, decoderSetupMs;
   const start = performance.now();
   function dispose() {
     signal?.removeEventListener("abort", abort);
@@ -1082,7 +1173,7 @@ async function directDecoder({ maxPacketBytes, maxFrameBytes, signal }) {
     dispose();
     rejectInitialization?.(reason);
   }
-  const abort = () => cancel(signal.reason);
+  const abort = () => cancel(signal?.reason);
   const aborted = new Promise((_, reject) => {
     rejectInitialization = reject;
   });
@@ -1102,22 +1193,21 @@ async function directDecoder({ maxPacketBytes, maxFrameBytes, signal }) {
   } finally {
     rejectInitialization = void 0;
   }
-  async function call(operation, ...args) {
+  async function call(operation, release = () => {
+  }) {
     if (failed) throw terminalError;
-    if (closed) throw new Error("packet decoder is closed");
+    if (closed || !decoder) throw new Error("packet decoder is closed");
     if (busy) throw new Error("only one packet operation may be in flight");
     busy = true;
-    let outputs = [];
+    let value;
     try {
-      const value = decoder[operation](...args);
-      if (operation === "decode") outputs = value.map((output) => ownFrame(takeFrame(output)));
-      else if (value?.frame) outputs = [ownFrame(takeFrame(value))];
+      value = operation(decoder);
       await Promise.resolve();
       if (failed) throw terminalError;
       if (closed) throw new DOMException("packet decoder closed during operation", "AbortError");
-      return operation === "decode" ? outputs : outputs[0] ?? value;
+      return value;
     } catch (error) {
-      for (const output of outputs) output.frame.free();
+      if (value !== void 0) release(value);
       if (error instanceof WebAssembly.RuntimeError) cancel(error);
       throw error;
     } finally {
@@ -1144,12 +1234,18 @@ async function directDecoder({ maxPacketBytes, maxFrameBytes, signal }) {
       if (!Number.isFinite(timing?.timestamp) || !Number.isFinite(timing?.duration) || timing.duration < 0) {
         return Promise.reject(new TypeError("timestamp must be finite and duration finite and nonnegative"));
       }
-      return call("decode", input, timing);
+      return call((native) => native.decode(input, timing).map((output) => ownFrame2(takeFrame(output))), (outputs) => outputs.forEach(clearOutput));
     },
-    discardLeadingB: (input) => call("discardLeadingB", input),
-    finishSegment: () => call("finishSegment"),
-    drain: () => call("drain"),
-    reset: () => call("reset"),
+    discardLeadingB: (input) => call((native) => native.discardLeadingB(input)),
+    finishSegment: () => call((native) => {
+      const output = native.finishSegment();
+      return output && ownFrame2(takeFrame(output));
+    }, clearOutput),
+    drain: () => call((native) => {
+      const output = native.drain();
+      return output && ownFrame2(takeFrame(output));
+    }, clearOutput),
+    reset: () => call((native) => native.reset()),
     cancel,
     async close() {
       if (!closed) {
@@ -1159,59 +1255,82 @@ async function directDecoder({ maxPacketBytes, maxFrameBytes, signal }) {
     }
   };
 }
-async function createMpeg2Decoder(options = {}) {
-  const settings = optionsFor(options), { concurrency, signal, maxPacketBytes, maxFrameBytes } = settings;
-  let backend;
-  if (concurrency === 0) backend = await directDecoder(settings);
-  else {
-    let blob = function(source) {
-      const url = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
-      urls.add(url);
-      return url;
-    };
-    const urls = /* @__PURE__ */ new Set();
-    try {
-      const workerUrl = blob(coordinatorSource);
-      const runtimeUrl = concurrency === 1 ? blob(scalarSource.replace("__MPEG2_SCALAR_WASM_BASE64__", scalarBase64)) : blob(sharedSource.replace("__MPEG2_RAYON_HELPER__", blob(helperSource)));
-      backend = await createPacketWorker({
-        threadCount: concurrency,
-        runtimeUrl,
-        workerUrl,
-        maxPacketBytes,
-        maxFrameBytes,
-        signal
-      }, urls);
-    } catch (error) {
-      for (const url of urls) URL.revokeObjectURL(url);
-      throw error;
-    }
+var Decoder = class _Decoder {
+  #backend;
+  #concurrency;
+  constructor(backend, concurrency) {
+    this.#backend = backend;
+    this.#concurrency = concurrency;
   }
-  return {
-    get concurrency() {
-      return concurrency;
-    },
-    get maxPacketBytes() {
-      return backend.maxPacketBytes;
-    },
-    get maxFrameBytes() {
-      return backend.maxFrameBytes;
-    },
-    get maxReferenceBytes() {
-      return backend.maxReferenceBytes;
-    },
-    get stats() {
-      const { threadCount, ...stats } = backend.stats;
-      return { concurrency, ...stats };
-    },
-    decode: (bytes, timing) => backend.decode(bytes, timing),
-    discardLeadingB: (bytes) => backend.discardLeadingB(bytes),
-    finishSegment: () => backend.finishSegment(),
-    drain: () => backend.drain(),
-    reset: () => backend.reset(),
-    cancel: (reason) => backend.cancel(reason),
-    close: () => backend.close()
-  };
-}
+  static async create(options = {}) {
+    const settings = optionsFor(options), { concurrency, signal, maxPacketBytes, maxFrameBytes } = settings;
+    let backend;
+    if (concurrency === 0) backend = await directDecoder(settings);
+    else {
+      let blob2 = function(source) {
+        const url = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
+        urls.add(url);
+        return url;
+      };
+      var blob = blob2;
+      const urls = /* @__PURE__ */ new Set();
+      try {
+        const workerUrl = blob2(coordinatorSource);
+        const runtimeUrl = concurrency === 1 ? blob2(scalarSource.replace("__MPEG2_SCALAR_WASM_BASE64__", scalarBase64)) : blob2(sharedSource.replace("__MPEG2_RAYON_HELPER__", blob2(helperSource)));
+        backend = await createPacketWorker({
+          threadCount: concurrency,
+          runtimeUrl,
+          workerUrl,
+          maxPacketBytes,
+          maxFrameBytes,
+          signal
+        }, urls, ownFrame2);
+      } catch (error) {
+        for (const url of urls) URL.revokeObjectURL(url);
+        throw error;
+      }
+    }
+    return new _Decoder(backend, concurrency);
+  }
+  get concurrency() {
+    return this.#concurrency;
+  }
+  get maxPacketBytes() {
+    return this.#backend.maxPacketBytes;
+  }
+  get maxFrameBytes() {
+    return this.#backend.maxFrameBytes;
+  }
+  get maxReferenceBytes() {
+    return this.#backend.maxReferenceBytes;
+  }
+  get stats() {
+    const { threadCount, ...stats } = this.#backend.stats;
+    return { concurrency: this.#concurrency, ...stats };
+  }
+  decode(bytes, timing) {
+    return this.#backend.decode(bytes, timing);
+  }
+  discardLeadingB(bytes) {
+    return this.#backend.discardLeadingB(bytes);
+  }
+  finishSegment() {
+    return this.#backend.finishSegment();
+  }
+  drain() {
+    return this.#backend.drain();
+  }
+  reset() {
+    return this.#backend.reset();
+  }
+  cancel(reason) {
+    this.#backend.cancel(reason);
+  }
+  close() {
+    return this.#backend.close();
+  }
+};
 export {
-  createMpeg2Decoder
+  Decoder,
+  Frame
 };
