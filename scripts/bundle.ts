@@ -299,7 +299,8 @@ const htj2kVariants = await createVariants(
 const mpeg2Notice = `/* Private local integration. NOT FOR PUBLIC DISTRIBUTION.
  * MPEG-2 Rust/WASM and generated vendor files have no selected project license.
  * MPL-2.0 applies only to the Mediabunny adapter source. See packages/mpeg2/vendor/PROVENANCE.json.
- * WASM SHA-256: 63e39b72085e2eccca4b70c87b6a30ad581a37e8b2007945dab01e7294bb61ce
+ * Default WASM numerical version: h262-butterfly-q14-q5-v1. Native f64 is unchanged.
+ * WASM SHA-256: c06ed93c42aa17dfe45bcad2e55b6d14fca5e0c07b5bca1cc469b52999407b9b
  */`;
 
 const mpeg2WorkerPlugin: esbuild.Plugin = {

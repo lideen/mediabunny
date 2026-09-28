@@ -1,0 +1,105 @@
+[
+  {
+    "name": "default-release",
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "--release",
+      "--no-fail-fast"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "default-threads",
+    "command": [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "--release",
+      "--features",
+      "threads",
+      "--no-fail-fast"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "clippy",
+    "command": [
+      "cargo",
+      "clippy",
+      "--offline",
+      "--locked",
+      "--release",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "wasm-clippy",
+    "command": [
+      "cargo",
+      "clippy",
+      "--offline",
+      "--locked",
+      "--release",
+      "--manifest-path",
+      "crates/wasm/Cargo.toml",
+      "--target",
+      "wasm32-unknown-unknown",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "format",
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "unit-build",
+    "command": [
+      "rustc",
+      "--edition=2024",
+      "--test",
+      "-O",
+      "-C",
+      "overflow-checks=yes",
+      "tools/butterfly-idct-probe.rs",
+      "-o",
+      "/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-butterfly-idct-20260927/promotion-checks/unit-tests"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "unit",
+    "command": [
+      "/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-butterfly-idct-20260927/promotion-checks/unit-tests"
+    ],
+    "exitCode": 0
+  },
+  {
+    "name": "promotion-builds/selected-node",
+    "command": [
+      "node",
+      "--test",
+      "--test-concurrency=1",
+      "/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-butterfly-idct-20260927/promotion-checks/promotion-builds/selected/crates/wasm/tests/runtime.test.mjs",
+      "/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-butterfly-idct-20260927/promotion-checks/promotion-builds/selected/crates/wasm/tests/packet.test.mjs"
+    ],
+    "exitCode": 0
+  }
+]

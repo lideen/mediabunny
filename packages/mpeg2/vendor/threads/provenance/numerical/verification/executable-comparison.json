@@ -1,0 +1,34 @@
+{
+  "scalar": {
+    "before": {
+      "bytes": 144238,
+      "sha256": "479d735d36211eecd28fba48cf88d1713730ba491fc0e9a655df636ab41c2109"
+    },
+    "after": {
+      "bytes": 144238,
+      "sha256": "c06ed93c42aa17dfe45bcad2e55b6d14fca5e0c07b5bca1cc469b52999407b9b"
+    },
+    "wholeBytesEqual": false,
+    "codeSectionEqual": true,
+    "differingSections": [
+      0
+    ]
+  },
+  "shared": {
+    "before": {
+      "bytes": 332979,
+      "sha256": "2239d933866b8759f66c53f573d7f6dc23cf71b5da673615bce5098526f3a423"
+    },
+    "after": {
+      "bytes": 332988,
+      "sha256": "32270a44364331fe90b2d22aeb590471c767a0bf4bd5c2e4e6346561e6ef7281"
+    },
+    "wholeBytesEqual": false,
+    "codeSectionEqual": false,
+    "differingSections": [
+      0,
+      10,
+      11
+    ]
+  }
+}

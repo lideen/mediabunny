@@ -6,6 +6,7 @@ import {
 } from '../../src/index.js';
 import { Mpeg2Decoder, registerMpeg2Decoder } from '@mediabunny/mpeg2';
 import pixels from '../fixtures/mpeg2/pixels.json' with { type: 'json' };
+import regression from '../fixtures/mpeg2/wasm-idct-v1.json' with { type: 'json' };
 import packets from '../fixtures/mpeg2/packets.json' with { type: 'json' };
 
 const fixture = () => new Uint8Array(readFileSync(new URL('../fixtures/mpeg2/main420.mxf', import.meta.url)));
@@ -18,7 +19,7 @@ const verify = async (sample: VideoSample, frame: number) => {
 	const data = new Uint8Array(sample.allocationSize());
 	await sample.copyTo(data);
 	expect([hash(data.subarray(0, 921600)), hash(data.subarray(921600, 1152000)),
-		hash(data.subarray(1152000))]).toEqual(expected.planes);
+		hash(data.subarray(1152000))]).toEqual(regression.cases.main420.frames[frame]!.planes);
 };
 
 const direct = (onSample: (sample: VideoSample) => void, config: Partial<VideoDecoderConfig> = {}) => {
@@ -66,8 +67,8 @@ describe('given the private MPEG-2 WASM extension', () => {
 				const data = ArrayBuffer.isView(bytes)
 					? new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 					: new Uint8Array(bytes);
-				expect(data.byteLength).toBe(154501);
-				expect(hash(data)).toBe('63e39b72085e2eccca4b70c87b6a30ad581a37e8b2007945dab01e7294bb61ce');
+				expect(data.byteLength).toBe(144238);
+				expect(hash(data)).toBe(regression.qualifiedWasmSha256);
 				await gate;
 				return compile(bytes);
 			});
@@ -106,8 +107,9 @@ describe('given the private MPEG-2 WASM extension', () => {
 			}
 		});
 
-		it('should match FAANI planes and ffprobe audio, retaining samples after disposal', async () => {
+		it('should match qualified WASM planes and ffprobe audio, retaining samples after disposal', async () => {
 			registerMpeg2Decoder();
+			expect(hash(fixture())).toBe(regression.cases.main420.inputSha256);
 			const input = inputFor();
 			const held: VideoSample[] = [];
 			try {

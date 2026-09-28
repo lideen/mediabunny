@@ -1,0 +1,2 @@
+variant=scalar
+RUSTFLAGS=-C target-feature=-simd128

@@ -1,0 +1,6413 @@
+{
+  "status": "EXPERIMENTAL_NUMERIC_UNAPPROVED",
+  "artifacts": [
+    {
+      "bytes": 154484,
+      "sha256": "a86af0e2d00999c12c1b2eb3e8d13abf1442c933571aba8493fc1b7e124e1d05"
+    },
+    {
+      "bytes": 144238,
+      "sha256": "479d735d36211eecd28fba48cf88d1713730ba491fc0e9a655df636ab41c2109"
+    }
+  ],
+  "nativeSha256": "c1c45b1d660592305399682331b6a3e48007f81f4df7126b2cbcbaaa4df72744",
+  "cases": [
+    {
+      "name": "01-flat-dc",
+      "frames": 1,
+      "inputHash": "f82a46d602200bce56bc9ee2da995b0eca276216aef5f5b529738a2a6e519a9f",
+      "baselineHash": "0bc4d10b4264ab253b7ea47ef8034fec4461d5a2a7a873d7364d969c59aac481",
+      "candidateHash": "0bc4d10b4264ab253b7ea47ef8034fec4461d5a2a7a873d7364d969c59aac481",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 1536
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 1536
+          }
+        }
+      ]
+    },
+    {
+      "name": "02-ac-32",
+      "frames": 1,
+      "inputHash": "a043e26d908c2f8b4fa7bbf4f16b3e2c4347e8d12242b4826f92746c3d902b16",
+      "baselineHash": "767afff8092cf78d91d4bd70de6438f7041e69d8ed62f5a99697db0526fed373",
+      "candidateHash": "de54d43866f4eb14becf52ee168a8e60d5062cab1020714c9ac379bc7062aace",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 1531,
+        "1": 5
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 1531,
+            "1": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "03-edges-48",
+      "frames": 1,
+      "inputHash": "f209140df32f69b3e1db684825fc45dc462b0c0fb5bd7798c8e58857db5f1aad",
+      "baselineHash": "ffc11cc63c098423a23a712888968235d6895ec5f8211da0f08911ef2863902f",
+      "candidateHash": "a18728e1b63a6230517eff149b212734314cd9711fa8bb79a3d9dfd508d24093",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 2286,
+        "1": 9,
+        "-1": 9
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 2286,
+            "1": 9,
+            "-1": 9
+          }
+        }
+      ]
+    },
+    {
+      "name": "04-ac-dc1",
+      "frames": 1,
+      "inputHash": "debf4d5b9a7258164998241188f518e94529bda70937ef42b71ae989269642cf",
+      "baselineHash": "82144e3033a7d21023d618fe0ec04cb264371fe5ab5e173c3f6f09d13c880401",
+      "candidateHash": "adad5db6296f4f7f2518d576e8095fbdff05507bd8bc57ff6c5cf064089f0d88",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 1532,
+        "1": 3,
+        "-1": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 1532,
+            "1": 3,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "05-ac-dc2",
+      "frames": 1,
+      "inputHash": "98284d39badbc98701a53bf3da76263790984fcba893cf2c4bed8b36821393e6",
+      "baselineHash": "a99caf1b48be20088d547b319dc383521f5687b65024b56495ed44acc5047c73",
+      "candidateHash": "c0dee97302d1c35e93f1232e718b2d187602042b1f6b3c21d626c33d0007ffd4",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 1532,
+        "1": 3,
+        "-1": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 1532,
+            "1": 3,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "06-ac-dc3",
+      "frames": 1,
+      "inputHash": "cea1fc5cb358f474b29e201741e1c6a741419bb7851b4e404fa90bfd27bda224",
+      "baselineHash": "3314de894fdacfa2d7a7651c8bd658fd614f8778add926fffbef1e0c6c08dac4",
+      "candidateHash": "8027a77c1795e358754b91292c1f5020e41e9e67db2d12f84d6093e9940360bb",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 1533,
+        "1": 2,
+        "-1": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 1533,
+            "1": 2,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "07-intra-vlc",
+      "frames": 1,
+      "inputHash": "c2c8021b0c469247fdd041a3d4445f51c1d0ccd957eff53c1e8df7ea32726e3a",
+      "baselineHash": "767afff8092cf78d91d4bd70de6438f7041e69d8ed62f5a99697db0526fed373",
+      "candidateHash": "de54d43866f4eb14becf52ee168a8e60d5062cab1020714c9ac379bc7062aace",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 1531,
+        "1": 5
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 1531,
+            "1": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "08-alternate-scan",
+      "frames": 1,
+      "inputHash": "2f013266ed1cb9439f3214e69aa828158a8fa09b7f5d8cb5226b35a5539b1fd6",
+      "baselineHash": "767afff8092cf78d91d4bd70de6438f7041e69d8ed62f5a99697db0526fed373",
+      "candidateHash": "de54d43866f4eb14becf52ee168a8e60d5062cab1020714c9ac379bc7062aace",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 1531,
+        "1": 5
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 1531,
+            "1": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "09-nonlinear",
+      "frames": 1,
+      "inputHash": "8cdf49aea2607c2f3e834cb246e30966b93ce82056b03ddf82956747e6b59e7e",
+      "baselineHash": "2417309a2be9b7f09e048bddd3ab73aeec04c24c1ce4c46273f6dfeb6c4d00e8",
+      "candidateHash": "90a4395c667b81f4c4337abc3ca9777abec9910612fd579f96dbfcc407f06959",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 1529,
+        "1": 4,
+        "-1": 3
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 1529,
+            "1": 4,
+            "-1": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "10-moving-all-i",
+      "frames": 4,
+      "inputHash": "69abd142e5f7520b9df3707c74a64637ca18772b7fc429c80c886a93e35485f4",
+      "baselineHash": "61f95a94abc4682bb9ef5baa047b8821bf62551615b792e348f3e8d6077ada64",
+      "candidateHash": "846a63c35a3c4d240611ad445755e3295d85e324430035070160335e0286eb9b",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 18329,
+        "1": 73,
+        "-1": 30
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4591,
+            "1": 11,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 4573,
+            "1": 21,
+            "-1": 14
+          }
+        },
+        {
+          "frame": 2,
+          "type": "I",
+          "histogram": {
+            "0": 4584,
+            "1": 18,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 3,
+          "type": "I",
+          "histogram": {
+            "0": 4581,
+            "1": 23,
+            "-1": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "11-422-intra",
+      "frames": 1,
+      "inputHash": "3876521a577a9516a0faf9b1afbf30d1254478da7983bbc4af08768567bfea1a",
+      "baselineHash": "c0332cb231accc693fbbe3eec735ffd5007d19536813ef066e1cbbd6b9fc72be",
+      "candidateHash": "f87703ef6f3cdd3e0f446e9a7720630ffbc3892097a6deaa1c3bc047d71760d3",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 3060,
+        "1": 10,
+        "-1": 2
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 3060,
+            "1": 10,
+            "-1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "12-422-fields-alt",
+      "frames": 1,
+      "inputHash": "3c262335b1932cf9ef9cde20dc170c3be46803adf455668dbced2bb4d0c1f94a",
+      "baselineHash": "21424cc2747fab58c933779c6b1f4dc48cfef201fecf70c41b0a2ebad8a64432",
+      "candidateHash": "79b7519865dc4dc1f1a7cdce0ba088f158caa15352f506229c6737416e1eb6d9",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 6128,
+        "1": 8,
+        "-1": 8
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6128,
+            "1": 8,
+            "-1": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "14-422-crop",
+      "frames": 2,
+      "inputHash": "f52caaad90f1519f081b7eebd6637f973727b68e7209cca3b3cb4792171d7a28",
+      "baselineHash": "bfb4e7efb9b46f56db8a4d29d76be8dec52b932452cd891fb68864c1e9b65ff8",
+      "candidateHash": "cb85897701661b2bbb0f214a16542e3db2a165651dc0a89feeb0fc10d6443a4d",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 1319,
+        "1": 7
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 660,
+            "1": 3
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 659,
+            "1": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "15-422-dc3",
+      "frames": 1,
+      "inputHash": "416c9eef454066383cdd480ab24ca9e155f67c1a10629477eadeca45e025033e",
+      "baselineHash": "6576dca3edc193f3d031596bc15ce2bd55d155f337f0cbf029eac00b83695cd1",
+      "candidateHash": "148a8c0014c2445065723046c164e05ab1e52033cb73bcb6864483b17858e954",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 2044,
+        "1": 3,
+        "-1": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 2044,
+            "1": 3,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "16-422-high-dc3",
+      "frames": 1,
+      "inputHash": "ca27e723d2e79f9d23a1cdda61314b2591b623986812b4032ab4448de8ea62f8",
+      "baselineHash": "6576dca3edc193f3d031596bc15ce2bd55d155f337f0cbf029eac00b83695cd1",
+      "candidateHash": "148a8c0014c2445065723046c164e05ab1e52033cb73bcb6864483b17858e954",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 2044,
+        "1": 3,
+        "-1": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 2044,
+            "1": 3,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "vector-run-20",
+      "frames": 1,
+      "inputHash": "78cf08d9d70efc934b146a840a877efd376e89be5a9a242ad321bc88098dbe30",
+      "baselineHash": "a7870b3d59913474c0b3a0b4f479b59357c754dc48824fbf4d50821d47139ae9",
+      "candidateHash": "a7870b3d59913474c0b3a0b4f479b59357c754dc48824fbf4d50821d47139ae9",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 384
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 384
+          }
+        }
+      ]
+    },
+    {
+      "name": "vector-run-21",
+      "frames": 1,
+      "inputHash": "937f5a77871e41b44b15b6375bae9141f634f722029b3acaa57b397fb6208d07",
+      "baselineHash": "cd8fa779a507903242508d98b04a47b8a663a54f8280732dc1d410bd322b5062",
+      "candidateHash": "903f4b376a7d5a60d74b892f9ee54453ce720ec947e49430ed49ae05d86837e6",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 368,
+        "1": 8,
+        "-1": 8
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 368,
+            "1": 8,
+            "-1": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "vector-run-22",
+      "frames": 1,
+      "inputHash": "7414403428a04c33b351a6e4d0f53f52106736086f548e580a156098995f80f5",
+      "baselineHash": "3515802d18f6b42cddeb79c982b3a627d1a258aedf39bd9f243f7490d0f11609",
+      "candidateHash": "3515802d18f6b42cddeb79c982b3a627d1a258aedf39bd9f243f7490d0f11609",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 384
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 384
+          }
+        }
+      ]
+    },
+    {
+      "name": "vector-run-23",
+      "frames": 1,
+      "inputHash": "7d9a092d5e798c6c13c1e9a316a282b0779faa29f1967ed87f3ae3a2305ca0d1",
+      "baselineHash": "59e7e57ec00f78557a6aeae6ef883340580d9a4238f8b3ce3e269ef1d2d02010",
+      "candidateHash": "59e7e57ec00f78557a6aeae6ef883340580d9a4238f8b3ce3e269ef1d2d02010",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 384
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 384
+          }
+        }
+      ]
+    },
+    {
+      "name": "vector-run-24",
+      "frames": 1,
+      "inputHash": "103b54c0988925b6d4e75b17019f1526648fc1349a01b21ecc125009af6085a0",
+      "baselineHash": "189912c534ba5c93b87a661c67b2eba8c757bc5d75b29c6a2df27f8117c0916f",
+      "candidateHash": "189912c534ba5c93b87a661c67b2eba8c757bc5d75b29c6a2df27f8117c0916f",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 384
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 384
+          }
+        }
+      ]
+    },
+    {
+      "name": "vector-run-25",
+      "frames": 1,
+      "inputHash": "e6e6269bcba665fac5a4cfeebf3386f68b9d1ed2eb6f0751af4bd753c14b4139",
+      "baselineHash": "095c8efcc9b13b996431d7db4a3843f49ccd05f879cda2828ca0445c9d3d3841",
+      "candidateHash": "095c8efcc9b13b996431d7db4a3843f49ccd05f879cda2828ca0445c9d3d3841",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 384
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 384
+          }
+        }
+      ]
+    },
+    {
+      "name": "vector-run-26",
+      "frames": 1,
+      "inputHash": "455a515fc4a510579c966fea245b3194da4559127fa9928be68da27fa08229c7",
+      "baselineHash": "d39e6ecd3f88e6e1ca1c0a87ce21ce9cecd51e97b11c046e8b5a7d6032557967",
+      "candidateHash": "d39e6ecd3f88e6e1ca1c0a87ce21ce9cecd51e97b11c046e8b5a7d6032557967",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 384
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 384
+          }
+        }
+      ]
+    },
+    {
+      "name": "vector-escape",
+      "frames": 1,
+      "inputHash": "40fe74c3b47b4b8143392c353daa7bf9d3c4bbafa8fdf17c529bdc0ca9fcf4ce",
+      "baselineHash": "aac73a53406eabae691fea53d4469d70b2d029c1858eac4e59ed7a83ef948c29",
+      "candidateHash": "7776ae6246d921ad58b7f6b635cf40009a67f4eeabbf40ae687defc26fc2a213",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 382,
+        "1": 1,
+        "-1": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 382,
+            "1": 1,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "vector-custom-crop",
+      "frames": 1,
+      "inputHash": "16c0071abfffe9d47752ca9094ed62e9cbfc13832a53748545069d29278503b4",
+      "baselineHash": "1353234cab3f7e4cdf97fb4400acd0ae63531aa13f1c25987fe714538749e934",
+      "candidateHash": "1353234cab3f7e4cdf97fb4400acd0ae63531aa13f1c25987fe714538749e934",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 503
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 503
+          }
+        }
+      ]
+    },
+    {
+      "name": "vector-odd-crop",
+      "frames": 1,
+      "inputHash": "6cfbad7f816561a26e137abae847e3d4742e1df4330b5aa047e432b6fbe5ad59",
+      "baselineHash": "67addde61a914cd8897ee95f0338938135bb468a4136b33847f0c9aa65511d03",
+      "candidateHash": "67addde61a914cd8897ee95f0338938135bb468a4136b33847f0c9aa65511d03",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 3
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "vlc-one-all-420",
+      "frames": 1,
+      "inputHash": "e0207eb819d71b014809e9593057709389247b356f3606d8878e11de71457cbc",
+      "baselineHash": "c2e3a5a4c5596a2df4fb11ef40617670ab1d0425b9d8b1880d577dda5eb6a589",
+      "candidateHash": "f5c106d018bed4d0204bff8421366c5a6d40b539f2304a7c05932d2d62369c90",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 14958,
+        "1": 17,
+        "-1": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 14958,
+            "1": 17,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "vlc-one-all-422",
+      "frames": 1,
+      "inputHash": "eddad026c381491ebdfab906dbada226dfb56cbbc51862d2dc2fa2c745671495",
+      "baselineHash": "6dfca7dd228347e53d61c6cf83310b76727cb90e8f00a7225f78e92d61dcfed0",
+      "candidateHash": "fa0548a777c2c56dd83d97553da0ecf2b351d2c80e1e3aca71af8c7f4f62a838",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 14830,
+        "1": 17,
+        "-1": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 14830,
+            "1": 17,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "vlc-one-escape",
+      "frames": 1,
+      "inputHash": "2e81dab444493252640b4393f65cf09612f3b1292810975b57a96c9674838c38",
+      "baselineHash": "aac73a53406eabae691fea53d4469d70b2d029c1858eac4e59ed7a83ef948c29",
+      "candidateHash": "7776ae6246d921ad58b7f6b635cf40009a67f4eeabbf40ae687defc26fc2a213",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 382,
+        "1": 1,
+        "-1": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 382,
+            "1": 1,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "scan-run-20",
+      "frames": 1,
+      "inputHash": "525d5871a6de685dfca2a24cf9ad2683f9af9e5c1eaf818a4423c28c4dad9182",
+      "baselineHash": "7549d3dbfcb1b4c20f1e4d07304e1035e06b64722db7a9a93b80751af7c468af",
+      "candidateHash": "7549d3dbfcb1b4c20f1e4d07304e1035e06b64722db7a9a93b80751af7c468af",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 384
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 384
+          }
+        }
+      ]
+    },
+    {
+      "name": "scan-matrix-420",
+      "frames": 5,
+      "inputHash": "2f6b71acc5508a97e00b8631bc88ff9736e6c871f79b0f9f6b1542a2d047c751",
+      "baselineHash": "c7d79cb90d74cb3c695aab552eedce69e1286949e5db74d1f4303aed0a6eedf0",
+      "candidateHash": "6581010e89e1e1209c5167c5239f07a0225770e7a064da520fcc61323dcae520",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 21026,
+        "1": 89,
+        "-1": 5
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4198,
+            "1": 25,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 4216,
+            "1": 7,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "I",
+          "histogram": {
+            "0": 4198,
+            "1": 25,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "I",
+          "histogram": {
+            "0": 4216,
+            "1": 7,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "I",
+          "histogram": {
+            "0": 4198,
+            "1": 25,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "scan-matrix-422",
+      "frames": 5,
+      "inputHash": "dc7c2bcb7a9ef6686447233128f0dd5030204935f9d1e62cd436eebde8c2b956",
+      "baselineHash": "2ecd24f8184038b24018ba4f60e9accda3b3b168dff52f8f73d667f1d2e0fdf9",
+      "candidateHash": "f71ca9bef7fb6aaf79114ab705807a9d83e05d5e1c67e503712876270c70727c",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 20386,
+        "1": 89,
+        "-1": 5
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4070,
+            "1": 25,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 4088,
+            "1": 7,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "I",
+          "histogram": {
+            "0": 4070,
+            "1": 25,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "I",
+          "histogram": {
+            "0": 4088,
+            "1": 7,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "I",
+          "histogram": {
+            "0": 4070,
+            "1": 25,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-420-tff",
+      "frames": 2,
+      "inputHash": "50dd463aa91227bae9fb421ce98607a0ed13f962d73cb18c4c61d34130280ab9",
+      "baselineHash": "fdc82a079ef889d2ffbaf38dd2d0742ae7dad65822e69e3d912163bd6c0bf046",
+      "candidateHash": "8fb926321ede3900353eeda4bfc17e6c52c0bc0db56c3d8df6b5b218a40c20df",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 4604,
+        "1": 3,
+        "-1": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 2302,
+            "1": 1,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 2302,
+            "1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-420-bff",
+      "frames": 2,
+      "inputHash": "fcdb9a6c3f8438ef792e32fd29d5f6c22eef96f17fa697fae0be68f4b8de5259",
+      "baselineHash": "fdc82a079ef889d2ffbaf38dd2d0742ae7dad65822e69e3d912163bd6c0bf046",
+      "candidateHash": "8fb926321ede3900353eeda4bfc17e6c52c0bc0db56c3d8df6b5b218a40c20df",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 4604,
+        "1": 3,
+        "-1": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 2302,
+            "1": 1,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 2302,
+            "1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-422-tff",
+      "frames": 2,
+      "inputHash": "a59cebfdc1fbb0d676a78e2d6b84724856a60a556214a5270a28881974a14998",
+      "baselineHash": "7345d8164807a92affcbe3daa4f47c58c002ae6c7baab9a9d28c2161f4060049",
+      "candidateHash": "4b00fad7514ef4118375fd8bda44ecdb30af2b8d54dca4ee046a28d38c870058",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 6135,
+        "1": 7,
+        "-1": 2
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 3068,
+            "1": 3,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 3067,
+            "1": 4,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-422-bff",
+      "frames": 2,
+      "inputHash": "48913a82b93e4830fe499b9a9b60fca2e632fcbdb3b811d4a59fa127d97e927e",
+      "baselineHash": "7345d8164807a92affcbe3daa4f47c58c002ae6c7baab9a9d28c2161f4060049",
+      "candidateHash": "4b00fad7514ef4118375fd8bda44ecdb30af2b8d54dca4ee046a28d38c870058",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 6135,
+        "1": 7,
+        "-1": 2
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 3068,
+            "1": 3,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 3067,
+            "1": 4,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-420-frame",
+      "frames": 2,
+      "inputHash": "aaff5517b5970303119c05169637f06dceffde9958410cf39c3169ad7aa1a00e",
+      "baselineHash": "e0eb5877046b0cdf638184f1baa5c365c5ac90e4ad6b6ea2db2c1f8fc8669446",
+      "candidateHash": "ecc468325b20319e8d22814f1e3e3a2e3565b8300a22271065dd73a9ae8962df",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 4604,
+        "1": 3,
+        "-1": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 2302,
+            "1": 1,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 2302,
+            "1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-420-progressive",
+      "frames": 2,
+      "inputHash": "10d19a28b3bb458d0f10301f05822c4a018fed8b08200dbcd7de4c2bb64ac2fd",
+      "baselineHash": "fdc82a079ef889d2ffbaf38dd2d0742ae7dad65822e69e3d912163bd6c0bf046",
+      "candidateHash": "8fb926321ede3900353eeda4bfc17e6c52c0bc0db56c3d8df6b5b218a40c20df",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 4604,
+        "1": 3,
+        "-1": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 2302,
+            "1": 1,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 2302,
+            "1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-matrix-420",
+      "frames": 3,
+      "inputHash": "697d3f512efb5a2110cc59b8b2941e096d2e694198b03f2f9fdd8dbe206d38c9",
+      "baselineHash": "f877e71a305ec0b9e06bc3ed5387d561173dfdc176998e0680db43e9a6371fb8",
+      "candidateHash": "2df8a43dc6fef5740fa40d17d5d6f10af1ab9c55496f56c8325b3d278c2f74f5",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 2292,
+        "1": 12
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 762,
+            "1": 6
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 762,
+            "1": 6
+          }
+        },
+        {
+          "frame": 2,
+          "type": "I",
+          "histogram": {
+            "0": 768
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-matrix-422",
+      "frames": 5,
+      "inputHash": "7f9169d376578804df8e551740ae10337018457cfc227d0b334bb58e635d6328",
+      "baselineHash": "307df13e63241f3144e19723c55bd304661c83537e2439be05575eb7694e00ec",
+      "candidateHash": "ace2902c5e96f4f84ad341912ce4f416211cfe4becf1d217846f1b40e7f167bc",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 5110,
+        "1": 10
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 1020,
+            "1": 4
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 1020,
+            "1": 4
+          }
+        },
+        {
+          "frame": 2,
+          "type": "I",
+          "histogram": {
+            "0": 1024
+          }
+        },
+        {
+          "frame": 3,
+          "type": "I",
+          "histogram": {
+            "0": 1022,
+            "1": 2
+          }
+        },
+        {
+          "frame": 4,
+          "type": "I",
+          "histogram": {
+            "0": 1024
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-enc-01-420-tff-frame",
+      "frames": 1,
+      "inputHash": "329def98cf59e75eabfe1734e0be6ced8deb7128e2ae86e2d51a082c0ec83e2c",
+      "baselineHash": "e7d5bbcd1133ccb11c2cf5dd11314e5c7f154c12b3d0e1bae3e1e4fe69baf77a",
+      "candidateHash": "c166b02af9f5aad344e3cf636511840eccb97cf6633723dacd9bd4a7b5e66032",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 4601,
+        "1": 7
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4601,
+            "1": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-enc-02-420-bff-frame",
+      "frames": 2,
+      "inputHash": "8a53e1ab958179a212d9dd2efa81132e0a4c206a3466c90bc344a6bd18f37f06",
+      "baselineHash": "d8badbb1f3935d22b9c3492e2d6c8ac0ca8f4a26b95630231b7f397c3e9ecc27",
+      "candidateHash": "7354f0d34e36546cd76ec013f68681305d123694705af216a33d10314235a299",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 9189,
+        "1": 20,
+        "-1": 7
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4598,
+            "1": 5,
+            "-1": 5
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 4591,
+            "1": 15,
+            "-1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-enc-03-420-tff-field",
+      "frames": 2,
+      "inputHash": "f687cd852307726e35ebbb50c0a3774aea285b9160ed88a8ec66b4e0d256c1c6",
+      "baselineHash": "40a0dd588fcdbf60d2827c1c7107422aefcb1abf7c9eac0a3031786b924cd042",
+      "candidateHash": "1cf206a2fd95868456ad6806e64807c3788cfad8f29812f25c2ef5c27352d4c9",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 9191,
+        "1": 18,
+        "-1": 7
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4588,
+            "1": 15,
+            "-1": 5
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 4603,
+            "1": 3,
+            "-1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-enc-04-420-bff-mixed",
+      "frames": 3,
+      "inputHash": "e7d6e416e1aa562701aca370e848c9a79f7ed12849b47a7ec4b12ac9e42fa26b",
+      "baselineHash": "cfafed0f93fc5141e0fb971eff999eb9754c330b9219723f8839f8658f3cf88e",
+      "candidateHash": "1f13b25abe40b5a0e5208e31fead43cb9ccc297944433263faf265e147895dfb",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 22984,
+        "1": 36,
+        "-1": 20
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 7655,
+            "1": 22,
+            "-1": 3
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 7668,
+            "1": 8,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 2,
+          "type": "I",
+          "histogram": {
+            "0": 7661,
+            "1": 6,
+            "-1": 13
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-enc-05-422-tff-frame",
+      "frames": 1,
+      "inputHash": "c774950560a4f487793e15f9c6f3fa004300da9f34e272e17a16f5c5fc31cd0b",
+      "baselineHash": "a5b6afefba3e780771f54a8b1fcb3c9ebacf76259198f4bcd004b8fa9345dcc7",
+      "candidateHash": "521dd0dc8da2b2c88234a1dda0a104f6ab5b2687966d56aaf3035c92957831f5",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 6130,
+        "1": 13,
+        "-1": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6130,
+            "1": 13,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-enc-06-422-bff-frame",
+      "frames": 2,
+      "inputHash": "9389d20a9bbb8893ab069546d251af550b731d52b4c19c3e81660fbd4c2601e4",
+      "baselineHash": "1221513293387ec0421ea1ceba50f0b05fa86c016c75b613fb6597a3afa4bc6a",
+      "candidateHash": "6dcb14f5de59bb1fe0bf1221e9a9be218f13e4ce671fc9403a5968575045b9a8",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 12254,
+        "1": 25,
+        "-1": 9
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6130,
+            "1": 9,
+            "-1": 5
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 6124,
+            "1": 16,
+            "-1": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-enc-07-422-bff-field",
+      "frames": 2,
+      "inputHash": "546f15a6e325bcff1d7ebfc75cea15b0bf4c50345e7acc7ad2f81aea2e575064",
+      "baselineHash": "b11025b77ae1f415be9d366be1300efd15bf117d0560d53e3c10696e8bde549c",
+      "candidateHash": "bb4113c86cac1712ba9fe516f761e9c5312287bbfedf9ceded864aeb7d056fde",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 12258,
+        "1": 14,
+        "-1": 16
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6122,
+            "1": 12,
+            "-1": 10
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 6136,
+            "1": 2,
+            "-1": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-enc-08-422-tff-mixed",
+      "frames": 3,
+      "inputHash": "871b7a8fd8eb998dde013e0f8b99740dbcae633591fe62d2e60f62086f1c9a17",
+      "baselineHash": "c319ae2fbaa3d1c7a11399b35df7bc916b2705c81ffec6c085289431cd079b7c",
+      "candidateHash": "cda05086d8feb7d1a5f8c4dee489ce7c22b1b1bd2b9486e4e7e2741243e8776c",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 30641,
+        "1": 51,
+        "-1": 28
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 10213,
+            "1": 19,
+            "-1": 8
+          }
+        },
+        {
+          "frame": 1,
+          "type": "I",
+          "histogram": {
+            "0": 10218,
+            "1": 14,
+            "-1": 8
+          }
+        },
+        {
+          "frame": 2,
+          "type": "I",
+          "histogram": {
+            "0": 10210,
+            "1": 18,
+            "-1": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-authored-420",
+      "frames": 5,
+      "inputHash": "1462296cb22db5f019743f27e852508e2f83b85ad4a9010254c8bfb359d7a1d4",
+      "baselineHash": "05d6a716fbe1d13ca0048e78a0f635132882e2573953df1357a80a914762cf03",
+      "candidateHash": "5f541702686f56ab803a3875a1813da1052fe7051b59932a275891568581e93c",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 23028,
+        "1": 12
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4605,
+            "1": 3
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 4605,
+            "1": 3
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 4606,
+            "1": 2
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 4606,
+            "1": 2
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 4606,
+            "1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-matrices-1",
+      "frames": 8,
+      "inputHash": "20aa49ebf9b7cacb681628d71ad65b01a2bde7e0e7380303f6869095780a809d",
+      "baselineHash": "bd792938a725bd0dcc0f292fca5c2c9251bf10a88057de66863a8b04a55d9bc5",
+      "candidateHash": "e33e43448dd311cd0d247d3a015087e6b9c1e135336b26d14e8e124886aa3833",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 36830,
+        "1": 31,
+        "-1": 3
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4605,
+            "1": 3
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 4605,
+            "1": 3
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 4606,
+            "1": 2
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 4606,
+            "1": 2
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 4606,
+            "1": 2
+          }
+        },
+        {
+          "frame": 5,
+          "type": "P",
+          "histogram": {
+            "0": 4606,
+            "1": 2
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 4600,
+            "1": 8
+          }
+        },
+        {
+          "frame": 7,
+          "type": "P",
+          "histogram": {
+            "0": 4596,
+            "1": 9,
+            "-1": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-crop-420",
+      "frames": 5,
+      "inputHash": "1a2b338749ad8bcb3315e65e9d4a33953eb7787c3b1771b310e3b6383ddff7cb",
+      "baselineHash": "ac588db50855b595ac3687ddceb7ccb73096dbf247f8327fab9764aa287576f9",
+      "candidateHash": "6762a6d36d28a93efca436fd1c8e1f9cd8d3f4391c0a64f42053ce364f81f403",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 20853,
+        "1": 2
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4170,
+            "1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 4170,
+            "1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 4171
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 4171
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 4171
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-cbp-420",
+      "frames": 2,
+      "inputHash": "7054e61476b9dab43b1148a917fe694fee5c1bdf96403ee12d7a9710b8a72f8a",
+      "baselineHash": "48194f2ce3e6f444baaabf938a3465019c9f1368f4d49f2a3757a48b368cb68a",
+      "candidateHash": "b75977a029a69c9506dd523901d9b7fd73e6b22b954830357bca9bdca20ecb04",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 47376,
+        "1": 1008
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 23688,
+            "1": 504
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 23688,
+            "1": 504
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-motion-codes-420",
+      "frames": 2,
+      "inputHash": "54596b934bf56876e461bb31229c7382092b39bf47050b39e3bb0f157ab8812d",
+      "baselineHash": "7eb80ae36924100a92d833003bdeb470dae194b12d342cee69b95c878c34f4e6",
+      "candidateHash": "a068e80d5dc6da607dd3de5368e6eacd374bf326c78cd3fa3a01d723e5c94450",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 40684,
+        "1": 788
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 20304,
+            "1": 432
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 20380,
+            "1": 356
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-resets-1",
+      "frames": 2,
+      "inputHash": "f1e2c78d100b99f7e140a5833bc0742f5238f7632fcc673d7a08380e8f615769",
+      "baselineHash": "6b73e79ccf21b7650a69cc25e52d47279b7881a036d2a782a284f56e190713bc",
+      "candidateHash": "1b699548d96ac2fc6be454c01a183a1bf161e167c4f83983d329145f8bf49bff",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 9210,
+        "1": 6
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4605,
+            "1": 3
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 4605,
+            "1": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-fcode1-1",
+      "frames": 2,
+      "inputHash": "cb2ac74557fe6717634cf52446d7553b2b4087954ea93872c58e7b9e79271470",
+      "baselineHash": "73948c88082067225627491b832ac3ad4b3e5325aa5d5638124e3f68751714b0",
+      "candidateHash": "7ce58b9894da8d465e1ee1fc249599413ed3237f99b0dc6773e73013984b7892",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 9211,
+        "1": 5
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4605,
+            "1": 3
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 4606,
+            "1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-fcode9-1",
+      "frames": 2,
+      "inputHash": "895fcc564ecdbc863705e3e1527941ef6fafef7968c4fc856b7dd4586ce3c89d",
+      "baselineHash": "73948c88082067225627491b832ac3ad4b3e5325aa5d5638124e3f68751714b0",
+      "candidateHash": "7ce58b9894da8d465e1ee1fc249599413ed3237f99b0dc6773e73013984b7892",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 9211,
+        "1": 5
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4605,
+            "1": 3
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 4606,
+            "1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-authored-422",
+      "frames": 5,
+      "inputHash": "454554bdbe7ed687a9afc1d57dc351ae9ddb0232a09f355f62030a43e0d90f27",
+      "baselineHash": "4da57c751cd19a45a6003c4a13b320d5337b219a9d09f3397b0cc699ead81c47",
+      "candidateHash": "7822224b3ed76c0f6c8df44afa91ead805459cb4f7f6602695b4430609511472",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 30666,
+        "1": 42,
+        "-1": 6,
+        "-2": 6
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6138,
+            "1": 6
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 6138,
+            "1": 6
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 6142,
+            "1": 2
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6124,
+            "1": 14,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 6124,
+            "1": 14,
+            "-2": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-matrices-2",
+      "frames": 8,
+      "inputHash": "f5027046f2cb4eb6c1d7d6e60018501b39f6e52fc2673e6e81d11abe036460b8",
+      "baselineHash": "5d9ade0e267bf4c03d942373648b9424d07b24c300bf9b703df2622f6793a6ed",
+      "candidateHash": "96dcfd05f21322d73fe7d5d483d30b978d66febbdabfb7f51c070aa965c6f26e",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 49014,
+        "1": 102,
+        "-1": 12,
+        "-2": 24
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6138,
+            "1": 6
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 6138,
+            "1": 6
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 6142,
+            "1": 2
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6124,
+            "1": 14,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 6124,
+            "1": 14,
+            "-2": 6
+          }
+        },
+        {
+          "frame": 5,
+          "type": "P",
+          "histogram": {
+            "0": 6124,
+            "1": 14,
+            "-2": 6
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 6116,
+            "1": 22,
+            "-2": 6
+          }
+        },
+        {
+          "frame": 7,
+          "type": "P",
+          "histogram": {
+            "0": 6108,
+            "1": 24,
+            "-1": 6,
+            "-2": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-crop-422",
+      "frames": 5,
+      "inputHash": "c831e12ba9bc0feac702bc99db9b960cbd81e6d3ccf806b60336baf57c87075e",
+      "baselineHash": "93c20952dbc2e9f3e7f046be4e3fa03d2ac1c17b86162e49207a1a1013f4b0d4",
+      "candidateHash": "2d209f80a3b4f1bbad5148dc19d905a1a487d96da7e317a1dda9d6ca79b9294f",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 27637,
+        "1": 28,
+        "-1": 5,
+        "-2": 5
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 5531,
+            "1": 4
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 5531,
+            "1": 4
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 5535
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 5520,
+            "1": 10,
+            "-1": 5
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 5520,
+            "1": 10,
+            "-2": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-cbp-422",
+      "frames": 2,
+      "inputHash": "c20fb24a6cdec778ffa8648a7f5df4e664da48fad542e67a85eaa736a7990cfa",
+      "baselineHash": "50835e024714296a52a06f5a8f1177efd2f737931d76012a41e155bc3a0572f5",
+      "candidateHash": "c37951268d6646797295dfdd9ae9c8a4466bfe00a127abec4cd69f580669e592",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 64512,
+        "1": 1024
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 32256,
+            "1": 512
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 32256,
+            "1": 512
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-motion-codes-422",
+      "frames": 2,
+      "inputHash": "46db8aea315ccbd34b1235d99040d56feb7aa811cbf1f9830297d3294e0f3c60",
+      "baselineHash": "06ad2f67967a1c409512348d14f9d5ce109ff0dc212dfe19eed4fc75074039a7",
+      "candidateHash": "783ce975562653654d027e941eaa1d775b9755ce5152852f2740107623d52ff4",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 54508,
+        "1": 788
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 27216,
+            "1": 432
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 27292,
+            "1": 356
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-resets-2",
+      "frames": 2,
+      "inputHash": "3ed7e8de296f7ce4e496ab6a50bb6fdb58ff8c83bc5b4e06c56351a962f875ee",
+      "baselineHash": "29e4c34ccea8d85cb509bd01bb90fe3e1d74e6ed85ea5bc56ed41cba219fe31c",
+      "candidateHash": "58ccdf15a44f629c9e0acd9f74e14ded6eac41c3c57658cc306d223265796f08",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 12276,
+        "1": 12
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6138,
+            "1": 6
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 6138,
+            "1": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-fcode1-2",
+      "frames": 2,
+      "inputHash": "e57c5bda645032515102f72bbd4481f51f9e6560c84e26ff5ba89270fa05f3af",
+      "baselineHash": "69ffd39c2708eaf4ca9130bb0e282af83c981f44c6af9ccfbba147f27a502fd0",
+      "candidateHash": "99057a387fdd95839ffc2e0b086ac5986bbf2e6b3a0c6699badd5db22cd36b56",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 12280,
+        "1": 8
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6138,
+            "1": 6
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 6142,
+            "1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-fcode9-2",
+      "frames": 2,
+      "inputHash": "e796bd520f6da9b6799884c05da5a8620ff38c642a4e9a1fcf9462d3a5aa89c4",
+      "baselineHash": "69ffd39c2708eaf4ca9130bb0e282af83c981f44c6af9ccfbba147f27a502fd0",
+      "candidateHash": "99057a387fdd95839ffc2e0b086ac5986bbf2e6b3a0c6699badd5db22cd36b56",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 12280,
+        "1": 8
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6138,
+            "1": 6
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 6142,
+            "1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-encoder-420-left",
+      "frames": 6,
+      "inputHash": "5d4a7b07bf30c229dc5c463dc72cbeb11b9ec45f47cfee659e15706005f452dd",
+      "baselineHash": "d1b67a84feaa1361da96676cb674ba29fb4da2ead68cae7af4dff899c95b806c",
+      "candidateHash": "2fd73093ec83c3494d062ec2228d3ebff958f24618e2f6ebbdf89edb4c8b6746",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 27217,
+        "1": 328,
+        "-1": 103
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4572,
+            "1": 36
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 4567,
+            "1": 36,
+            "-1": 5
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 4546,
+            "1": 48,
+            "-1": 14
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 4527,
+            "1": 61,
+            "-1": 20
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 4510,
+            "1": 74,
+            "-1": 24
+          }
+        },
+        {
+          "frame": 5,
+          "type": "P",
+          "histogram": {
+            "0": 4495,
+            "1": 73,
+            "-1": 40
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-encoder-420-right",
+      "frames": 6,
+      "inputHash": "cef939f8bed1ce74d1d3549f1803cd27db3f27546c5865392056dbbfdff6a90e",
+      "baselineHash": "e05481bd18b6c09524b2b52645beaeced33b8bfb8a4563c91abad2a1fa1aa6b4",
+      "candidateHash": "53566940ce3b61d256a4fbb06e6dd17e9db0439c69017f1010e26c80c5b6c269",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 27219,
+        "1": 352,
+        "-1": 77
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4572,
+            "1": 36
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 4563,
+            "1": 45
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 4538,
+            "1": 64,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 4522,
+            "1": 71,
+            "-1": 15
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 4514,
+            "1": 66,
+            "-1": 28
+          }
+        },
+        {
+          "frame": 5,
+          "type": "P",
+          "histogram": {
+            "0": 4510,
+            "1": 70,
+            "-1": 28
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-encoder-422-left",
+      "frames": 6,
+      "inputHash": "35b206b32206c72bbebc41796c8a0a99e53a34ef4048410dd85bf10f0c6ee57d",
+      "baselineHash": "262efff0ecf87da0383e2d61f83e8bda7c82e9619bd90b1ea504702acbf74fe7",
+      "candidateHash": "960888548513a3ab77f132f5b0c4c3c32de4a2a1b4d259e176341b8d5523fe4d",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 36310,
+        "1": 343,
+        "2": 2,
+        "-1": 209
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6096,
+            "1": 48
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 6087,
+            "1": 48,
+            "-1": 9
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 6068,
+            "1": 42,
+            "-1": 34
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6037,
+            "1": 56,
+            "-1": 51
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 6024,
+            "1": 69,
+            "-1": 51
+          }
+        },
+        {
+          "frame": 5,
+          "type": "P",
+          "histogram": {
+            "0": 5998,
+            "1": 80,
+            "2": 2,
+            "-1": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "p-encoder-422-right",
+      "frames": 6,
+      "inputHash": "ece14fa77e58cd004d971a1aa214223c1ba37593710fb8ebe1df9d8e2e3d808e",
+      "baselineHash": "a45cce2f404821f83b5ebfbd7d195a6e512e92caec43ab0b8a6a1d79194ba137",
+      "candidateHash": "f6ad416fcfa29192d02225e1662be358b5e11b64b1d956f5125d3e35ff78db06",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 36285,
+        "1": 456,
+        "-1": 122,
+        "-2": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6096,
+            "1": 48
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 6084,
+            "1": 60
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 6056,
+            "1": 81,
+            "-1": 7
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6036,
+            "1": 84,
+            "-1": 24
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 6020,
+            "1": 85,
+            "-1": 39
+          }
+        },
+        {
+          "frame": 5,
+          "type": "P",
+          "histogram": {
+            "0": 5993,
+            "1": 98,
+            "-1": 52,
+            "-2": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "b-authored-1",
+      "frames": 7,
+      "inputHash": "0aa0ea418119c3cf9115e578fea9c9c176e7f03b3ba288f02107349d6d59e8c6",
+      "baselineHash": "71fcdf5fcde34fbb1518a32de5a392a7d2e63598daafdd456ddb8e71c14416a9",
+      "candidateHash": "ced810987371fd13613bebe74ec0a6b6548d1fb3b6c842cc46f0bbe7a783e637",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 32213,
+        "1": 43
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4600,
+            "1": 8
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 4603,
+            "1": 5
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 4607,
+            "1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "I",
+          "histogram": {
+            "0": 4605,
+            "1": 3
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 4597,
+            "1": 11
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 4602,
+            "1": 6
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 4599,
+            "1": 9
+          }
+        }
+      ]
+    },
+    {
+      "name": "b-wrap-1",
+      "frames": 7,
+      "inputHash": "20bee1f888bce220c7ed36bc3b3b6e519364338fdce060e942de1c49ca0742de",
+      "baselineHash": "71fcdf5fcde34fbb1518a32de5a392a7d2e63598daafdd456ddb8e71c14416a9",
+      "candidateHash": "ced810987371fd13613bebe74ec0a6b6548d1fb3b6c842cc46f0bbe7a783e637",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 32213,
+        "1": 43
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4600,
+            "1": 8
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 4603,
+            "1": 5
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 4607,
+            "1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "I",
+          "histogram": {
+            "0": 4605,
+            "1": 3
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 4597,
+            "1": 11
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 4602,
+            "1": 6
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 4599,
+            "1": 9
+          }
+        }
+      ]
+    },
+    {
+      "name": "b-leading-1",
+      "frames": 3,
+      "inputHash": "fa53c017b5e13415418d7a88a020c00872dffd0ffe8b56e99bcc879f79bca2d5",
+      "baselineHash": "0794d041c325d842fc5413a59711f5656e49b59c61171c774c46bc88c874989d",
+      "candidateHash": "0794d041c325d842fc5413a59711f5656e49b59c61171c774c46bc88c874989d",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 13824
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "B",
+          "histogram": {
+            "0": 4608
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 4608
+          }
+        },
+        {
+          "frame": 2,
+          "type": "I",
+          "histogram": {
+            "0": 4608
+          }
+        }
+      ]
+    },
+    {
+      "name": "b-open-gop-1",
+      "frames": 7,
+      "inputHash": "8986c03126fec989e2b344f89adc5f9a17ebf0eb99cc0371f6f46c195aef5b38",
+      "baselineHash": "155a9401b8d5725916ba7668ffcf8639ef4406fc2ad359dcdc13539a10ef0090",
+      "candidateHash": "5c0d5521385dfb9ed24c85cd14a9465caf74e80b134e90cf46523a73555d2bb8",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 32211,
+        "1": 45
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4600,
+            "1": 8
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 4603,
+            "1": 5
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 4607,
+            "1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "I",
+          "histogram": {
+            "0": 4605,
+            "1": 3
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 4600,
+            "1": 8
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 4602,
+            "1": 6
+          }
+        },
+        {
+          "frame": 6,
+          "type": "I",
+          "histogram": {
+            "0": 4594,
+            "1": 14
+          }
+        }
+      ]
+    },
+    {
+      "name": "b-authored-2",
+      "frames": 7,
+      "inputHash": "924a020f96bf9c37e3f31ff73fe883564f8ba52023aae1b1393b95a67a083209",
+      "baselineHash": "72cd4184fdcd526a0cb6233e08d144e93c89efdbe10ec2be76eaeae3adc62d78",
+      "candidateHash": "5b5d36980447debda12079fd0cad19e300637d54b737fca58d30c72380bacf5a",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 42942,
+        "1": 66
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6131,
+            "1": 13
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6135,
+            "1": 9
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6142,
+            "1": 2
+          }
+        },
+        {
+          "frame": 3,
+          "type": "I",
+          "histogram": {
+            "0": 6141,
+            "1": 3
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6127,
+            "1": 17
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 6137,
+            "1": 7
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 6129,
+            "1": 15
+          }
+        }
+      ]
+    },
+    {
+      "name": "b-wrap-2",
+      "frames": 7,
+      "inputHash": "8f3151b3d84b0a48bdb3b7d07540fbd3f72c1115cda5a6fcf710277c7e2122b6",
+      "baselineHash": "72cd4184fdcd526a0cb6233e08d144e93c89efdbe10ec2be76eaeae3adc62d78",
+      "candidateHash": "5b5d36980447debda12079fd0cad19e300637d54b737fca58d30c72380bacf5a",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 42942,
+        "1": 66
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6131,
+            "1": 13
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6135,
+            "1": 9
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6142,
+            "1": 2
+          }
+        },
+        {
+          "frame": 3,
+          "type": "I",
+          "histogram": {
+            "0": 6141,
+            "1": 3
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6127,
+            "1": 17
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 6137,
+            "1": 7
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 6129,
+            "1": 15
+          }
+        }
+      ]
+    },
+    {
+      "name": "b-leading-2",
+      "frames": 3,
+      "inputHash": "7aaffe1f67b94c9b158a8eec36c78c67f0ac99a83ec0bec69c016b8c4b1f67d3",
+      "baselineHash": "1bca30544564e6682e027c3c1d297e4322623f555413efa897bef4eea7dea4dd",
+      "candidateHash": "1bca30544564e6682e027c3c1d297e4322623f555413efa897bef4eea7dea4dd",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 18432
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "B",
+          "histogram": {
+            "0": 6144
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6144
+          }
+        },
+        {
+          "frame": 2,
+          "type": "I",
+          "histogram": {
+            "0": 6144
+          }
+        }
+      ]
+    },
+    {
+      "name": "b-open-gop-2",
+      "frames": 7,
+      "inputHash": "c83c9dd421ce9efa2f89b9be45d1ffd9cba1888011eacda3b4174201bb525f21",
+      "baselineHash": "eaa678bbd948a736e343235a8ea413e7315596aae5c380401ff47c6af9aef343",
+      "candidateHash": "1665305452199f59b3652966dc80b4b4d46a0da56c5dbcd4db43785b8f2d53f1",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 42952,
+        "1": 56
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6131,
+            "1": 13
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6135,
+            "1": 9
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6142,
+            "1": 2
+          }
+        },
+        {
+          "frame": 3,
+          "type": "I",
+          "histogram": {
+            "0": 6141,
+            "1": 3
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6133,
+            "1": 11
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 6143,
+            "1": 1
+          }
+        },
+        {
+          "frame": 6,
+          "type": "I",
+          "histogram": {
+            "0": 6127,
+            "1": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "b-encoder-01",
+      "frames": 7,
+      "inputHash": "375c5679e493cf7f5e65418604bc32bce0f6672f4b1731a6d96dea55a8541943",
+      "baselineHash": "5e737c8cd353142082746740c57e9e69169ca55892813e4c31662d655b67669c",
+      "candidateHash": "852a6b5c354826af7f558b63f6d20b7e827f31df9683653be336a4cd102c4dee",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 16049,
+        "1": 42,
+        "-1": 36,
+        "-2": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 2300,
+            "1": 3,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 2289,
+            "1": 6,
+            "-1": 9
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 2296,
+            "1": 5,
+            "-1": 3
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 2295,
+            "1": 5,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 2291,
+            "1": 7,
+            "-1": 5,
+            "-2": 1
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 2290,
+            "1": 8,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 2288,
+            "1": 8,
+            "-1": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "b-encoder-02",
+      "frames": 7,
+      "inputHash": "037200e07dc9ca4205080ca964dd8fc6ab51a39a6b4151547bcc33b2e64bf003",
+      "baselineHash": "a159260500539f6f13f8ec840f2586ebd45b0c87f0c3ccf0ea15c3e99e18176e",
+      "candidateHash": "c4049e5af382afb32eb8e273357ee706ac6202beb9337447142fc2c5e2b99a7a",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 42719,
+        "1": 176,
+        "-1": 112,
+        "-2": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6127,
+            "1": 11,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6107,
+            "1": 22,
+            "-1": 15
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6105,
+            "1": 25,
+            "-1": 14
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6101,
+            "1": 26,
+            "-1": 17
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6100,
+            "1": 25,
+            "-1": 18,
+            "-2": 1
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 6090,
+            "1": 33,
+            "-1": 21
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 6089,
+            "1": 34,
+            "-1": 21
+          }
+        }
+      ]
+    },
+    {
+      "name": "b-encoder-03",
+      "frames": 13,
+      "inputHash": "ca7090d065f3ff89c5a015aedf56421b93109fc934f10febc69b05b0065edd76",
+      "baselineHash": "429b2b5dfceb66ea88ca292ade1413a2c65ea4bd234e07655d4181ff1f3b9f76",
+      "candidateHash": "da05425ba212d8da9a150ca66dc73af2e3ef16e343ad07592bc931f09adc612d",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 29828,
+        "1": 64,
+        "-1": 60
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 2300,
+            "1": 3,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 2289,
+            "1": 6,
+            "-1": 9
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 2296,
+            "1": 5,
+            "-1": 3
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 2295,
+            "1": 5,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 2293,
+            "1": 5,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 5,
+          "type": "P",
+          "histogram": {
+            "0": 2292,
+            "1": 6,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 6,
+          "type": "I",
+          "histogram": {
+            "0": 2301,
+            "1": 2,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 7,
+          "type": "B",
+          "histogram": {
+            "0": 2291,
+            "1": 5,
+            "-1": 8
+          }
+        },
+        {
+          "frame": 8,
+          "type": "B",
+          "histogram": {
+            "0": 2295,
+            "1": 5,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 9,
+          "type": "P",
+          "histogram": {
+            "0": 2295,
+            "1": 5,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 10,
+          "type": "B",
+          "histogram": {
+            "0": 2290,
+            "1": 7,
+            "-1": 7
+          }
+        },
+        {
+          "frame": 11,
+          "type": "P",
+          "histogram": {
+            "0": 2291,
+            "1": 8,
+            "-1": 5
+          }
+        },
+        {
+          "frame": 12,
+          "type": "I",
+          "histogram": {
+            "0": 2300,
+            "1": 2,
+            "-1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "b-encoder-04",
+      "frames": 13,
+      "inputHash": "23592c95fdec64b3ed0871729e16172c310c4fa03c666e5cb1e9aec67246302d",
+      "baselineHash": "53732d779bf9449b9dbbee929d270eb4c9baa952f69939b0194075a5752afb9d",
+      "candidateHash": "1a983ed86c7d604b7e7de51acde9b9e0d57382614bcbd1a6d7ea0f57a132cc05",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 79354,
+        "1": 292,
+        "-1": 226
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6127,
+            "1": 11,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6107,
+            "1": 22,
+            "-1": 15
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6105,
+            "1": 25,
+            "-1": 14
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6101,
+            "1": 26,
+            "-1": 17
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6091,
+            "1": 30,
+            "-1": 23
+          }
+        },
+        {
+          "frame": 5,
+          "type": "P",
+          "histogram": {
+            "0": 6086,
+            "1": 35,
+            "-1": 23
+          }
+        },
+        {
+          "frame": 6,
+          "type": "I",
+          "histogram": {
+            "0": 6128,
+            "1": 9,
+            "-1": 7
+          }
+        },
+        {
+          "frame": 7,
+          "type": "B",
+          "histogram": {
+            "0": 6109,
+            "1": 18,
+            "-1": 17
+          }
+        },
+        {
+          "frame": 8,
+          "type": "B",
+          "histogram": {
+            "0": 6101,
+            "1": 22,
+            "-1": 21
+          }
+        },
+        {
+          "frame": 9,
+          "type": "P",
+          "histogram": {
+            "0": 6101,
+            "1": 22,
+            "-1": 21
+          }
+        },
+        {
+          "frame": 10,
+          "type": "B",
+          "histogram": {
+            "0": 6091,
+            "1": 28,
+            "-1": 25
+          }
+        },
+        {
+          "frame": 11,
+          "type": "P",
+          "histogram": {
+            "0": 6085,
+            "1": 32,
+            "-1": 27
+          }
+        },
+        {
+          "frame": 12,
+          "type": "I",
+          "histogram": {
+            "0": 6122,
+            "1": 12,
+            "-1": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "b-encoder-05",
+      "frames": 13,
+      "inputHash": "3edc907dfc2fcc9e5c59353e6d9b4a6d6a10443375723ea0f819ca7ff8d1b6fc",
+      "baselineHash": "8cd31a09cfdbb1ae2f631b4e2c3e3d06f0e5d2290be9811f02dc94c6733b1dea",
+      "candidateHash": "4ed94d87abefe1307979cb140fa43cf1f99351d2d24d80095a1467b009b6fb36",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 29808,
+        "1": 88,
+        "-1": 56
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 2300,
+            "1": 3,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 2289,
+            "1": 6,
+            "-1": 9
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 2296,
+            "1": 5,
+            "-1": 3
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 2295,
+            "1": 5,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 2293,
+            "1": 5,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 5,
+          "type": "P",
+          "histogram": {
+            "0": 2292,
+            "1": 6,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 6,
+          "type": "B",
+          "histogram": {
+            "0": 2283,
+            "1": 11,
+            "-1": 10
+          }
+        },
+        {
+          "frame": 7,
+          "type": "B",
+          "histogram": {
+            "0": 2288,
+            "1": 11,
+            "-1": 5
+          }
+        },
+        {
+          "frame": 8,
+          "type": "I",
+          "histogram": {
+            "0": 2297,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 9,
+          "type": "B",
+          "histogram": {
+            "0": 2292,
+            "1": 8,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 10,
+          "type": "B",
+          "histogram": {
+            "0": 2289,
+            "1": 11,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 11,
+          "type": "P",
+          "histogram": {
+            "0": 2294,
+            "1": 9,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 12,
+          "type": "I",
+          "histogram": {
+            "0": 2300,
+            "1": 2,
+            "-1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "b-encoder-06",
+      "frames": 13,
+      "inputHash": "30781447997787fafc0081761ebb3e60c5761e07715a7196f29784b159579b9c",
+      "baselineHash": "4ced17681853d8312bfa7171a51ba5d34e7150672c3c2a444cd240a7a2e53320",
+      "candidateHash": "c6abec31de96c590d6dc4b843d1f3d51c9c93ab5fbaf465d1b78fdb5cfb9fa7c",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 79373,
+        "1": 297,
+        "-1": 202
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6127,
+            "1": 11,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6107,
+            "1": 22,
+            "-1": 15
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6105,
+            "1": 25,
+            "-1": 14
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6101,
+            "1": 26,
+            "-1": 17
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6091,
+            "1": 30,
+            "-1": 23
+          }
+        },
+        {
+          "frame": 5,
+          "type": "P",
+          "histogram": {
+            "0": 6086,
+            "1": 35,
+            "-1": 23
+          }
+        },
+        {
+          "frame": 6,
+          "type": "B",
+          "histogram": {
+            "0": 6084,
+            "1": 39,
+            "-1": 21
+          }
+        },
+        {
+          "frame": 7,
+          "type": "B",
+          "histogram": {
+            "0": 6084,
+            "1": 33,
+            "-1": 27
+          }
+        },
+        {
+          "frame": 8,
+          "type": "I",
+          "histogram": {
+            "0": 6124,
+            "1": 13,
+            "-1": 7
+          }
+        },
+        {
+          "frame": 9,
+          "type": "B",
+          "histogram": {
+            "0": 6116,
+            "1": 16,
+            "-1": 12
+          }
+        },
+        {
+          "frame": 10,
+          "type": "B",
+          "histogram": {
+            "0": 6114,
+            "1": 18,
+            "-1": 12
+          }
+        },
+        {
+          "frame": 11,
+          "type": "P",
+          "histogram": {
+            "0": 6112,
+            "1": 17,
+            "-1": 15
+          }
+        },
+        {
+          "frame": 12,
+          "type": "I",
+          "histogram": {
+            "0": 6122,
+            "1": 12,
+            "-1": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "13-future-ipb",
+      "frames": 7,
+      "inputHash": "66969ac8f6ef034e6ff9cfa542c9c4eb19b981258139fe16e5bf8b32752add1f",
+      "baselineHash": "012c09d96f81cec206d935e5323ddb9b5d7810d5125118a959174e78c1390648",
+      "candidateHash": "f951867d034cdcb2c4a4ab4e3b561db2c3bcc7b8048a72e1b214dad039ef780e",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 15983,
+        "1": 100,
+        "-1": 45
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 2294,
+            "1": 8,
+            "-1": 2
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 2277,
+            "1": 21,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 2289,
+            "1": 11,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 2289,
+            "1": 12,
+            "-1": 3
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 2274,
+            "1": 19,
+            "-1": 11
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 2280,
+            "1": 15,
+            "-1": 9
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 2280,
+            "1": 14,
+            "-1": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-frame-motion-1-0",
+      "frames": 7,
+      "inputHash": "8989d4feb0e7f18c800eca892df14d6e74a4d341e995dbd317faeea95192a043",
+      "baselineHash": "16732e3754f0c9149e78277649f8571d0f7021bcb8cec1b6488faca56f45dcd4",
+      "candidateHash": "92a9aa5e207e0741d4edbca87395bd83f076245d9d999ec1cec4da890ace8769",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 32184,
+        "1": 65,
+        "-1": 7
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4601,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 4600,
+            "1": 7,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 4604,
+            "1": 3,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 4602,
+            "1": 5,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 4595,
+            "1": 12,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 4595,
+            "1": 12,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 4587,
+            "1": 20,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-frame-motion-1-1",
+      "frames": 7,
+      "inputHash": "b4598d0c14df693f52a1aa29cb85f4c45a5114c4ba94dfc8121d13808cccba3b",
+      "baselineHash": "16732e3754f0c9149e78277649f8571d0f7021bcb8cec1b6488faca56f45dcd4",
+      "candidateHash": "92a9aa5e207e0741d4edbca87395bd83f076245d9d999ec1cec4da890ace8769",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 32184,
+        "1": 65,
+        "-1": 7
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4601,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 4600,
+            "1": 7,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 4604,
+            "1": 3,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 4602,
+            "1": 5,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 4595,
+            "1": 12,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 4595,
+            "1": 12,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 4587,
+            "1": 20,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-frame-motion-2-0",
+      "frames": 7,
+      "inputHash": "f8265461b2e4167b74187fb988f0d4d9f13e4781b64161dd9484f2d7fc109856",
+      "baselineHash": "8371028e69c4bc521aef9b14845cd4e6903a02cf9ff66499808a75fc72f62a75",
+      "candidateHash": "e4e615087b5df55b8de3d54b3e49dc343c463707cb2715a350c0e00e703f4cfb",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 42884,
+        "1": 108,
+        "-1": 16
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6133,
+            "1": 10,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6131,
+            "1": 12,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6135,
+            "1": 8,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6134,
+            "1": 9,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6113,
+            "1": 24,
+            "-1": 7
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 6119,
+            "1": 21,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 6119,
+            "1": 24,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-frame-motion-2-1",
+      "frames": 7,
+      "inputHash": "5fe3c6d0d7585f43a5cef48bad4336ab844c043b5b67a296015e2b0c30d18fc3",
+      "baselineHash": "8371028e69c4bc521aef9b14845cd4e6903a02cf9ff66499808a75fc72f62a75",
+      "candidateHash": "e4e615087b5df55b8de3d54b3e49dc343c463707cb2715a350c0e00e703f4cfb",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 42884,
+        "1": 108,
+        "-1": 16
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6133,
+            "1": 10,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6131,
+            "1": 12,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6135,
+            "1": 8,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6134,
+            "1": 9,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6113,
+            "1": 24,
+            "-1": 7
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 6119,
+            "1": 21,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 6119,
+            "1": 24,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-field-motion-1-0",
+      "frames": 7,
+      "inputHash": "ef95d92d86ac6a60d0412286651736f1e82a19b3dcf059c190488eb8618e6237",
+      "baselineHash": "0f2c6d396da004b4f20a49d8e0c22e95108258c5f2bda1bcf902b5073de7dae7",
+      "candidateHash": "4cfe06d5f598a257fe2a3230c9c5583c0a6697058d3c79c670a12a24be292297",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 32187,
+        "1": 64,
+        "-1": 5
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4601,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 4601,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 4605,
+            "1": 2,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 4602,
+            "1": 5,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 4595,
+            "1": 13
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 4596,
+            "1": 12
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 4587,
+            "1": 20,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-field-motion-1-1",
+      "frames": 7,
+      "inputHash": "073635858cbedb02a5596b98091eb9304b12bec1a2888bc52eb6a0ec13836c2b",
+      "baselineHash": "0f2c6d396da004b4f20a49d8e0c22e95108258c5f2bda1bcf902b5073de7dae7",
+      "candidateHash": "4cfe06d5f598a257fe2a3230c9c5583c0a6697058d3c79c670a12a24be292297",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 32187,
+        "1": 64,
+        "-1": 5
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4601,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 4601,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 4605,
+            "1": 2,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 4602,
+            "1": 5,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 4595,
+            "1": 13
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 4596,
+            "1": 12
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 4587,
+            "1": 20,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-field-motion-2-0",
+      "frames": 7,
+      "inputHash": "e54e25fac60f134246b5dfc4f40a48c04bf56ea6c4fe1e430b4952c1c266d90b",
+      "baselineHash": "0b7918c7b1284da9d36622e305413d47fe5c5913b6f9699e125989d820d02132",
+      "candidateHash": "014612c66cd8a79b20b4f3bf1d6cfa78c0a29c66ade6818ab39d57d9a0161ef3",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 42897,
+        "1": 97,
+        "-1": 14
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6133,
+            "1": 10,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6134,
+            "1": 9,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6138,
+            "1": 5,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6134,
+            "1": 9,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6116,
+            "1": 22,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 6123,
+            "1": 18,
+            "-1": 3
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 6119,
+            "1": 24,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-field-motion-2-1",
+      "frames": 7,
+      "inputHash": "f89636fec7d66f0846946f4311e1500b6635b278f0aeac5903ebf70e73720edc",
+      "baselineHash": "0b7918c7b1284da9d36622e305413d47fe5c5913b6f9699e125989d820d02132",
+      "candidateHash": "014612c66cd8a79b20b4f3bf1d6cfa78c0a29c66ade6818ab39d57d9a0161ef3",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 42897,
+        "1": 97,
+        "-1": 14
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6133,
+            "1": 10,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6134,
+            "1": 9,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6138,
+            "1": 5,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6134,
+            "1": 9,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6116,
+            "1": 22,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 6123,
+            "1": 18,
+            "-1": 3
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 6119,
+            "1": 24,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-skip-motion-1-0",
+      "frames": 7,
+      "inputHash": "e0b9c1bc759795627b70b5f1e94ae82478645f7f82ac3dce11f2a4102cb41191",
+      "baselineHash": "ee02110c84ecdb05db22f9b242b00cb4f83c2393bf00279d924554628eb87420",
+      "candidateHash": "0b04e3c6822d7c2bafcc4547bfa12277eb9a19a1850dbba35371280333f26c6f",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 32203,
+        "1": 48,
+        "-1": 5
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4601,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 4601,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 4600,
+            "1": 7,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 4601,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 4600,
+            "1": 8
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 4600,
+            "1": 8
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 4600,
+            "1": 7,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-skip-motion-1-1",
+      "frames": 7,
+      "inputHash": "ff4cccc698694b633ef10f8cc54fc0e099bfb817aa844ffec50635bd0762b0c9",
+      "baselineHash": "ee02110c84ecdb05db22f9b242b00cb4f83c2393bf00279d924554628eb87420",
+      "candidateHash": "0b04e3c6822d7c2bafcc4547bfa12277eb9a19a1850dbba35371280333f26c6f",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 32203,
+        "1": 48,
+        "-1": 5
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4601,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 4601,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 4600,
+            "1": 7,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 4601,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 4600,
+            "1": 8
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 4600,
+            "1": 8
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 4600,
+            "1": 7,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-skip-motion-2-0",
+      "frames": 7,
+      "inputHash": "3371cf01f0c0e3d6f23f0bcabe9e8ad12149912ddf6201ce7bb88b502e5b9061",
+      "baselineHash": "8ca77bc08593fa6378381b8ecc3eddc39bddc14b8926c23fc3dc0e0bdfb17fa5",
+      "candidateHash": "dd0cc34386dfb2cd97d69ca9d8c9cc06efa68085692649c8c5a45f266dce8610",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 42893,
+        "1": 110,
+        "-1": 5
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6133,
+            "1": 10,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6128,
+            "1": 15,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6127,
+            "1": 16,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6129,
+            "1": 14,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6124,
+            "1": 20
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 6124,
+            "1": 20
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 6128,
+            "1": 15,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-skip-motion-2-1",
+      "frames": 7,
+      "inputHash": "81e93ab6e0cda54912ee3a2c4694941092c7dca9a60507eeaf8145b6020196e0",
+      "baselineHash": "8ca77bc08593fa6378381b8ecc3eddc39bddc14b8926c23fc3dc0e0bdfb17fa5",
+      "candidateHash": "dd0cc34386dfb2cd97d69ca9d8c9cc06efa68085692649c8c5a45f266dce8610",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 42893,
+        "1": 110,
+        "-1": 5
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6133,
+            "1": 10,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6128,
+            "1": 15,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6127,
+            "1": 16,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6129,
+            "1": 14,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6124,
+            "1": 20
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 6124,
+            "1": 20
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 6128,
+            "1": 15,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-flags-motion-1-0",
+      "frames": 7,
+      "inputHash": "77d05e0d9e08f91dfdbf019d25a44d40015be257a2b71a2cb83b23cdc9cbbaf9",
+      "baselineHash": "a7dd436250c0f5da68585e26ae0105029571a0161fd361d660e0754be969d9f7",
+      "candidateHash": "cf35faa0453fea1d23ca9e79a9fb847c652bbcd82f45a9174f3a1e5ea469abd8",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 32182,
+        "1": 67,
+        "-1": 7
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4601,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 4600,
+            "1": 7,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 4604,
+            "1": 3,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 4602,
+            "1": 5,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 4594,
+            "1": 13,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 4594,
+            "1": 13,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 4587,
+            "1": 20,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-flags-motion-1-1",
+      "frames": 7,
+      "inputHash": "8b511a3320b79851a1d6a3696f14ec1ff00cf1f17768b748290cdd47cb26ef87",
+      "baselineHash": "a7dd436250c0f5da68585e26ae0105029571a0161fd361d660e0754be969d9f7",
+      "candidateHash": "cf35faa0453fea1d23ca9e79a9fb847c652bbcd82f45a9174f3a1e5ea469abd8",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 32182,
+        "1": 67,
+        "-1": 7
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 4601,
+            "1": 6,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 4600,
+            "1": 7,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 4604,
+            "1": 3,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 4602,
+            "1": 5,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 4594,
+            "1": 13,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 4594,
+            "1": 13,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 4587,
+            "1": 20,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-flags-motion-2-0",
+      "frames": 7,
+      "inputHash": "4a28cd410a89d5645847978c2eba5cc58242e60121153135c5ac5f8d299d33c9",
+      "baselineHash": "250f9adf5ba60c1da56c16d9abd2cbbc4bcc822a4a3a966f9772be82b61b8d89",
+      "candidateHash": "2cedeb83743a87f4a13aecddcd5362afd98e53f34ff31c3ff6cb89fd7253c90e",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 42884,
+        "1": 108,
+        "-1": 16
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6133,
+            "1": 10,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6131,
+            "1": 12,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6135,
+            "1": 8,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6134,
+            "1": 9,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6113,
+            "1": 24,
+            "-1": 7
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 6119,
+            "1": 21,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 6119,
+            "1": 24,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-flags-motion-2-1",
+      "frames": 7,
+      "inputHash": "4b08f4ad8a78b6930d54721cfa0e1ea5dcfe0fb32afea7f39b47ef983d62a8c4",
+      "baselineHash": "250f9adf5ba60c1da56c16d9abd2cbbc4bcc822a4a3a966f9772be82b61b8d89",
+      "candidateHash": "2cedeb83743a87f4a13aecddcd5362afd98e53f34ff31c3ff6cb89fd7253c90e",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 42884,
+        "1": 108,
+        "-1": 16
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6133,
+            "1": 10,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6131,
+            "1": 12,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6135,
+            "1": 8,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6134,
+            "1": 9,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6113,
+            "1": 24,
+            "-1": 7
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 6119,
+            "1": 21,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 6119,
+            "1": 24,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-encoder-01-420-tff-ip",
+      "frames": 4,
+      "inputHash": "742a7919d36645b37c00958731b01aa03cbc9831ff0ecae6c16700530a3dccb9",
+      "baselineHash": "e9fbd65c48fa0a27d98855cd3faa24f1e6fe1b7f99e0ecd9588c216113b15d51",
+      "candidateHash": "ce4490deb983cf7a82cdabdc141a1bd0f1c3ebcbfbbe42db23ea1a9a1b99d464",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 24497,
+        "1": 48,
+        "-1": 31
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6139,
+            "1": 3,
+            "-1": 2
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 6127,
+            "1": 11,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 6116,
+            "1": 17,
+            "-1": 11
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6115,
+            "1": 17,
+            "-1": 12
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-encoder-02-420-bff-ip",
+      "frames": 4,
+      "inputHash": "b1606c8c70e4ff369f1fbb6b5cd34c8a93980fd4f7522d96fc579fec57046ee4",
+      "baselineHash": "e4c444e414f43909c993f5929d8f3f939febf727e6e103a5a238e7d5212bd009",
+      "candidateHash": "ea6decbfd7a811ee16890999994ea686cf6e44ecedf0fbbeb5fcb8ad01eaac20",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 45830,
+        "1": 150,
+        "2": 1,
+        "-1": 99
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 11502,
+            "1": 12,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 11465,
+            "1": 37,
+            "-1": 18
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 11443,
+            "1": 46,
+            "-1": 31
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 11420,
+            "1": 55,
+            "2": 1,
+            "-1": 44
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-encoder-03-422-tff-ip",
+      "frames": 4,
+      "inputHash": "cf2c4ab14ddde5ca3985894cc85084e393b5376b3470df2db81ff9daf4c1b2dc",
+      "baselineHash": "9919422417822bab521bdaad8a70173418709f0fda24622603e9881cf87aa454",
+      "candidateHash": "e7d4158893afc8bdd23dd89d6de33e4ee65c24462eb9ee807ea3e9652b2f1a34",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 32619,
+        "1": 97,
+        "-1": 52
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 8179,
+            "1": 6,
+            "-1": 7
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 8153,
+            "1": 27,
+            "-1": 12
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 8147,
+            "1": 29,
+            "-1": 16
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 8140,
+            "1": 35,
+            "-1": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-encoder-04-422-bff-ip",
+      "frames": 4,
+      "inputHash": "735192ee5bddc746e1315b6fa87b908247bb705dd1b8e9efd2bec6dcbfeb29c6",
+      "baselineHash": "3d711447b322df13e69378dac8c106c39ec5d384c1376f7c90bd662f981baef6",
+      "candidateHash": "79c989489df55b16a8df9a5c14dd68d9947127420c4afeac5d1fc6c13103c5c5",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 61018,
+        "1": 267,
+        "2": 4,
+        "-1": 150,
+        "-2": 1
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 15319,
+            "1": 27,
+            "-1": 14
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 15272,
+            "1": 58,
+            "-1": 30
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 15228,
+            "1": 83,
+            "-1": 49
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 15199,
+            "1": 99,
+            "2": 4,
+            "-1": 57,
+            "-2": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-encoder-05-420-tff-ipb",
+      "frames": 7,
+      "inputHash": "2ef4e26a4494ff7ab73e7a41dd381cf0b779aafee5740a3df2e381f10bb3ac15",
+      "baselineHash": "06efd54cd5432200fc462042118819a5970ef7d6ba26b272fae756730bfa542b",
+      "candidateHash": "095472d082390493435aa128b6d5b59cff14c52995e88969732d5dbbc81dbc05",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 42819,
+        "1": 98,
+        "-1": 91
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 6139,
+            "1": 3,
+            "-1": 2
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 6114,
+            "1": 13,
+            "-1": 17
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 6122,
+            "1": 11,
+            "-1": 11
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 6126,
+            "1": 9,
+            "-1": 9
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 6111,
+            "1": 18,
+            "-1": 15
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 6097,
+            "1": 26,
+            "-1": 21
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 6110,
+            "1": 18,
+            "-1": 16
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-encoder-06-420-bff-ipb",
+      "frames": 7,
+      "inputHash": "da3cc6755d6c4a3ba018fe9c7c4082f6cfbcbf0f410913ad6ee4270301a52230",
+      "baselineHash": "c1b029dd932a27a8b51a62421c4e13e1c5bb41d8264d8c15504f92053a0a0f6d",
+      "candidateHash": "4e292189661e2a506bb95d654ff7aaeed25d10efadc7710d175ffa283d8a0cd4",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 80229,
+        "1": 243,
+        "-1": 168
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 11502,
+            "1": 12,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 11472,
+            "1": 29,
+            "-1": 19
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 11451,
+            "1": 39,
+            "-1": 30
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 11477,
+            "1": 27,
+            "-1": 16
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 11445,
+            "1": 52,
+            "-1": 23
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 11429,
+            "1": 46,
+            "-1": 45
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 11453,
+            "1": 38,
+            "-1": 29
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-encoder-07-422-tff-ipb",
+      "frames": 7,
+      "inputHash": "ecc8b1da9ca3264dfd04aad07c6675af24dc49817047aec0557df661b27fe8d5",
+      "baselineHash": "cefddb8f7399c39bd7602a073ca98f67149a5e26b4434dcfde8066a0ae8c903c",
+      "candidateHash": "6b5d46e6830b70dd2fcfd9549e30efc5b6ad856af40ffa3ddf7a5c9df3e67e88",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 57028,
+        "1": 172,
+        "2": 1,
+        "-1": 143
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 8179,
+            "1": 6,
+            "-1": 7
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 8146,
+            "1": 23,
+            "-1": 23
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 8152,
+            "1": 23,
+            "-1": 17
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 8163,
+            "1": 13,
+            "-1": 16
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 8125,
+            "1": 37,
+            "2": 1,
+            "-1": 29
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 8126,
+            "1": 36,
+            "-1": 30
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 8137,
+            "1": 34,
+            "-1": 21
+          }
+        }
+      ]
+    },
+    {
+      "name": "interlace-encoder-08-422-bff-ipb",
+      "frames": 7,
+      "inputHash": "8a88aa4710ff6e5ce8cfddd0dab8c40d81f4c1f2be1a8fe635ed3145233aee10",
+      "baselineHash": "e620fc6b935483d2d115a081359d52963f44af50b89b6df111e4c20a81efb7d2",
+      "candidateHash": "7cb76c760657e3f6af43e4bed30734074cd2e52837f69162faa07250c7ccf9be",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 106824,
+        "1": 430,
+        "2": 1,
+        "-1": 265
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 15319,
+            "1": 27,
+            "-1": 14
+          }
+        },
+        {
+          "frame": 1,
+          "type": "B",
+          "histogram": {
+            "0": 15271,
+            "1": 54,
+            "-1": 35
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 15246,
+            "1": 73,
+            "-1": 41
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 15291,
+            "1": 44,
+            "-1": 25
+          }
+        },
+        {
+          "frame": 4,
+          "type": "B",
+          "histogram": {
+            "0": 15231,
+            "1": 80,
+            "2": 1,
+            "-1": 48
+          }
+        },
+        {
+          "frame": 5,
+          "type": "B",
+          "histogram": {
+            "0": 15229,
+            "1": 75,
+            "-1": 56
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 15237,
+            "1": 77,
+            "-1": 46
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-1-0",
+      "frames": 10,
+      "inputHash": "e4d33f9ed9563d23493fb16858fd731ae722d863593c24ac133b317fb5937ca7",
+      "baselineHash": "56fbf176ba2ec49f3588e7ca2238988b366f1190ba34a412c07f80fd5327bacb",
+      "candidateHash": "963cfd96ead9148a45e803d614ac1080bb52d984344efbc61b25511eb86cc568",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 91879,
+        "1": 263,
+        "-1": 18
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 9196,
+            "1": 19,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 9195,
+            "1": 21
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 9194,
+            "1": 22
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 9192,
+            "1": 22,
+            "-1": 2
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 9190,
+            "1": 23,
+            "-1": 3
+          }
+        },
+        {
+          "frame": 5,
+          "type": "P",
+          "histogram": {
+            "0": 9189,
+            "1": 25,
+            "-1": 2
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 9179,
+            "1": 31,
+            "-1": 6
+          }
+        },
+        {
+          "frame": 7,
+          "type": "P",
+          "histogram": {
+            "0": 9180,
+            "1": 34,
+            "-1": 2
+          }
+        },
+        {
+          "frame": 8,
+          "type": "P",
+          "histogram": {
+            "0": 9180,
+            "1": 35,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 9,
+          "type": "P",
+          "histogram": {
+            "0": 9184,
+            "1": 31,
+            "-1": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-edge-1-0",
+      "frames": 2,
+      "inputHash": "5f1136925facba97c03a029b28ab28aa527556327044a314b79998364fbde60b",
+      "baselineHash": "e5557769691297d644f2cc16aa82d0eee7804a90882b42411ed94729d4b662e4",
+      "candidateHash": "e5557769691297d644f2cc16aa82d0eee7804a90882b42411ed94729d4b662e4",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 1536
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 768
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 768
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-derived-range-1-0",
+      "frames": 2,
+      "inputHash": "8f4c736467e7c0a525712e9df6dbe63964d9f3a7789d5c455e15eddace175245",
+      "baselineHash": "976b49abe4d5f739b615544a6df32aaafd799490616bffb8b713fbb1e8f62f1a",
+      "candidateHash": "976b49abe4d5f739b615544a6df32aaafd799490616bffb8b713fbb1e8f62f1a",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 27648
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 13824
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 13824
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-later-b-1-0",
+      "frames": 5,
+      "inputHash": "b3f58a691a59c61b904c61cf8171cb10923dede9ee15ae74400b30abda5904aa",
+      "baselineHash": "64caefe159e93926b1001771824f2f9dc119c46d1e019a0cd60de41ec1faefeb",
+      "candidateHash": "64caefe159e93926b1001771824f2f9dc119c46d1e019a0cd60de41ec1faefeb",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 3840
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 768
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 768
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 768
+          }
+        },
+        {
+          "frame": 3,
+          "type": "B",
+          "histogram": {
+            "0": 768
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 768
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-1-1",
+      "frames": 10,
+      "inputHash": "81bccbe510098f45a326cd2abe67a08221a6ce782233e5afd509a355a513936b",
+      "baselineHash": "f261598935990bce7e7b1532d2c19bcb92ec4091c07aa396ef7100cd98479a20",
+      "candidateHash": "58aaff64c24e41d59cdfba85b9e25a1060639449f87e1996b9504e46bd28c03a",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 91888,
+        "1": 248,
+        "-1": 24
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 9196,
+            "1": 19,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 9196,
+            "1": 20
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 9193,
+            "1": 23
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 9190,
+            "1": 24,
+            "-1": 2
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 9187,
+            "1": 26,
+            "-1": 3
+          }
+        },
+        {
+          "frame": 5,
+          "type": "P",
+          "histogram": {
+            "0": 9186,
+            "1": 29,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 9182,
+            "1": 30,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 7,
+          "type": "P",
+          "histogram": {
+            "0": 9186,
+            "1": 26,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 8,
+          "type": "P",
+          "histogram": {
+            "0": 9186,
+            "1": 26,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 9,
+          "type": "P",
+          "histogram": {
+            "0": 9186,
+            "1": 25,
+            "-1": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-edge-1-1",
+      "frames": 2,
+      "inputHash": "be2c66f7394ffd47f91ee6f8cd54a9e7ed1d02f497f31e44b8f05af8d4546d27",
+      "baselineHash": "e5557769691297d644f2cc16aa82d0eee7804a90882b42411ed94729d4b662e4",
+      "candidateHash": "e5557769691297d644f2cc16aa82d0eee7804a90882b42411ed94729d4b662e4",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 1536
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 768
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 768
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-derived-range-1-1",
+      "frames": 2,
+      "inputHash": "46d0490c4e48bddfbb693004780799896ec6634b069d6101b2f6a4932f3eac71",
+      "baselineHash": "0f1c9a2983140f94899157321dbb79f6e4f2daa36e6904fd792ba90775773f03",
+      "candidateHash": "0f1c9a2983140f94899157321dbb79f6e4f2daa36e6904fd792ba90775773f03",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 27648
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 13824
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 13824
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-later-b-1-1",
+      "frames": 5,
+      "inputHash": "9a547936bbe25494605bed2b1530382bbbf147153f2beb711f34a6a8c1766495",
+      "baselineHash": "64caefe159e93926b1001771824f2f9dc119c46d1e019a0cd60de41ec1faefeb",
+      "candidateHash": "64caefe159e93926b1001771824f2f9dc119c46d1e019a0cd60de41ec1faefeb",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 3840
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 768
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 768
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 768
+          }
+        },
+        {
+          "frame": 3,
+          "type": "B",
+          "histogram": {
+            "0": 768
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 768
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-2-0",
+      "frames": 10,
+      "inputHash": "753e501979ddf7ba62fe6790087e0a9f0b6fa83b12b3105c97a923e3f9a30136",
+      "baselineHash": "e190103ff126c959a207f4e6dc1c9df972db35723d71e50084150bec90cb8447",
+      "candidateHash": "32486ac53a6087c23d34b90229134d8ee39918d932d8b32c64a8ca5a1f010e12",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 122601,
+        "1": 266,
+        "-1": 13
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 12266,
+            "1": 21,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 12267,
+            "1": 20,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 12265,
+            "1": 22,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 12263,
+            "1": 22,
+            "-1": 3
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 12262,
+            "1": 24,
+            "-1": 2
+          }
+        },
+        {
+          "frame": 5,
+          "type": "P",
+          "histogram": {
+            "0": 12260,
+            "1": 27,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 12253,
+            "1": 33,
+            "-1": 2
+          }
+        },
+        {
+          "frame": 7,
+          "type": "P",
+          "histogram": {
+            "0": 12253,
+            "1": 35
+          }
+        },
+        {
+          "frame": 8,
+          "type": "P",
+          "histogram": {
+            "0": 12256,
+            "1": 32
+          }
+        },
+        {
+          "frame": 9,
+          "type": "P",
+          "histogram": {
+            "0": 12256,
+            "1": 30,
+            "-1": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-edge-2-0",
+      "frames": 2,
+      "inputHash": "e41964235435cac444d80a98d051be56eba341bac8b019896f4585c876d52a14",
+      "baselineHash": "af4b5aefcc7fcec38bac6def8ce2c62adb3ad399ecadd3849d131b4dcdbbf375",
+      "candidateHash": "af4b5aefcc7fcec38bac6def8ce2c62adb3ad399ecadd3849d131b4dcdbbf375",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 2048
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 1024
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 1024
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-derived-range-2-0",
+      "frames": 2,
+      "inputHash": "793813075ecef4e13cdb59b1f0abd022340b7f332d9cbdf2fe1f2401961fb391",
+      "baselineHash": "db39d24d211c4c3a473a151fabef7315c419a2186e5b883e857b4de7a5637207",
+      "candidateHash": "db39d24d211c4c3a473a151fabef7315c419a2186e5b883e857b4de7a5637207",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 36864
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 18432
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 18432
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-later-b-2-0",
+      "frames": 5,
+      "inputHash": "256b913a14568f963de62ac6398f3dad5bcb0007a3a2078aba7aaf6db316161c",
+      "baselineHash": "495c865c42e84d08a890c26fa6f892f5c70b7758969176167610044f265d5c16",
+      "candidateHash": "495c865c42e84d08a890c26fa6f892f5c70b7758969176167610044f265d5c16",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 5120
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 1024
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 1024
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 1024
+          }
+        },
+        {
+          "frame": 3,
+          "type": "B",
+          "histogram": {
+            "0": 1024
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 1024
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-2-1",
+      "frames": 10,
+      "inputHash": "a6891c08b85237d290eda8c5beb3801d60ecfffbefdee76b5c917402665b9d2f",
+      "baselineHash": "c316c9634cf86d4aa5f48bac099a7d9ff38efbe1f7a66ce7dc14ff2944a1891b",
+      "candidateHash": "52e72bc7937dca3a9a4b0361f96d4ff0c03da8266c711f99b6b0784393183403",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 122640,
+        "1": 217,
+        "-1": 23
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 12266,
+            "1": 21,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 12269,
+            "1": 18,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 2,
+          "type": "P",
+          "histogram": {
+            "0": 12269,
+            "1": 19
+          }
+        },
+        {
+          "frame": 3,
+          "type": "P",
+          "histogram": {
+            "0": 12266,
+            "1": 20,
+            "-1": 2
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 12266,
+            "1": 20,
+            "-1": 2
+          }
+        },
+        {
+          "frame": 5,
+          "type": "P",
+          "histogram": {
+            "0": 12264,
+            "1": 23,
+            "-1": 1
+          }
+        },
+        {
+          "frame": 6,
+          "type": "P",
+          "histogram": {
+            "0": 12261,
+            "1": 24,
+            "-1": 3
+          }
+        },
+        {
+          "frame": 7,
+          "type": "P",
+          "histogram": {
+            "0": 12261,
+            "1": 23,
+            "-1": 4
+          }
+        },
+        {
+          "frame": 8,
+          "type": "P",
+          "histogram": {
+            "0": 12259,
+            "1": 24,
+            "-1": 5
+          }
+        },
+        {
+          "frame": 9,
+          "type": "P",
+          "histogram": {
+            "0": 12259,
+            "1": 25,
+            "-1": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-edge-2-1",
+      "frames": 2,
+      "inputHash": "0479e4b4251f6797fec11c33ffd21ef8d04c93305e1d90d139375c161efb3b46",
+      "baselineHash": "af4b5aefcc7fcec38bac6def8ce2c62adb3ad399ecadd3849d131b4dcdbbf375",
+      "candidateHash": "af4b5aefcc7fcec38bac6def8ce2c62adb3ad399ecadd3849d131b4dcdbbf375",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 2048
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 1024
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 1024
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-derived-range-2-1",
+      "frames": 2,
+      "inputHash": "87b8a68aa3b8c888a3f6846a340be9b21f35af17d0cdc08d685af5b93c282acb",
+      "baselineHash": "25347fd2ff055dfe55e803cfed15e653d5e8408006e7141cea1c96777fb03670",
+      "candidateHash": "25347fd2ff055dfe55e803cfed15e653d5e8408006e7141cea1c96777fb03670",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 36864
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 18432
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 18432
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-prime-later-b-2-1",
+      "frames": 5,
+      "inputHash": "f8ea6388a7f32f007941d1a9478d2acfe1df556bb25bd36d98f9607572e30a48",
+      "baselineHash": "495c865c42e84d08a890c26fa6f892f5c70b7758969176167610044f265d5c16",
+      "candidateHash": "495c865c42e84d08a890c26fa6f892f5c70b7758969176167610044f265d5c16",
+      "nativeWasmExact": true,
+      "packetPullExact": true,
+      "metadataExact": true,
+      "histogram": {
+        "0": 5120
+      },
+      "frameDeltas": [
+        {
+          "frame": 0,
+          "type": "I",
+          "histogram": {
+            "0": 1024
+          }
+        },
+        {
+          "frame": 1,
+          "type": "P",
+          "histogram": {
+            "0": 1024
+          }
+        },
+        {
+          "frame": 2,
+          "type": "B",
+          "histogram": {
+            "0": 1024
+          }
+        },
+        {
+          "frame": 3,
+          "type": "B",
+          "histogram": {
+            "0": 1024
+          }
+        },
+        {
+          "frame": 4,
+          "type": "P",
+          "histogram": {
+            "0": 1024
+          }
+        }
+      ]
+    }
+  ],
+  "histogram": {
+    "0": 3040389,
+    "1": 11153,
+    "2": 9,
+    "-1": 2676,
+    "-2": 39
+  },
+  "frames": 512
+}

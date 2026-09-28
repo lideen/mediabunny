@@ -5,6 +5,7 @@ import { setImmediate } from 'node:timers/promises';
 import { BufferSource, CustomSource, Input, MXF, registerDecoder, VideoSampleSink } from '../../src/index.js';
 import { Mpeg2Decoder } from '@mediabunny/mpeg2';
 import manifest from '../fixtures/mpeg2/open/open422.json' with { type: 'json' };
+import regression from '../fixtures/mpeg2/wasm-idct-v1.json' with { type: 'json' };
 
 const deferred = () => {
 	let resolve!: () => void;
@@ -79,7 +80,8 @@ describe('given an open-GOP range with asynchronously initialized real MPEG-2 de
 				} else {
 					gate.resolve();
 					expect(await completed).toEqual([24, 25, 26, 27].map(ordinal => ({
-						timestamp: ordinal / 25, duration: 1 / 25, hash: manifest.faani[ordinal],
+						timestamp: ordinal / 25, duration: 1 / 25,
+						hash: regression.cases.open422.frames[ordinal]!.sha256,
 					})));
 				}
 			} finally {

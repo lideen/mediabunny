@@ -1,0 +1,9 @@
+{
+  "allArtifactAndEvidenceHashesVerified": true,
+  "allSourceHashesVerified": true,
+  "manifestRequiredFieldsVerified": true,
+  "sourceCompiledInputsMatch": true,
+  "numericalManifestSha256": "6ea6cb87b90ba047924ca524c2d429ece1466c72d1d3a2c43a4662d25957a3dc",
+  "sourcePatchAppliesToCanonicalBase": true,
+  "sourcePatchContainsNoAnsi": true
+}

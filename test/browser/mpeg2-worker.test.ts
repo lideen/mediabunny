@@ -4,6 +4,7 @@ import { registerMpeg2Decoder } from '@mediabunny/mpeg2';
 import progressiveUrl from '../fixtures/mpeg2/main420.mxf?url';
 import interlacedUrl from '../fixtures/mpeg2/open/interlaced422.mxf?url';
 import progressive from '../fixtures/mpeg2/pixels.json' with { type: 'json' };
+import regression from '../fixtures/mpeg2/wasm-idct-v1.json' with { type: 'json' };
 import interlaced from '../fixtures/mpeg2/open/interlaced422.json' with { type: 'json' };
 
 const hash = async (bytes: Uint8Array<ArrayBuffer>) => {
@@ -110,7 +111,7 @@ describe('given the built MPEG-2 extension and a real browser Worker', () => {
 		}
 	}, 10000);
 
-	it('should decode all authored progressive pictures with independent plane hashes', async () => {
+	it('should decode all authored progressive pictures with qualified WASM plane hashes', async () => {
 		registerMpeg2Decoder({ useWorker: true });
 		const data = await (await fetch(progressiveUrl)).arrayBuffer();
 		using input = new Input({ formats: [MXF], source: new BufferSource(data) });
@@ -124,7 +125,8 @@ describe('given the built MPEG-2 extension and a real browser Worker', () => {
 				expect([sample.timestamp, sample.duration, sample.scan, sample.format])
 					.toEqual([expected.timestamp, expected.duration, 'progressive', 'I420']);
 				expect(await Promise.all([hash(pixels.subarray(0, 921600)),
-					hash(pixels.subarray(921600, 1152000)), hash(pixels.subarray(1152000))])).toEqual(expected.planes);
+					hash(pixels.subarray(921600, 1152000)), hash(pixels.subarray(1152000))]))
+					.toEqual(regression.cases.main420.frames[ordinal - 1]!.planes);
 			} finally {
 				sample.close();
 			}

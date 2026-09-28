@@ -3,6 +3,7 @@ import { Input, BufferSource, MXF, VideoSampleSink } from '../../src/index.js';
 import { registerMpeg2Decoder } from '@mediabunny/mpeg2';
 import progressiveUrl from '../fixtures/mpeg2/main420.mxf?url';
 import progressive from '../fixtures/mpeg2/pixels.json' with { type: 'json' };
+import regression from '../fixtures/mpeg2/wasm-idct-v1.json' with { type: 'json' };
 
 const runtimeUrl = '/threads/js/threaded-runtime.mjs';
 
@@ -11,7 +12,7 @@ const hash = async (bytes: Uint8Array<ArrayBuffer>) => Array.from(
 ).join('');
 
 describe('given the opt-in MPEG-2 slice pool in an isolated browser', () => {
-	it('should retain independent decoded pixels after terminating the coordinator and four pool workers', async () => {
+	it('should retain qualified WASM pixels after terminating the coordinator and four pool workers', async () => {
 		registerMpeg2Decoder({ threadCount: 4, threadedRuntimeUrl: new URL(runtimeUrl, location.href) });
 		const NativeWorker = Worker;
 		const workers: Worker[] = [];
@@ -46,7 +47,7 @@ describe('given the opt-in MPEG-2 slice pool in an isolated browser', () => {
 				hash(pixels.slice(0, ySize)),
 				hash(pixels.slice(ySize, ySize + chromaSize)),
 				hash(pixels.slice(ySize + chromaSize)),
-			])).toEqual(progressive.frames[0]!.planes);
+			])).toEqual(regression.cases.main420.frames[0]!.planes);
 		} finally {
 			input.dispose();
 			globalThis.Worker = NativeWorker;

@@ -1,0 +1,22 @@
+{
+  "q": 14,
+  "rowFractionBits": 5,
+  "rotations": [
+    {
+      "b": 8867,
+      "difference": 12540,
+      "sum": 30274
+    },
+    {
+      "b": 4520,
+      "difference": 18205,
+      "sum": 27246
+    },
+    {
+      "b": 12873,
+      "difference": 6393,
+      "sum": 32138
+    }
+  ],
+  "inverseRoot2": 11585
+}

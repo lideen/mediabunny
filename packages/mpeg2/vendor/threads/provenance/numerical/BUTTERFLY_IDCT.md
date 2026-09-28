@@ -1,0 +1,781 @@
+# Default WASM butterfly IDCT
+
+The butterfly is now the default WASM transform in this integration worktree,
+following explicit authorization of the numerical migration. Native keeps f64.
+The redundant `experimental-butterfly-idct` selector was removed; the historical
+`experimental-fixed-idct` remains separate and incompatible with threads.
+The accepted comparison baseline is
+`1fafe8f611afab696ce8b90d2d54b46f4c252789`, rebuilt in the same worktree before
+the candidate was added. Canonical Rust and Mediabunny checkouts were not changed.
+
+The candidate uses 11 nontrivial multiplications per 8-point transform, Q14
+constants, a five-bit fractional row intermediate, and predominantly i32
+butterfly sums. Products widen where the legal-domain proof requires it. It has
+no runtime trigonometry, floating fallback, dependency, unsafe code or change to
+release overflow checking. This is independently authored algebra, not a
+translation of FFmpeg or IJG code or tables. Prior FFmpeg source exposure remains
+disclosed in [PROVENANCE.md](PROVENANCE.md); this is not a clean-room claim.
+
+## Authorized default integration, 2026-09-28
+
+The final source selects `transform/butterfly_entry.rs` on WASM unless the
+historical wide fixed-IDCT experiment is explicitly requested. Native still
+selects the unchanged `transform.rs`. No production numerical-mode parameter,
+extra butterfly feature, automatic thread-selection change or transport change
+remains. Canonical repositories and the consumer have not been edited; final
+source review and consumer integration belong to the primary.
+
+### Shared-state and row-boundary assessment
+
+`Idct` is a zero-sized immutable type. Every coefficient, row intermediate and
+output array belongs to the invocation; masks and constants are immutable.
+No retained scratch buffer, floating basis initialization or mutable shared cache
+was introduced. Sharing `&Idct` across the existing Rayon jobs is therefore safe
+under the same Rust borrowing rules.
+
+`decoder/slice_parallel.rs` still validates and groups at most 16 consecutive
+macroblock rows, borrows disjoint `FrameMut::split_rows` views and collects results
+in stream order. `reconstruction.rs` still translates global plane indices into
+those disjoint slices. The butterfly never sees a destination plane and returns
+the same 64 row-major residual positions. Frame/field DCT row steps, reference
+borrows, coverage checks and earliest-error selection are unchanged. Shared-one
+uses the existing serial path in shared memory; shared-two/four use the existing
+eligible-row backend. No scheduler retuning was needed.
+
+### Final correctness and test migration
+
+Final default artifacts pass actual Chrome nonshared and shared 1/2/4 equality
+for all 122 fixtures / 512 pictures, 1288 selections / 1932 pictures and all seven
+retained workloads. The core shared-one/two/four checks include complete color,
+geometry and rational metadata, timing and output order. All 13 lifecycle and
+12 terminal-failure browser scenarios pass. The entire 5,361,472-sample signed
+kernel set matches the qualified scalar/native integer stream on each worker
+count, with a barrier proving participation. No precision or SIMD change occurred.
+
+Default native and threaded tests pass. All 28 promoted default-WASM Node tests
+now pass, including assertions previously skipped by early pixel-golden failures.
+Native/FFmpeg reference files are untouched. The following six scenarios were
+migrated explicitly rather than given a larger tolerance:
+
+| Test scenario | Intentional change | Assertions retained and now reached |
+|---|---|---|
+| Supported fixture corpus | Strict WASM v1 plane hashes replace WASM-to-f64 equality; native-to-faani equality remains | Full metadata, dimensions, plane ownership, batch/pull/packet identity, emission order, conditional simple-IDCT error <=1 |
+| Header-only preroll and sticky failures | Predicted and held-anchor planes use named preroll WASM records | Header-only descriptors, packet identity, reset, sticky errors, later finish, held output after producer free |
+| 4:2:2 budgets and mixed formats | Each mixed-format picture uses its WASM record | Exact padded byte budgets, both format orders, visible crop plane lengths |
+| Interlaced field prediction | Per-frame hashes use the WASM backend | Both chroma formats, late truncation, exact seven-picture padded budget |
+| Dual-prime reconstruction | Per-frame hashes use the WASM backend | Both chroma formats, late damage, exact ten-picture budgets and invalid-bottom reference rejection |
+| Extended bit rate | Modified-header pixels must equal the original fixture's WASM record | Nonzero combined rate, unchanged chroma/pixels and later zero-rate rejection |
+
+`crates/wasm/tests/wasm-idct-v1.json` records 123 fixture inputs, including preroll,
+with exact per-frame/plane hashes, picture types, accepted hashes and old/new
+histograms. The versioned records were captured from the already qualified
+artifact, not generated by the test runner. Their generator refuses to overwrite
+a version and rejects newly observed drift above the disclosed two-unit range
+before recording. That recording check is not a runtime tolerance. Native golden
+comparisons and algorithm-independent expectations, including the conditional
+simple-IDCT comparison, were not weakened. Preroll's additional record was
+classified as an IDCT-only pixel migration with unchanged metadata and drift
+within the already disclosed range.
+
+These snapshots are regression records, not independent mathematical evidence.
+The unchanged Decimal/cyclotomic oracle, signed-residual gates and full-domain
+arithmetic proof below remain the accuracy basis. A3 is sampled, IEEE A2 remains
+unverified, and observed predictive drift is not a global bound.
+
+### Final artifacts and timing reuse
+
+Final nonshared WASM is 144238 bytes, SHA-256
+`c06ed93c42aa17dfe45bcad2e55b6d14fca5e0c07b5bca1cc469b52999407b9b`.
+Its executable code and data sections are byte-identical to the five/seven
+confirmed candidate; only a custom section changed after removing the feature.
+
+Final shared WASM is 332988 bytes, SHA-256
+`32270a44364331fe90b2d22aeb590471c767a0bf4bd5c2e4e6346561e6ef7281`.
+It is nine bytes larger than the confirmed candidate. Disassembly shows identical
+instruction opcodes and order; the changed operands address relocated static
+data. Custom names also change. A separate serial paired focus run compared the
+confirmed candidate with this default build, two warmup and three measured rounds,
+80 or 120 pictures per observation. Public shared-four medians were:
+
+| Workload | Confirmed candidate to default ms/picture | Paired reduction |
+|---|---:|---:|
+| Cosmos | 0.882 to 0.870 | -0.04% |
+| SWAT | 7.179 to 7.193 | -0.19% |
+| Live2VOD | 6.770 to 6.668 | 1.35% |
+| Long I/P/B | 2.333 to 2.289 | 1.66% |
+
+These small focus-run differences do not overturn the measured web gains below.
+Paired medians and ratios of separate medians can differ, especially on Cosmos.
+The focus run is not substituted for the original five/seven accepted-baseline
+comparison. `promotion-builds/executable-comparison.json`,
+`shared-relocation-classification.json` and `promotion-focus/` retain this check.
+
+The shared standard library contains `__multi3` in timeout/parking support, also
+present in the previously measured shared build. No butterfly function calls a
+wide multiplication helper. The earlier helper-absence statement below describes
+the native/nonshared experiment, not every function in rebuilt threaded std.
+
+`integration-ready/` contains complete `scalar/{js,pkg}` and `shared/{js,pkg}`
+trees, a current source snapshot, dirty patch, build flags/logs, helper-adaptation
+provenance and `numerical-migration.json`. The manifest follows
+`wasm-numerical-migration.schema.json` and binds artifact, schema, regression,
+qualification and source hashes to the old/new per-frame I/P/B records. It can
+support consumer verification without pretending the new output equals f64.
+
+Retain and review this default-WASM integration. Native throughput is not a veto;
+native behavior is unchanged. No canonical copy, consumer vendoring, publication,
+reviewer-agent run or commit was performed here.
+
+## Web-focused measurement phase, 2026-09-28
+
+WASM is the primary performance target. Retain the WASM-only butterfly candidate
+for final numerical-migration approval and retained-code review. The earlier
+all-target rejection below is historical; native throughput is not a retention
+veto under the clarified product priority.
+
+During this measurement phase, `experimental-butterfly-idct` selected the
+butterfly only on `wasm32`. That temporary feature is now removed by the default
+integration above. Native decoder builds keep the accepted f64 transform.
+The standalone native integer probe remains available for
+correctness and portability checks. No runtime numerical-mode API was introduced,
+and no native-throughput tuning followed the priority clarification. The later
+default promotion was explicitly authorized; consumer publication was not.
+
+The selected scalar WASM is byte-identical to measured `candidate2`, so its prior
+seven-workload Node confirmation remains valid and was not restarted. The shared
+baseline was built from frozen accepted `baseline1/source`; the candidate uses
+the existing four-worker slice backend without scheduling or ownership changes.
+Both use the pinned nightly, atomics/bulk-memory flags, disabled SIMD, 256 MiB
+shared-memory maximum and unchanged hash-checked Rayon worker adaptation.
+
+### Real-browser qualification
+
+An owned HeadlessChrome 154 session served only retained local packets and the
+frozen generated assets under COOP/COEP. It exercised the selected artifacts,
+not a JS imitation of the kernel. The browser run was inside the exclusive CPU
+command, and its server, coordinators and browser were closed before return.
+
+- Actual shared numerical probes at one, two and four workers match the qualified
+  native/scalar residual stream across all 83,773 blocks and 5,361,472 samples.
+  A barrier reached every worker. This includes the complete exact DC/F63 family,
+  signed half ties, full legal boundaries and unchanged engineering groups.
+  The shared residual SHA-256 is
+  `7f408a032a0c583b29ae4099526a8bf1bad7dfc61246266fe02f7ab59db87f2a`.
+- The browser public facade at one, two and four workers passes the complete
+  122-fixture / 512-picture corpus and 1288-selection / 1932-picture boundary
+  corpus against the selected nonshared artifact. Pixels, complete metadata,
+  timings and output order match. Truncation/sticky errors, overlapping calls,
+  close-during-decode and zero remaining pool workers also pass.
+- All 13 lifecycle and 12 terminal-failure browser scenarios pass. These cover
+  cancellation, initialization failures, lost replies and owned-worker cleanup.
+- All seven workload frame hashes match each variant's already-qualified hashes
+  through nonshared core, shared-four core, public nonshared facade and public
+  shared-four facade. The caller packets remain unchanged. This is exact equality
+  to the candidate's qualified output, not a claim that old float pixels match.
+- Selected native release and threaded release tests pass with the feature
+  enabled. The selected native artifact matches all seven accepted native
+  workload hashes. Existing WASM pixel-golden failures remain recorded; the
+  candidate's numerical differences were not retoleranced.
+
+`web-proof/report.json` retains numerical/corpus/lifecycle results.
+`web-confirm/comparison.png` shows actual decoded luma previews for SWAT, Live2VOD,
+the final predictive-control picture and cheap controls, with selected artifact
+hashes and the successful 768-trial browser run. Black first pictures in the
+cheap controls match their frozen hashes; they are not failed previews. This is
+decoder verification, not a color-rendering or complete player benchmark.
+
+The arithmetic proof and numerical acceptance criteria below are unchanged.
+Shared execution transfers their qualification through bit-exact residual
+equality; it does not make sampled A3 exhaustive or supply the missing IEEE A2
+procedure. There is still no IEEE or full H.262 conformance claim.
+
+### Confirmed browser performance
+
+The screen covers all seven workloads. The confirming run covers Cosmos, SWAT,
+Live2VOD and long I/P/B with five warmup and seven measured rounds, serial
+randomized ABBA/BAAB, at least 160 pictures per observation or 180 for long I/P/B.
+Each mode uses a separate warm A/B pair. Native profiling and throughput
+measurements were not repeated.
+
+Core times are measured inside a coordinator around the synchronous WASM calls,
+with one measurement RPC per whole trial. Core shared-four owns four Rayon pool
+workers plus the coordinator. Public-facade times await every reset, packet and
+finish RPC, including input copying, coordinator extraction and transferred
+owned output delivery. Public nonshared uses one coordinator and no Rayon pool.
+These are different boundaries; do not subtract their medians to claim a measured
+RPC overhead. Pool/module startup is separate from the warm trials.
+
+| Boundary | Workload | A to B ms/picture | Paired reduction | A/B round-average p95 |
+|---|---|---:|---:|---:|
+| Nonshared core | Cosmos | 1.448 to 1.447 | 0.02% | 1.598 / 1.617 |
+| Nonshared core | SWAT | 31.421 to 20.088 | 36.07% | 33.032 / 20.628 |
+| Nonshared core | Live2VOD | 36.089 to 19.471 | 46.27% | 37.281 / 20.041 |
+| Nonshared core | Long I/P/B | 6.002 to 4.946 | 17.65% | 6.543 / 5.388 |
+| Shared-four core | Cosmos | 0.833 to 0.823 | 0.98% | 0.845 / 0.841 |
+| Shared-four core | SWAT | 9.671 to 7.109 | 26.73% | 9.972 / 7.306 |
+| Shared-four core | Live2VOD | 10.494 to 6.599 | 36.34% | 10.675 / 6.798 |
+| Shared-four core | Long I/P/B | 2.378 to 2.203 | 8.68% | 2.490 / 2.302 |
+| Public nonshared | Cosmos | 1.504 to 1.512 | -0.07% | 1.612 / 1.611 |
+| Public nonshared | SWAT | 31.624 to 20.460 | 35.32% | 32.510 / 21.029 |
+| Public nonshared | Live2VOD | 35.515 to 19.157 | 46.18% | 36.812 / 19.522 |
+| Public nonshared | Long I/P/B | 6.051 to 4.995 | 17.15% | 6.247 / 5.215 |
+| Public shared-four | Cosmos | 0.864 to 0.869 | 0.32% | 0.901 / 0.917 |
+| Public shared-four | SWAT | 9.450 to 7.011 | 26.35% | 9.620 / 7.139 |
+| Public shared-four | Live2VOD | 10.425 to 6.625 | 36.28% | 10.589 / 6.840 |
+| Public shared-four | Long I/P/B | 2.497 to 2.294 | 7.46% | 2.596 / 2.402 |
+
+Percentages are medians of paired per-round reductions, not ratios of independent
+medians. This explains Cosmos public shared-four's tiny positive paired result
+despite the opposite ratio of medians. The cheap-control difference is negligible
+relative to reductions of 2.439 ms on SWAT and 3.800 ms on Live2VOD at the public
+shared-four boundary. It is not treated as a rigid one-percent retention veto.
+The screen also reduces public shared-four time by 15.22% for Elephants, 33.71%
+for progressive textured and 39.80% for interlaced textured; those three are
+screen results, not five/seven confirming results.
+
+Every confirming SWAT and Live2VOD round improves on every boundary. Public
+shared-four SWAT reductions range from 24.45% to 27.01%; Live2VOD from 35.00% to
+36.55%. Round-average nearest-rank p95 at seven rounds is the maximum, not a
+production-tail estimate. Actual pooled SWAT public shared-four packet-call p95
+for I/P/B changes from 10.665/10.960/10.440 to 7.525/7.895/7.875 ms. Delayed output
+is still attributed to its packet call, not divided into invented frame latency.
+
+For shared-four SWAT, core decode/finish changes from 9.203 to 6.640 ms per picture;
+local WASM plane extraction/free remains about 0.47 ms. Public facade copy/free
+is about 0.0019 ms because planes are already extracted and transferred before
+`decode()` resolves; that work is included in the public decode timing, not lost.
+Amortized public reset time is about 0.0011 to 0.0014 ms per picture. Full setup,
+copy, wall, per-type packet and paired-round data remain in
+`web-confirm/summary.json`. Browser and Node timings use their own paired
+baselines and are not interchanged to inflate a speedup.
+
+Observed public-facade creation takes 7.01/6.72 ms for nonshared A/B and
+18.70/16.64 ms for shared-four. Candidate shared-four reports 5.19 ms module init,
+7.72 ms pool startup and 0.185 ms decoder setup. These are single observations
+after earlier modes may have warmed compiled-module caches, not cold-start
+benchmark claims. Peak reported WASM allocation is unchanged at 19,922,944 bytes
+for nonshared and 29,425,664 for shared-four. It excludes host-owned output arrays,
+browser machinery and proof-only kernel buffers. Worker termination is verified;
+these figures do not prove immediate heap reclamation.
+
+### Web artifact sizes and recommendation
+
+| Artifact | Accepted bytes | Candidate bytes | Reduction | gzip A/B bytes |
+|---|---:|---:|---:|---:|
+| Nonshared WASM | 154484 | 144238 | 10246, 6.63% | 55562 / 51480 |
+| Shared WASM | 343849 | 332979 | 10870, 3.16% | 100814 / 97209 |
+
+gzip uses the same level-nine encoder and zero timestamp for both files; it is
+not an HTTP transfer measurement. Generated bindings and the adapted Rayon
+worker helper are unchanged between each pair. The entire shared package tree
+must still be deployed together.
+
+Selected nonshared SHA-256:
+`479d735d36211eecd28fba48cf88d1713730ba491fc0e9a655df636ab41c2109`.
+Selected shared SHA-256:
+`2239d933866b8759f66c53f573d7f6dc23cf71b5da673615bce5098526f3a423`.
+`web-builds/build.json` identifies source/build commands and all generated assets;
+`web-builds/selected/source` freezes the selected source. `web-screen/` and
+`web-confirm/` retain actual browser proof, timing, startup and screenshots.
+
+The recommendation is to retain this web-only design and proceed to final
+retained-code review and numerical-migration approval. Native regressions from
+the original all-target experiment are secondary observations, not rejection
+criteria; the selected native path is unchanged. Changed old float pixels and
+predictive drift remain fully reported below. No default flip, consuming-package
+change, new SIMD mechanism, reviewer-agent run or publication was performed.
+
+## Factorization
+
+Let `c(k) = cos(k*pi/16)` and `s(k) = sin(k*pi/16)`. Define the scaled 1D inverse
+transform
+
+```text
+T(x)[n] = x[0] + sqrt(2) * sum(k=1..7, x[k]*cos((2*n+1)*k*pi/16)).
+```
+
+The orthonormal 1D transform is `T/sqrt(8)`. Applying `T` along both axes and
+dividing by eight therefore gives the required 2D normalization. The following
+identities derive the implementation directly from the cosine formula.
+
+For a rotation angle `t`, define
+
+```text
+a = sqrt(2)*cos(t), b = sqrt(2)*sin(t)
+R_t(p,q) = (a*p + b*q, b*p - a*q).
+```
+
+Each rotation needs three multiplications rather than four:
+
+```text
+h  = b*(p+q)
+r0 = (a-b)*p + h
+r1 = h - (a+b)*q.
+```
+
+The even frequencies use one rotation and two butterflies:
+
+```text
+(r,s) = R_(pi/8)(x2,x6)
+u = x0+x4
+v = x0-x4
+e = [u+r, v+s, v-s, u-r].
+```
+
+For the odd frequencies, first rotate two independent pairs:
+
+```text
+(a,b) = R_(pi/16)(x1,x7)
+(c,d) = R_(3*pi/16)(x3,x5)
+p = a-c
+q = b+d
+o = [a+c, (p+q)/sqrt(2), (p-q)/sqrt(2), b-d].
+```
+
+For example, expanding `o[1]` gives
+
+```text
+(c(1)+s(1))*x1 + (-c(3)+s(3))*x3
+  + (-s(3)-c(3))*x5 + (s(1)-c(1))*x7
+= sqrt(2) * (c(3)*x1 - c(7)*x3 - c(1)*x5 - c(5)*x7).
+```
+
+This follows from the cosine angle-addition identities at `pi/4`; expanding
+`o[2]` gives the third odd-frequency row. Reflection gives the final arrangement:
+
+```text
+[e0+o0, e1+o1, e2+o2, e3+o3, e3-o3, e2-o2, e1-o1, e0-o0].
+```
+
+The odd part shares both rotations and their recombinations between outputs.
+These are actual shared subexpressions, not four independent even/odd dot
+products renamed as a butterfly.
+
+### Constants and scaling
+
+`tools/butterfly-idct-math.py` starts at `sqrt(2)` and derives the positive sine
+and cosine values by half-angle square roots. With 112-digit Decimal arithmetic,
+it quantizes each of `b`, `a-b`, and `a+b` independently to nearest Q14 integer,
+half ties away from zero. It does not read the implementation or any codec table.
+
+| Angle | Q14 b | Q14 a-b | Q14 a+b |
+|---|---:|---:|---:|
+| pi/8 | 8867 | 12540 | 30274 |
+| pi/16 | 4520 | 18205 | 27246 |
+| 3*pi/16 | 12873 | 6393 | 32138 |
+
+The Q14 reciprocal square root of two is 11585. Independent quantization means
+the integer constants need not satisfy the real-valued rotation identities
+exactly. Accuracy is measured against the independent mathematical oracle,
+not inferred from the factorization.
+
+Rows start with integer coefficients. Each Q14 rotation result rounds after a
+nine-bit shift, preserving five fraction bits. Row DC butterflies scale by 32
+to match. The two reciprocal-square-root products round after a 14-bit shift,
+retaining that scale. Columns start and finish at the five-bit fractional scale;
+their rotations also round after a 14-bit shift. The last eight-bit shift removes
+the five fraction bits and the factor of eight from the 2D normalization.
+
+Every rounding operation uses
+
+```text
+R_s(v) = (v + 2^(s-1) - [v < 0]) >> s.
+```
+
+Rust right shift on signed integers is arithmetic, so this is floor division of
+the biased value, not truncation toward zero. For `v=-n`, it equals
+`-floor((n+2^(s-1))/2^s)`. Both signs therefore round nearest with half ties away
+from zero. The biases and subtraction are proved safe below. No unchecked
+conversion supplies truncation or wrapping.
+
+### Operation counts
+
+Counts below describe a fully dense block before compiler scheduling, strength
+reduction or vectorization. They exclude indexing, loads/stores, dispatch,
+comparisons, and clipping.
+
+- Each 1D transform has three three-multiply rotations and two reciprocal-square-
+  root products: 11 nontrivial multiplications and 29 algebraic adds/subtracts.
+- Sixteen 1D transforms give 176 multiplications and 464 algebraic adds/subtracts,
+  versus 512 multiplications in the previous Q24/Q18/Q42 candidate.
+- There are 128 internal round operations plus 64 final round operations. Each
+  source expression adds a bias and subtracts a sign flag: 384 further integer
+  adds/subtracts and 192 arithmetic shifts before compiler simplification.
+- The eight rows also have sixteen multiplications by 32, implemented as shifts.
+  Columns multiply those DC sums by one. These are not included in the count of
+  nontrivial multiplications.
+- Of the 176 nontrivial products, 72 are i32 row-rotation products. The 16 row
+  reciprocal-square-root products and all 88 column products widen to i64.
+  This is not an all-i32 kernel. The butterfly values and 416 of the 464 algebraic
+  adds/subtracts remain i32; the 48 column rotation recombinations use i64.
+- The retained range-bound revision checks eight input values per 1D pass.
+  Release overflow checking remains enabled on every arithmetic expression.
+
+An AC-free row uses one multiplication by 32 and a fill. DC-only and legal
+DC/F63 `+/-1` blocks bypass both passes. Dense operation counts are not workload
+averages and do not predict decoder speed by themselves.
+
+## Full-domain arithmetic proof
+
+The proof covers all 64 independent input coefficients in `[-2048,2047]`, without
+assuming mismatch parity, sparsity, or cancellation. The symmetric envelope
+`|x| <= 2048` also includes the unused positive endpoint 2048. Columns use the
+proved row-output envelope `|x| <= 588088`. The retained implementation asserts
+these pass boundaries before doing the butterfly arithmetic, which makes the
+bounds available to compiler optimization. They are not unchecked assumptions.
+
+`tools/butterfly-idct-bounds.py` reproduces all bounds below using exact Python
+integer arithmetic. Its JSON includes every rotation's pre-add, three products,
+both recombinations, biases, pass butterflies and final narrowing. This is an
+interval proof, not a random overflow test.
+
+For one rotation with input magnitude at most `B` and positive integer constants
+`b,d,t` for `b,a-b,a+b`, the actual source intermediates have these envelopes:
+
+```text
+|p+q|       <= 2*B
+|h|         <= 2*b*B
+|d*p|       <= d*B
+|t*q|       <= t*B
+|d*p+h|     <= (d+2*b)*B
+|h-t*q|     <= (2*b+t)*B       conservative independent-term sum
+```
+
+For the output rounding argument, expanding the shared term gives the tighter
+bound `|h-t*q| <= (b+abs(b-t))*B = t*B`. Expanding the first result gives
+`(d+2*b)*B`. Both bounds hold regardless of operand signs. The looser bound above
+already proves that the addition/subtraction itself cannot overflow.
+
+| Rotation intermediate magnitude | Rows, i32 | Columns, i64 |
+|---|---:|---:|
+| Largest input pre-add | 4096 | 1176176 |
+| Largest shared product | 52727808 | 15140913648 |
+| Largest difference product | 37283840 | 10706142040 |
+| Largest sum product | 65818624 | 18899972144 |
+| Largest first recombination | 65820672 | 18900560232 |
+| Largest conservative second recombination | 118546432 | 34040885792 |
+
+Every row value in this table, including addition of the 256 bias and subtraction
+of one, fits i32. Column pre-adds fit i32, but the products do not; those operations
+alone widen. Their recombinations and 8192 bias remain far inside i64.
+
+Applying `floor((M+bias)/2^s)` to an absolute input bound `M` bounds both signed
+rounded results. Row rotation output envelopes are 121096 for the even rotation,
+108984 for the first odd rotation and 128556 for the second odd rotation. Keeping
+individual output bounds gives the following pass bounds:
+
+| Butterfly temporary magnitude | Rows | Columns |
+|---|---:|---:|
+| DC sum/difference before scaling | 4096 | 1176176 |
+| DC sum/difference after scaling | 131072 | 1176176 |
+| Any even output | 252168 | 2262832 |
+| Either shared odd sum `p` or `q` | 237536 | 2131532 |
+| `p+q` or `p-q` | 475072 | 4263064 |
+| Reciprocal-square-root product | 5503709120 | 49387596440 |
+| Either rounded reciprocal-square-root result | 335920 | 3014380 |
+| Any odd output | 335920 | 3014380 |
+| Final even/odd sum or difference | 588088 | 5277212 |
+
+All butterflies fit i32. Both reciprocal-square-root products need i64 in this
+conservative full-domain proof. Their biases fit i64, and their shifted values
+fit i32 before checked conversion. The final column result plus 128 and minus
+the sign flag has magnitude at most 5277341, safely in i32. The fixed shift counts
+3, 8, 9 and 14 are less than either operand width. No operation negates an
+unbounded signed value or reaches a signed minimum.
+
+Final residual clipping precedes checked i16 conversion and restricts values to
+`[-256,255]`. Intra samples additionally clamp the lower limit to zero before
+checked u8 conversion. The unchanged decoder adds prediction in `[0,255]` to the
+signed residual, so the sum lies in `[-256,510]`, fits i16, and is pixel-clipped
+only after addition.
+
+For the sparse paths, arithmetic `dc >> 3` lies in `[-256,255]`; adding a mask bit
+lies in `[-256,256]` and clips before narrowing. Mask shifts are in `[0,63]` on
+u64 and the extracted bit is in `[0,1]`. DC rounding with bias four and sign
+subtraction has magnitude at most 2053. An AC-free row's `dc*32` has magnitude at
+most 65536. Zero produces zero. These statements cover every sparse operation.
+
+## Numerical qualification
+
+The unchanged `fixed-idct-oracle.py` evaluates the mathematical transform with
+112-digit Decimal arithmetic. Exact cyclotomic reduction resolves half ties.
+It is independent of both candidate kernels and the old floating decoder.
+The retained native and actual scalar, nonshared WASM outputs are bit-identical.
+
+The 65,641-block suite includes the original six engineering groups, oriented
+negations, mismatch adjustment, all 4096 Annex A4 cases, boundary masks and zero.
+Among 4,201,024 residuals, 4,180,783 match the oracle, 10,100 differ by -1 and
+10,141 by +1. Peak error is one. No coefficient precision revision or tolerance
+change was needed.
+
+The engineering gates remain peak <=1, maximum per-position MSE <=0.06,
+overall MSE <=0.02, maximum absolute per-position mean <=0.015 and absolute
+overall mean <=0.0015. Each group has 10,000 blocks; the xorshift32 seed is
+`0x48323632`. These are project engineering tests, not the IEEE procedure.
+
+| Distribution / orientation | Max position MSE | Overall MSE | Max absolute position mean | Signed overall mean |
+|---|---:|---:|---:|---:|
+| 1 / positive | 0.0068 | 0.0052140625 | 0.0018 | -0.0000421875 |
+| 1 / negative | 0.0068 | 0.0052140625 | 0.0018 | +0.0000421875 |
+| 255 / positive | 0.0082 | 0.0057171875 | 0.0019 | -0.0000890625 |
+| 255 / negative | 0.0081 | 0.0057171875 | 0.0019 | +0.0000859375 |
+| 2047 / positive | 0.0072 | 0.0046453125 | 0.0017 | -0.0000359375 |
+| 2047 / negative | 0.0072 | 0.0046531250 | 0.0017 | +0.0000281250 |
+
+The final supplementary set has 18,132 blocks: every legal DC with F63 `-1,0,1`, full
+legal random coefficients, boundary corners, row/column masks, impulses,
+cancellation and signed half ties. Its 1,160,448 residuals have 794 positive and
+754 negative one-unit differences. Native/WASM agree. All 35,072 exact half
+reference samples match, unlike the retained engineering set, which has no half
+ties. The earlier 18,139-block supplement remains retained; the final generator
+removes seven duplicate cancellation inputs without changing any distinct case.
+The probe's separate closed-form tests protect zero, signed DC half ties,
+saturation, and the alternating F4 half-tie output.
+
+All 12,288 DC/F63 family blocks exactly match both same-worktree accepted target
+kernels, including every DC-only half tie. The three accepted masks are preserved
+from [DC_PATTERNS.md](DC_PATTERNS.md). Of these family blocks, 6144 have coded-block
+mismatch parity; testing the other half is deliberate kernel coverage. The
+candidate's legal-domain probe does not promise the old diagnostic evaluator's
+out-of-range i32 behavior.
+
+The actual H.262 text was read as plain text at the retained
+`mpeg2-rust-oracles/interlaced/H262-2000.local-text.txt`, lines 4691 through 4731.
+The reported normative subset is:
+
+- A1 residual range follows from clipping over the full domain.
+- A3 passes for all 36,077 eligible blocks in the retained set and 13,289 in the
+  supplementary set. Eligibility requires **all 64 unsaturated rounded** reference
+  values in `[-384,383]`. Only then are outputs above 256 required to be 255,
+  outputs below -257 required to be -256, and the remaining errors limited to two
+  against the saturated reference. These are sampled, overlapping input sets,
+  not an exhaustive A3 accuracy proof.
+- All 4096 A4 blocks match exactly, stronger than the allowed error of one.
+- The complete IEEE 1180 procedure required by A2 remains unavailable. No IEEE
+  or full H.262 conformance claim is made.
+
+## Decoder behavior and drift
+
+The default selects the new transform on WASM only, after standalone
+qualification and explicit numerical-migration authorization. There is no public
+numerical-mode parameter or runtime fallback.
+The old fixed-point experiment and ordinary exact benchmark mode remain separate.
+Parser code, ownership, resource accounting, ordering, prediction, mismatch and
+error contracts are not edited. In particular, `decoder.rs` skips noncoded blocks
+before coefficient decoding. Neither skipped blocks nor the transform synthesize
+an F63 mismatch coefficient.
+
+The initial all-target characterization below used the native integer laboratory
+build. The selected production native build now keeps accepted f64 behavior;
+do not infer production native/WASM numerical identity from these lab comparisons.
+
+All 122 retained fixtures / 512 frames and 1288 authored selections / 1932 frames
+were compared through native decode, actual WASM pull and packet APIs. Candidate
+native/WASM pixels match; packet/pull pixels, output metadata and emission order
+match. The fixture corpus has 13,877 changed samples versus accepted WASM, up to
+two units; authored selections have 1400 changed samples, all one unit. These
+differences are retained, not written back to old goldens.
+
+The seven workload reports retain per-frame histograms and picture types. Their
+aggregate candidate-minus-accepted-WASM histograms are:
+
+| Workload | -2 | -1 | +1 | +2 |
+|---|---:|---:|---:|---:|
+| Elephants | 3 | 3539 | 11770 | 10 |
+| Cosmos | 0 | 0 | 0 | 0 |
+| SWAT | 137 | 161256 | 360926 | 341 |
+| Live2VOD | 0 | 36485 | 257251 | 0 |
+| Progressive textured | 0 | 2005 | 11148 | 0 |
+| Interlaced textured | 0 | 1118 | 9316 | 0 |
+| Long I/P/B | 116 | 59970 | 79956 | 166 |
+
+These are comparisons with the accepted numerical implementation, not error
+measurements against an independent whole-decoder oracle. Residual errors against
+the mathematical oracle are reported separately above. Prediction can carry and
+combine differences; a per-block peak of one does not imply a whole-picture peak
+of one or bound drift in untested GOPs.
+
+| Workload / type | Pictures | Changed samples | Peak | Signed mean delta |
+|---|---:|---:|---:|---:|
+| Elephants I | 7 | 804 | 1 | +0.000065 |
+| Elephants P | 25 | 14518 | 2 | +0.000220 |
+| SWAT I | 3 | 34556 | 1 | +0.001739 |
+| SWAT P | 8 | 121941 | 2 | +0.001391 |
+| SWAT B | 21 | 366163 | 2 | +0.001519 |
+| Long I/P/B I | 5 | 3961 | 1 | +0.000134 |
+| Long I/P/B P | 20 | 47130 | 2 | +0.000108 |
+| Long I/P/B B | 35 | 89117 | 2 | +0.000104 |
+
+Cosmos has no differences across three I and 29 P pictures. Live2VOD has 32 I
+pictures. The progressive textured control has one I and one P; the interlaced
+control has one I. Full per-picture histograms and per-type MSE are in
+`analysis.json` and `candidate2/numerical-migration.json`, rather than only a pooled
+PSNR. Prediction amplifies some one-unit differences to two units in P and B
+pictures; these short retained sequences do not establish a long-term drift bound.
+
+### The known SWAT native/WASM discrepancy
+
+At raw byte 25398821, display picture six, the frozen accepted native value is 46
+and accepted WASM is 47. The candidate is 46 on both targets. A private diagnostic
+copy captured the post-mismatch coefficients, block output index 37 and prediction
+48. Its entire output hash matched the corresponding frozen decoder before its
+trace was used. Exact cyclotomic reduction establishes a mathematical negative
+half tie, rounded residual -2 and conditional output 46. Candidate and accepted
+native therefore match this independent conditional oracle. The old WASM pixel
+is one higher. No kernel was changed to force either old target's answer.
+
+`tools/trace-butterfly-swat.py` reproduces the trace using only extracted packets;
+`swat-oracle/report.json` records coefficients, prediction, hashes and rounding.
+This classifies IDCT given the captured coefficient and prediction inputs, not
+entropy decoding or motion compensation through an independent full decoder.
+
+Default release, default threaded release, and all 28 default Node tests pass.
+The initial native integer debug/release runs retain 19 failing tests at old pixel comparisons.
+The candidate Node run has 22 passes and six failures at old pixel comparisons.
+Several tests mix pixel checks with lifecycle assertions and stop at the first
+pixel failure, so later assertions in those scenarios are not claimed as passed.
+Core all-target candidate Clippy, formatting and the standalone unit tests pass.
+
+## Initial all-target experiment and evidence
+
+The first kernel passed numerical qualification. Its isolated kernel benchmark
+regressed native by 10.9% while reducing WASM time by 42.4%. The first whole-decoder
+screen likewise regressed native. One bounded revision added checked pass-boundary
+assertions, without changing constants, scaling or any qualified output. It made
+the legal ranges visible to checked-arithmetic optimization. No second arithmetic
+mechanism or precision tuning pass was attempted.
+
+The revised isolated kernel uses the retained 65,641-block set, four repetitions
+per observation, five warmup rounds and seven measured rounds with serial
+ABBA/BAAB ordering. Median observation times changed from 30.313 to 25.316 ms
+natively and 105.628 to 60.086 ms in actual WASM. These are about 16.5% and 43.1%
+reductions. A final rerun with an explicit hashed qualification-file gate measured
+29.725 to 25.335 ms natively, a 14.77% reduction, and 105.720 to 60.082 ms in WASM,
+a 43.17% reduction. Both runs are retained. WASM includes input transfer;
+native timing excludes process startup
+and file reading. Both include transform dispatch and a checksum consumer.
+This saturated synthetic workload is not a decoder workload forecast.
+
+### Confirming whole-decoder measurements
+
+The confirming run used five warmup rounds and seven measured rounds, serial
+randomized ABBA/BAAB, on all seven unchanged packet workloads. Each observation
+contained at least 160 pictures, or 180 for the 60-picture I/P/B sequence. Setup,
+output extraction/free and decoder calls are timed separately; correctness checks
+and profiling are outside the timing loop. The machine was Apple M3 Pro, with the
+existing isolated Rust 1.98.1 toolchain and actual scalar WASM in Node. No browser,
+rendering, network, player integration or FFmpeg timing is included.
+
+Median summed-stage milliseconds per picture follow. Percentages are median
+per-round paired reductions, so they need not exactly equal a ratio of the two
+reported medians. Negative reductions are regressions.
+
+| Workload | WASM A to B | WASM reduction | Native A to B | Native reduction |
+|---|---:|---:|---:|---:|
+| Elephants | 2.660 to 2.313 | 12.84% | 1.805 to 1.810 | -0.27% |
+| Cosmos | 1.442 to 1.458 | -0.75% | 1.316 to 1.297 | 1.62% |
+| SWAT | 25.335 to 19.700 | 22.25% | 15.786 to 16.177 | -2.45% |
+| Live2VOD | 26.813 to 18.903 | 29.51% | 13.581 to 14.528 | -6.67% |
+| Progressive textured | 13.545 to 9.836 | 27.33% | 7.235 to 7.939 | -9.80% |
+| Interlaced textured | 28.490 to 19.456 | 31.72% | 13.635 to 15.120 | -10.62% |
+| Long I/P/B | 5.384 to 4.932 | 8.45% | 4.194 to 4.347 | -3.71% |
+
+The WASM Cosmos cost is about 0.016 ms per picture, versus reductions of 5.635 ms
+on SWAT and 7.910 ms on Live2VOD. That minor regression alone would not reject the
+experiment. The repeated native regressions, numerical migration and missing
+conformance procedure are the material reasons not to promote a general default.
+
+For SWAT, WASM decode/finish medians are 25.022 to 19.375 ms per picture; extraction
+and free stay about 0.318 ms and amortized setup about 0.00028 ms. Native
+decode/finish changes from 15.761 to 16.152 ms, release from 0.0247 to 0.0255 ms,
+and setup remains below 0.00002 ms per picture. Across all workloads, WASM
+copy/free medians range from 0.107 to 0.346 ms and amortized setup from 0.00017
+to 0.00213 ms. These small setup values exclude module compilation and process
+startup. Native wall time includes process startup and input reading; WASM wall
+time includes JS bookkeeping and inter-interval GC. Whole-trial wall results
+remain separate in `candidate2/confirm.summary.json`.
+
+All round-average p95 values are retained in `candidate2/confirm.md`; at seven
+rounds nearest-rank p95 is the maximum, not a production-tail estimate. Actual
+pooled packet-call p95 is also retained by picture type. SWAT WASM I/P/B p95
+changes from 28.717/29.000/28.303 to 21.347/22.088/22.295 ms. Native I/P/B changes
+from 16.014/17.458/18.505 to 17.621/18.132/18.811 ms. Delayed-output calls remain
+packet calls; these values are not fabricated per-output-frame latencies.
+
+Elephants and Cosmos have 45 coded slices per picture; the other five workloads
+have 68. The short textured controls repeat independent one/two-picture segments,
+not invented long GOPs. Packet byte counts, dimensions, picture-type counts and
+slice counts are retained in `analysis.json`. Block distribution, sparse paths
+and surrounding code generation differ from the dense kernel benchmark.
+
+### Emitted code and profiles
+
+The retained WASM kernel body has nine static `i32.mul` and thirteen `i64.mul`
+instructions covering the row and column loops. This agrees with 72 narrow and
+104 widened dynamic products per dense block. It has 132 static `i32.add` and 21
+`i32.sub` versus 28 `i64.add`, including dispatch, addressing and rounding. There
+are no floating multiplies or SIMD instructions in that kernel. Native disassembly
+shows row `mul w...` and `madd w...`, 32-bit butterflies and localized `smull` /
+`smaddl` widened products. Static instruction counts are not dynamic operation
+counts. Neither artifact contains `__multi3`, `__muldi3` or `__muloti4` helpers.
+
+The range-bound revision removes many per-operation overflow paths while retaining
+the checked boundary and global overflow policy. `candidate2/kernel-{native,wasm}.dis`
+and full disassemblies retain the actual instructions. The performance observation
+is not an assertion that the transform is branch-free.
+
+Separate SWAT V8 profiles put accepted IDCT self time at 41.31% plus 1.88% in the
+floating round function, versus 28.42% in candidate IDCT. Decoder-state self time
+changes from 25.85% to 31.91%; these are shares of different total durations.
+Native five-second samples retain IDCT among the hottest functions, alongside
+decoder state, motion and VLC. Inlining and workload mix prevent assigning the
+whole native regression to one multiply width from these samples. The confirming
+decoder timings, not the kernel microbenchmark or profile percentages, decide
+the default-replacement verdict.
+
+The initial confirming run showed native regressions on the costly workloads
+despite meaningful WASM gains. Its all-target default-replacement rejection is
+superseded by the web-focused selection above. The missing IEEE procedure,
+changed pixels and predictive drift remain promotion gaps independently of speed.
+No SIMD variant, consumer packaging or publication was attempted. Shared browser
+qualification and measurements were subsequently completed as described above.
+
+Evidence root:
+
+```text
+/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-butterfly-idct-20260927/
+```
+
+`baseline1/` is the successful same-worktree freeze. `baseline/` retains the failed
+first setup attempt, where wasm-bindgen was missing from PATH. `candidate1/` is
+the original butterfly; `candidate2/` is the range-bound revision. Each decoder
+build has its own source snapshot, command log, native target, generated package
+and hashes. `retained-final/` rebuilds the final feature-selection guard and
+tooling cleanup; its native benchmark and WASM bytes match measured `candidate2`
+exactly. `probe4/qualification.json` binds the retained kernel source to native
+and actual WASM residuals. `supplement-final/`, `bounds.json`, `constants.json`,
+`kernel-final-gated.json`, `candidate2/numerical-migration.json`,
+`candidate2/{corpus,boundaries}.json` and `checks/results.json` retain the other
+proof. No original media or CDN was read. Retained extracted packets and their
+hashes were reused; local media is not authorized for redistribution.
+
+The candidate WASM is 144238 bytes, SHA-256
+`479d735d36211eecd28fba48cf88d1713730ba491fc0e9a655df636ab41c2109`.
+The same-worktree accepted WASM is 154484 bytes, SHA-256
+`a86af0e2d00999c12c1b2eb3e8d13abf1442c933571aba8493fc1b7e124e1d05`.
+Default native selection remains the accepted floating transform; WASM uses the
+authorized butterfly default. The historical wide fixed-IDCT experiment remains
+explicit and incompatible with threads.
+
+All builds, tests, sweeps, profiles and measurements must run through the supplied
+exclusive CPU runner. With `T` set to the approved temporary root:
+
+```sh
+python3 "$T/mpeg2-first-principles-20260927/cpu-slot.py" butterfly COMMAND ARGS...
+```
+
+Inside that command, source `mpeg2-rust-toolchain/env.sh`, use the existing
+`mpeg2-slice-parallel-20260927/cargo` cache, and prepend
+`mpeg2-wasm/tooling/bin` to PATH. Use fresh evidence destinations. Do not write to
+canonical target/pkg directories or run overlapping CPU jobs. Build tools retain
+actual commands. Core defaults stay dependency-free and overflow-checked.

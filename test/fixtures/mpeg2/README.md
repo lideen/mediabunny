@@ -20,3 +20,13 @@ python3 test/node/generate-mpeg2-pixel-hashes.py /path/to/expected-faani.yuv
 The raw reference is 24,883,200 bytes with SHA-256 `0b1f18b0b54bcd670c1dd34fe125fc4e0504017d44ca913dd487019c4f23f620`. It is intentionally not committed. The independent retained native ES output matched it exactly for this fixture. This is not a general promise of bit-exact MPEG-2 IDCT results for other media.
 
 The demux tests verify packet extraction and restart headers. The optional private `@mediabunny/mpeg2` tests additionally prove decoded planes, timing and lifecycle through the real bundled WASM. Node tests do not establish browser canvas color conversion or playback.
+
+`wasm-idct-v1.json` records the user-authorized `h262-butterfly-q14-q5-v1` numerical
+migration. It binds exact wrapper/packet inputs and timing to qualified standalone-core
+output, and retains old f64 hashes and signed drift histograms. The built consumer was
+checked against that core output before recording. These are backend regression records,
+not independent accuracy oracles; do not regenerate `pixels.json` or other native/FAANI
+references to match them. The cutoff and LXF entries cover their exact authored wrapper
+selections. The open-GOP fixture includes observed accumulated predictive drift of 3,
+which is not an unseen-stream bound. See `packages/mpeg2/NUMERICAL_MIGRATION.md` for
+qualification limits, source state and the assertion inventory.

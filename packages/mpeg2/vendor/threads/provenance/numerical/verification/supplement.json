@@ -1,0 +1,18 @@
+{
+  "blocks": 18132,
+  "nativeWasmExact": true,
+  "histogram": {
+    "0": 1158900,
+    "1": 794,
+    "-1": 754
+  },
+  "exactHalfHistogram": {
+    "0": 35072
+  },
+  "A3Eligible": 13289,
+  "A3Failures": [],
+  "exactFamilySamples": {
+    "native": 786432,
+    "wasm": 786432
+  }
+}

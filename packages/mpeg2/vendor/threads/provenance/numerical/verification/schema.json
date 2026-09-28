@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MPEG-2 WASM numerical migration provenance",
+  "type": "object",
+  "required": ["schemaVersion", "backend", "authorization", "source", "baselines", "artifacts", "evidence", "workloads", "limitations"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "backend": { "const": "h262-butterfly-q14-q5-v1" },
+    "authorization": { "type": "string" },
+    "source": { "type": "object", "required": ["baseCommit", "branch", "files", "kernelSha256", "compiledInputsMatch"] },
+    "artifacts": { "type": "object", "additionalProperties": { "$ref": "#/$defs/fingerprint" } },
+    "baselines": { "type": "object", "additionalProperties": { "$ref": "#/$defs/fingerprint" } },
+    "evidence": { "type": "object", "additionalProperties": { "$ref": "#/$defs/fingerprint" } },
+    "workloads": {
+      "type": "array",
+      "items": { "type": "object", "required": ["name", "input", "packets", "acceptedWasmSha256", "acceptedNative", "candidateWasmSha256", "candidateFrameHashes", "frameDeltas"] }
+    },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  },
+  "$defs": {
+    "fingerprint": {
+      "type": "object",
+      "required": ["bytes", "sha256"],
+      "properties": { "bytes": { "type": "integer", "minimum": 0 }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } },
+      "additionalProperties": false
+    }
+  }
+}

@@ -4,6 +4,7 @@ import { ALL_FORMATS, AudioSampleSink, BufferSource, CustomSource, EncodedPacket
 	Input, LXF, MXF, VideoSampleSink } from '../../src/index.js';
 import { registerMpeg2Decoder } from '@mediabunny/mpeg2';
 import { lxfChecksum, lxfEnvelope, lxfFixture, pcmValue } from './lxf-fixture.js';
+import regression from '../fixtures/mpeg2/wasm-idct-v1.json' with { type: 'json' };
 
 describe('given authored version-1 LXF with a nonzero common origin', () => {
 	it('should exclude every embedded candidate in a known ancillary extent during later navigation', async () => {
@@ -217,8 +218,10 @@ describe('given authored version-1 LXF with a nonzero common origin', () => {
 	it('should preserve wire timing, separate endpoints, owned video and eight distinct PCM channels', async () => {
 		registerMpeg2Decoder();
 		const fixture = lxfFixture();
+		const data = fixture.read(0, fixture.size);
+		expect(createHash('sha256').update(data).digest('hex')).toBe(regression.cases.lxf.inputSha256);
 		using input = new Input({ formats: [...ALL_FORMATS, MXF, LXF],
-			source: new BufferSource(fixture.read(0, fixture.size)) });
+			source: new BufferSource(data) });
 		expect(await input.getFormat()).toBe(LXF);
 		expect(ALL_FORMATS).not.toContain(LXF);
 		const video = (await input.getPrimaryVideoTrack())!;
@@ -231,7 +234,7 @@ describe('given authored version-1 LXF with a nonzero common origin', () => {
 		using sample = (await new VideoSampleSink(video).getSample((fixture.origin + 3 * 28800) / 720000))!;
 		const pixels = new Uint8Array(sample.allocationSize());
 		await sample.copyTo(pixels);
-		expect(createHash('sha256').update(pixels).digest('hex')).toBe(fixture.golden);
+		expect(createHash('sha256').update(pixels).digest('hex')).toBe(regression.cases.lxf.frames[0]!.sha256);
 		expect(sample.timestamp).toBe((fixture.origin + 3 * 28800) / 720000);
 		const packets = new EncodedPacketSink(audio);
 		const packet = (await packets.getFirstPacket())!;

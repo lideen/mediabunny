@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { BufferSource, EncodedPacketSink, Input, MXF, VideoSampleSink } from '../../src/index.js';
 import { registerMpeg2Decoder } from '@mediabunny/mpeg2';
 import manifest from '../fixtures/mpeg2/open/open422.json' with { type: 'json' };
+import regression from '../fixtures/mpeg2/wasm-idct-v1.json' with { type: 'json' };
 
 const integer = (value: number, length: number) => {
 	const bytes = Buffer.alloc(length);
@@ -18,7 +19,7 @@ const klv = (key: string, value: Uint8Array) => Buffer.concat([
 const item = (tag: number, value: Uint8Array) => Buffer.concat([integer(tag, 2), integer(value.length, 2), value]);
 
 // Keep the authored backward-only Bs: their pixels depend only on the following I, so the
-// existing independent FAANI golden remains valid despite the lengthened preceding GOP.
+// qualified WASM regression remains valid despite the lengthened preceding GOP.
 const boundaryFixture = (variant: 'complete' | 'partial-index' | 'wrong-anchor' = 'complete') => {
 	const original = readFileSync(new URL('../fixtures/mpeg2/open/open422.mxf', import.meta.url));
 	const count = 261;
@@ -92,7 +93,9 @@ describe('given an authored open GOP at the dependency edge of the 256-entry inv
 	it('should retain the requested leading B when its preceding anchor is exactly 127 decode ordinals back',
 		async () => {
 			registerMpeg2Decoder();
-			using input = new Input({ formats: [MXF], source: new BufferSource(boundaryFixture()) });
+			const data = boundaryFixture();
+			expect(createHash('sha256').update(data).digest('hex')).toBe(regression.cases.cutoff.inputSha256);
+			using input = new Input({ formats: [MXF], source: new BufferSource(data) });
 			const track = (await input.getPrimaryVideoTrack())!;
 			const packet = (await new EncodedPacketSink(track).getPacket(126 / 25))!;
 			expect([packet.sequenceNumber, packet.timestamp, packet.type]).toEqual([127, 126 / 25, 'delta']);
@@ -100,7 +103,8 @@ describe('given an authored open GOP at the dependency edge of the 256-entry inv
 			expect([sample.timestamp, sample.duration, sample.format]).toEqual([126 / 25, 1 / 25, 'I422']);
 			const pixels = new Uint8Array(sample.allocationSize());
 			await sample.copyTo(pixels);
-			expect(createHash('sha256').update(pixels).digest('hex')).toBe(manifest.faani[0]);
+			expect(createHash('sha256').update(pixels).digest('hex'))
+				.toBe(regression.cases.cutoff.frames[0]!.sha256);
 		},
 	);
 

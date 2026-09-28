@@ -7,6 +7,7 @@ import {
 } from '../../src/index.js';
 import { registerMpeg2Decoder } from '@mediabunny/mpeg2';
 import manifest from '../fixtures/mpeg2/open/open422.json' with { type: 'json' };
+import regression from '../fixtures/mpeg2/wasm-idct-v1.json' with { type: 'json' };
 import interlaced from '../fixtures/mpeg2/open/interlaced422.json' with { type: 'json' };
 import { makeMxf } from './mxf-fixture.js';
 
@@ -29,7 +30,7 @@ const verify = async (sample: VideoSample, ordinal: number) => {
 		.toEqual([ordinal / 25, 1 / 25, 'I422', 'progressive']);
 	const bytes = new Uint8Array(sample.allocationSize());
 	await sample.copyTo(bytes);
-	expect(hash(bytes)).toBe(manifest.faani[ordinal]);
+	expect(hash(bytes)).toBe(regression.cases.open422.frames[ordinal]!.sha256);
 };
 
 describe('given authored 4:2:2 open GOPs with a leading-B-only matrix update', () => {
@@ -75,6 +76,8 @@ describe('given authored 4:2:2 open GOPs with a leading-B-only matrix update', (
 	});
 
 	it('should preserve every source packet in decode order without preroll omissions', async () => {
+		expect(hash(readFileSync(new URL('../fixtures/mpeg2/open/open422.mxf', import.meta.url))))
+			.toBe(regression.cases.open422.inputSha256);
 		using input = new Input({ source: source(), formats: [MXF] });
 		const sink = new EncodedPacketSink((await input.getPrimaryVideoTrack())!);
 		let i = 0;

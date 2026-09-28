@@ -6,6 +6,7 @@ import { registerMpeg2Decoder } from '@mediabunny/mpeg2';
 import padded from '../fixtures/mpeg2/progressive/padded-high.json' with { type: 'json' };
 import high1440 from '../fixtures/mpeg2/progressive/high1440.json' with { type: 'json' };
 import closed from '../fixtures/mpeg2/packets.json' with { type: 'json' };
+import regression from '../fixtures/mpeg2/wasm-idct-v1.json' with { type: 'json' };
 
 const fixture = (name: string) => new Uint8Array(readFileSync(
 	new URL(`../fixtures/mpeg2/${name}.mxf`, import.meta.url),
@@ -127,6 +128,7 @@ describe('given progressive MPEG-2 with open-flag I/P GOPs', () => {
 			async (name, manifest) => {
 				registerMpeg2Decoder();
 				const data = fixture(`progressive/${name}`);
+				expect(hash(data)).toBe(regression.cases[name].inputSha256);
 				let bytes = 0;
 				using input = new Input({ formats: [MXF], source: new CustomSource({
 					getSize: () => data.length, prefetchProfile: 'none',
@@ -146,7 +148,7 @@ describe('given progressive MPEG-2 with open-flag I/P GOPs', () => {
 						.toEqual([ordinal / 24, 1 / 24, manifest.width, 720]);
 					const pixels = new Uint8Array(sample.allocationSize());
 					await sample.copyTo(pixels);
-					expect(hash(pixels)).toBe(manifest.frameHashes[ordinal]);
+					expect(hash(pixels)).toBe(regression.cases[name].frames[ordinal]!.sha256);
 					const packet = (await sink.getPacket(ordinal / 24))!;
 					const expected = manifest.packets.filter(p => p.codec_type === 'video')[ordinal]!;
 					expect(`SHA256:${hash(packet.data)}`).toBe(expected.data_hash);

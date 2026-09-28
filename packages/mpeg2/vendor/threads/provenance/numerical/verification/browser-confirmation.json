@@ -1,0 +1,5090 @@
+{
+  "status": "EXPERIMENTAL_NUMERIC_UNAPPROVED",
+  "method": {
+    "rounds": 7,
+    "warmups": 5,
+    "frameTarget": 160,
+    "modes": [
+      "core-0",
+      "core-4",
+      "facade-1",
+      "facade-4"
+    ],
+    "selected": [
+      "cosmos",
+      "swat",
+      "live2vod",
+      "1080p-420-IPB-60"
+    ]
+  },
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+  "crossOriginIsolated": true,
+  "artifacts": {
+    "scalar-A": {
+      "pkg/mpeg2_wasm.d.ts": {
+        "bytes": 8712,
+        "sha256": "7d3949290bd58e7da30dbe27ecc42ceff2726d7a29426e3c8a691d18f7837cdd"
+      },
+      "pkg/mpeg2_wasm_bg.wasm.d.ts": {
+        "bytes": 4240,
+        "sha256": "2579697264a424efa2679ad051fe03352c81877b1ea356fc8be718b07a116032"
+      },
+      "pkg/mpeg2_wasm.js": {
+        "bytes": 22772,
+        "sha256": "f39fd77f03ade8555978a9a133fabec05e00a210f971c1be867a7c1af271fd92"
+      },
+      "pkg/mpeg2_wasm_bg.wasm": {
+        "bytes": 154484,
+        "sha256": "a86af0e2d00999c12c1b2eb3e8d13abf1442c933571aba8493fc1b7e124e1d05"
+      },
+      "js/index.mjs": {
+        "bytes": 4975,
+        "sha256": "7fc979b850e5c0b5dd9aec5557da7e8303279a4de98caa330faa33df42192da5"
+      }
+    },
+    "scalar-B": {
+      "pkg/mpeg2_wasm.d.ts": {
+        "bytes": 8712,
+        "sha256": "7d3949290bd58e7da30dbe27ecc42ceff2726d7a29426e3c8a691d18f7837cdd"
+      },
+      "pkg/mpeg2_wasm_bg.wasm.d.ts": {
+        "bytes": 4240,
+        "sha256": "2579697264a424efa2679ad051fe03352c81877b1ea356fc8be718b07a116032"
+      },
+      "pkg/mpeg2_wasm.js": {
+        "bytes": 22772,
+        "sha256": "f39fd77f03ade8555978a9a133fabec05e00a210f971c1be867a7c1af271fd92"
+      },
+      "pkg/mpeg2_wasm_bg.wasm": {
+        "bytes": 144238,
+        "sha256": "479d735d36211eecd28fba48cf88d1713730ba491fc0e9a655df636ab41c2109"
+      },
+      "js/index.mjs": {
+        "bytes": 4975,
+        "sha256": "7fc979b850e5c0b5dd9aec5557da7e8303279a4de98caa330faa33df42192da5"
+      }
+    },
+    "shared-A": {
+      "pkg/mpeg2_wasm.d.ts": {
+        "bytes": 10038,
+        "sha256": "9b0d0070b26bcc74f69f9eb92fe13d0ece9feecc79fab9f257650e4aad84e448"
+      },
+      "pkg/mpeg2_wasm_bg.wasm.d.ts": {
+        "bytes": 4837,
+        "sha256": "de20c75050d10613f05e1b6c96d0f0b1a0f983d9c0282360d0af586ca93b9ef5"
+      },
+      "pkg/mpeg2_wasm.js": {
+        "bytes": 27298,
+        "sha256": "430f5d39b7f6e0a5abb1648c27a62ae06161a73f4a73d6ee428bad5f9655e40b"
+      },
+      "pkg/mpeg2_wasm_bg.wasm": {
+        "bytes": 343849,
+        "sha256": "9c89dc1b9b41846d9d1aa4bd163d0ece51d53fdd2479049f9d39560fc12acf08"
+      },
+      "pkg/snippets/wasm-bindgen-rayon-38edf6e439f6d70d/src/workerHelpers.no-bundler.js": {
+        "bytes": 3180,
+        "sha256": "e335cb4321a3a05f21951f81cd2890d9da8161c182466ef006ebfe9c430c1f48"
+      },
+      "js/threaded-runtime.mjs": {
+        "bytes": 182,
+        "sha256": "e84013661c1af77c81e4c479f18fd793a0959c430491631bdf60c13f4b3105a3"
+      },
+      "js/index.mjs": {
+        "bytes": 4975,
+        "sha256": "7fc979b850e5c0b5dd9aec5557da7e8303279a4de98caa330faa33df42192da5"
+      }
+    },
+    "shared-B": {
+      "pkg/mpeg2_wasm.d.ts": {
+        "bytes": 10038,
+        "sha256": "9b0d0070b26bcc74f69f9eb92fe13d0ece9feecc79fab9f257650e4aad84e448"
+      },
+      "pkg/mpeg2_wasm_bg.wasm.d.ts": {
+        "bytes": 4837,
+        "sha256": "de20c75050d10613f05e1b6c96d0f0b1a0f983d9c0282360d0af586ca93b9ef5"
+      },
+      "pkg/mpeg2_wasm.js": {
+        "bytes": 27298,
+        "sha256": "430f5d39b7f6e0a5abb1648c27a62ae06161a73f4a73d6ee428bad5f9655e40b"
+      },
+      "pkg/mpeg2_wasm_bg.wasm": {
+        "bytes": 332979,
+        "sha256": "2239d933866b8759f66c53f573d7f6dc23cf71b5da673615bce5098526f3a423"
+      },
+      "pkg/snippets/wasm-bindgen-rayon-38edf6e439f6d70d/src/workerHelpers.no-bundler.js": {
+        "bytes": 3180,
+        "sha256": "e335cb4321a3a05f21951f81cd2890d9da8161c182466ef006ebfe9c430c1f48"
+      },
+      "js/threaded-runtime.mjs": {
+        "bytes": 182,
+        "sha256": "e84013661c1af77c81e4c479f18fd793a0959c430491631bdf60c13f4b3105a3"
+      },
+      "js/index.mjs": {
+        "bytes": 4975,
+        "sha256": "7fc979b850e5c0b5dd9aec5557da7e8303279a4de98caa330faa33df42192da5"
+      }
+    },
+    "probe": {
+      "probe_bg.wasm": {
+        "bytes": 196949,
+        "sha256": "32783e7ab52782daf8682d7ec1e4fdd229c39bf41d0e62fdd5dc96e14e4653f8"
+      },
+      "probe_bg.wasm.d.ts": {
+        "bytes": 1035,
+        "sha256": "24d95dd1ecf4fa2b4093cc241680b6c7aeca7e21a5a00cd8c8aae6b4d9a284f3"
+      },
+      "probe.d.ts": {
+        "bytes": 2853,
+        "sha256": "27ec4d4c89dfbdac91ca3e0155999ce9b2248569c3278773d293345584ae2171"
+      },
+      "probe.js": {
+        "bytes": 11281,
+        "sha256": "70feaa96eb8252caf9f7fb53f2b691787d43aa8c5ed4a8d48b510b8600496cd5"
+      },
+      "snippets/wasm-bindgen-rayon-38edf6e439f6d70d/src/workerHelpers.no-bundler.js": {
+        "bytes": 3180,
+        "sha256": "e335cb4321a3a05f21951f81cd2890d9da8161c182466ef006ebfe9c430c1f48"
+      }
+    }
+  },
+  "startup": [
+    {
+      "mode": "core-0",
+      "label": "A",
+      "ms": 86,
+      "ready": {
+        "type": "ready",
+        "threadCount": 0,
+        "workers": [],
+        "created": 0,
+        "memoryBytes": 1114112,
+        "shared": false
+      },
+      "closed": {
+        "type": "closed",
+        "created": 0,
+        "terminated": 0,
+        "children": 0
+      }
+    },
+    {
+      "mode": "core-0",
+      "label": "B",
+      "ms": 101.35000014305115,
+      "ready": {
+        "type": "ready",
+        "threadCount": 0,
+        "workers": [],
+        "created": 0,
+        "memoryBytes": 1114112,
+        "shared": false
+      },
+      "closed": {
+        "type": "closed",
+        "created": 0,
+        "terminated": 0,
+        "children": 0
+      }
+    },
+    {
+      "mode": "core-4",
+      "label": "A",
+      "ms": 154.25,
+      "ready": {
+        "type": "ready",
+        "threadCount": 4,
+        "workers": [],
+        "created": 4,
+        "memoryBytes": 9895936,
+        "shared": true
+      },
+      "closed": {
+        "type": "closed",
+        "created": 4,
+        "terminated": 4,
+        "children": 0
+      }
+    },
+    {
+      "mode": "core-4",
+      "label": "B",
+      "ms": 99.30999994277954,
+      "ready": {
+        "type": "ready",
+        "threadCount": 4,
+        "workers": [],
+        "created": 4,
+        "memoryBytes": 9895936,
+        "shared": true
+      },
+      "closed": {
+        "type": "closed",
+        "created": 4,
+        "terminated": 4,
+        "children": 0
+      }
+    },
+    {
+      "mode": "facade-1",
+      "label": "A",
+      "ms": 7.009999990463257,
+      "stats": {
+        "threadCount": 1,
+        "poolWorkers": 0,
+        "createdWorkers": 0,
+        "allocatedBytes": 1179648,
+        "peakBytes": 1179648,
+        "moduleInitMs": 3.234999895095825,
+        "poolStartupMs": 0,
+        "decoderSetupMs": 0.1400001049041748
+      },
+      "closed": {
+        "threadCount": 1,
+        "poolWorkers": 0,
+        "createdWorkers": 0,
+        "allocatedBytes": 19922944,
+        "peakBytes": 19922944,
+        "moduleInitMs": 3.234999895095825,
+        "poolStartupMs": 0,
+        "decoderSetupMs": 0.1400001049041748
+      }
+    },
+    {
+      "mode": "facade-1",
+      "label": "B",
+      "ms": 6.7200000286102295,
+      "stats": {
+        "threadCount": 1,
+        "poolWorkers": 0,
+        "createdWorkers": 0,
+        "allocatedBytes": 1179648,
+        "peakBytes": 1179648,
+        "moduleInitMs": 3.4000000953674316,
+        "poolStartupMs": 0,
+        "decoderSetupMs": 0.14999985694885254
+      },
+      "closed": {
+        "threadCount": 1,
+        "poolWorkers": 0,
+        "createdWorkers": 0,
+        "allocatedBytes": 19922944,
+        "peakBytes": 19922944,
+        "moduleInitMs": 3.4000000953674316,
+        "poolStartupMs": 0,
+        "decoderSetupMs": 0.14999985694885254
+      }
+    },
+    {
+      "mode": "facade-4",
+      "label": "A",
+      "ms": 18.700000047683716,
+      "stats": {
+        "threadCount": 4,
+        "poolWorkers": 4,
+        "createdWorkers": 4,
+        "allocatedBytes": 9895936,
+        "peakBytes": 9895936,
+        "moduleInitMs": 5.9049999713897705,
+        "poolStartupMs": 9.204999923706055,
+        "decoderSetupMs": 0.2850000858306885,
+        "maxMemoryBytes": 268435456
+      },
+      "closed": {
+        "threadCount": 4,
+        "poolWorkers": 0,
+        "createdWorkers": 4,
+        "allocatedBytes": 29425664,
+        "peakBytes": 29425664,
+        "moduleInitMs": 5.9049999713897705,
+        "poolStartupMs": 9.204999923706055,
+        "decoderSetupMs": 0.2850000858306885,
+        "maxMemoryBytes": 268435456
+      }
+    },
+    {
+      "mode": "facade-4",
+      "label": "B",
+      "ms": 16.640000104904175,
+      "stats": {
+        "threadCount": 4,
+        "poolWorkers": 4,
+        "createdWorkers": 4,
+        "allocatedBytes": 9895936,
+        "peakBytes": 9895936,
+        "moduleInitMs": 5.18999981880188,
+        "poolStartupMs": 7.7200000286102295,
+        "decoderSetupMs": 0.18499994277954102,
+        "maxMemoryBytes": 268435456
+      },
+      "closed": {
+        "threadCount": 4,
+        "poolWorkers": 0,
+        "createdWorkers": 4,
+        "allocatedBytes": 29425664,
+        "peakBytes": 29425664,
+        "moduleInitMs": 5.18999981880188,
+        "poolStartupMs": 7.7200000286102295,
+        "decoderSetupMs": 0.18499994277954102,
+        "maxMemoryBytes": 268435456
+      }
+    }
+  ],
+  "proof": [
+    {
+      "mode": "core-0",
+      "label": "A",
+      "value": {
+        "type": "result",
+        "cases": [
+          {
+            "name": "elephants-fix",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 9961472
+          },
+          {
+            "name": "cosmos",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 14090240
+          },
+          {
+            "name": "swat",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 34013184
+          },
+          {
+            "name": "live2vod",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 34013184
+          },
+          {
+            "name": "1080p-420-IP-textured",
+            "frames": 2,
+            "trace": null,
+            "memoryBytes": 34013184
+          },
+          {
+            "name": "1080i-422-I-textured",
+            "frames": 1,
+            "trace": null,
+            "memoryBytes": 34013184
+          },
+          {
+            "name": "1080p-420-IPB-60",
+            "frames": 60,
+            "trace": null,
+            "memoryBytes": 34013184
+          }
+        ],
+        "children": 0
+      }
+    },
+    {
+      "mode": "core-0",
+      "label": "B",
+      "value": {
+        "type": "result",
+        "cases": [
+          {
+            "name": "elephants-fix",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 9961472
+          },
+          {
+            "name": "cosmos",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 14090240
+          },
+          {
+            "name": "swat",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 34013184
+          },
+          {
+            "name": "live2vod",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 34013184
+          },
+          {
+            "name": "1080p-420-IP-textured",
+            "frames": 2,
+            "trace": null,
+            "memoryBytes": 34013184
+          },
+          {
+            "name": "1080i-422-I-textured",
+            "frames": 1,
+            "trace": null,
+            "memoryBytes": 34013184
+          },
+          {
+            "name": "1080p-420-IPB-60",
+            "frames": 60,
+            "trace": null,
+            "memoryBytes": 34013184
+          }
+        ],
+        "children": 0
+      }
+    },
+    {
+      "mode": "core-4",
+      "label": "A",
+      "value": {
+        "type": "result",
+        "cases": [
+          {
+            "name": "elephants-fix",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 15138816
+          },
+          {
+            "name": "cosmos",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 15794176
+          },
+          {
+            "name": "swat",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 28377088
+          },
+          {
+            "name": "live2vod",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 28377088
+          },
+          {
+            "name": "1080p-420-IP-textured",
+            "frames": 2,
+            "trace": null,
+            "memoryBytes": 28377088
+          },
+          {
+            "name": "1080i-422-I-textured",
+            "frames": 1,
+            "trace": null,
+            "memoryBytes": 28377088
+          },
+          {
+            "name": "1080p-420-IPB-60",
+            "frames": 60,
+            "trace": null,
+            "memoryBytes": 28377088
+          }
+        ],
+        "children": 4
+      }
+    },
+    {
+      "mode": "core-4",
+      "label": "B",
+      "value": {
+        "type": "result",
+        "cases": [
+          {
+            "name": "elephants-fix",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 15138816
+          },
+          {
+            "name": "cosmos",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 15794176
+          },
+          {
+            "name": "swat",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 28377088
+          },
+          {
+            "name": "live2vod",
+            "frames": 32,
+            "trace": null,
+            "memoryBytes": 28377088
+          },
+          {
+            "name": "1080p-420-IP-textured",
+            "frames": 2,
+            "trace": null,
+            "memoryBytes": 28377088
+          },
+          {
+            "name": "1080i-422-I-textured",
+            "frames": 1,
+            "trace": null,
+            "memoryBytes": 28377088
+          },
+          {
+            "name": "1080p-420-IPB-60",
+            "frames": 60,
+            "trace": null,
+            "memoryBytes": 28377088
+          }
+        ],
+        "children": 4
+      }
+    },
+    {
+      "mode": "facade-1",
+      "label": "A",
+      "value": [
+        {
+          "name": "elephants-fix",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "cosmos",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "swat",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "live2vod",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "1080p-420-IP-textured",
+          "frames": 2,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "1080i-422-I-textured",
+          "frames": 1,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "1080p-420-IPB-60",
+          "frames": 60,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        }
+      ]
+    },
+    {
+      "mode": "facade-1",
+      "label": "B",
+      "value": [
+        {
+          "name": "elephants-fix",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "cosmos",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "swat",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "live2vod",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "1080p-420-IP-textured",
+          "frames": 2,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "1080i-422-I-textured",
+          "frames": 1,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "1080p-420-IPB-60",
+          "frames": 60,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        }
+      ]
+    },
+    {
+      "mode": "facade-4",
+      "label": "A",
+      "value": [
+        {
+          "name": "elephants-fix",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "cosmos",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "swat",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "live2vod",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "1080p-420-IP-textured",
+          "frames": 2,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "1080i-422-I-textured",
+          "frames": 1,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "1080p-420-IPB-60",
+          "frames": 60,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        }
+      ]
+    },
+    {
+      "mode": "facade-4",
+      "label": "B",
+      "value": [
+        {
+          "name": "elephants-fix",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "cosmos",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "swat",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "live2vod",
+          "frames": 32,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "1080p-420-IP-textured",
+          "frames": 2,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "1080i-422-I-textured",
+          "frames": 1,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        },
+        {
+          "name": "1080p-420-IPB-60",
+          "frames": 60,
+          "exactQualifiedPixels": true,
+          "metadataTimingExact": true
+        }
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "mode": "core-0",
+      "name": "cosmos",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 1.5984218738973142,
+              "decodeFinishMs": 1.433734368532896,
+              "copyFreeMs": 0.16415625363588332,
+              "setupMs": 0.0005312517285346984,
+              "localWallMs": 1.6009374998509882,
+              "callerWallMs": 1.6018125005066395
+            },
+            {
+              "stagesMs": 1.546046867221594,
+              "decodeFinishMs": 1.4074843652546405,
+              "copyFreeMs": 0.1383593775331974,
+              "setupMs": 0.00020312443375587464,
+              "localWallMs": 1.5470312498509884,
+              "callerWallMs": 1.5486718751490116
+            },
+            {
+              "stagesMs": 1.4194843754172326,
+              "decodeFinishMs": 1.2995625011622907,
+              "copyFreeMs": 0.11976562291383744,
+              "setupMs": 0.00015625134110450742,
+              "localWallMs": 1.4200468748807906,
+              "callerWallMs": 1.4214687503874304
+            },
+            {
+              "stagesMs": 1.4321093745529652,
+              "decodeFinishMs": 1.305703128129244,
+              "copyFreeMs": 0.1262499950826168,
+              "setupMs": 0.00015625134110450742,
+              "localWallMs": 1.4330000005662442,
+              "callerWallMs": 1.4348124995827676
+            },
+            {
+              "stagesMs": 1.4483906239271165,
+              "decodeFinishMs": 1.326796868443489,
+              "copyFreeMs": 0.12137500643730165,
+              "setupMs": 0.0002187490463256836,
+              "localWallMs": 1.448843750357628,
+              "callerWallMs": 1.4497343756258487
+            },
+            {
+              "stagesMs": 1.50625,
+              "decodeFinishMs": 1.3783593885600567,
+              "copyFreeMs": 0.12770311087369918,
+              "setupMs": 0.00018750056624412538,
+              "localWallMs": 1.5071249999105931,
+              "callerWallMs": 1.507906249910593
+            },
+            {
+              "stagesMs": 1.4197656266391276,
+              "decodeFinishMs": 1.2986406162381172,
+              "copyFreeMs": 0.12098438441753388,
+              "setupMs": 0.0001406259834766388,
+              "localWallMs": 1.420593749731779,
+              "callerWallMs": 1.4214531257748604
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 1.4483906239271165,
+              "p95": 1.5984218738973142,
+              "min": 1.4194843754172326,
+              "max": 1.5984218738973142
+            },
+            "decodeFinishMs": {
+              "median": 1.326796868443489,
+              "p95": 1.433734368532896,
+              "min": 1.2986406162381172,
+              "max": 1.433734368532896
+            },
+            "copyFreeMs": {
+              "median": 0.1262499950826168,
+              "p95": 0.16415625363588332,
+              "min": 0.11976562291383744,
+              "max": 0.16415625363588332
+            },
+            "setupMs": {
+              "median": 0.00018750056624412538,
+              "p95": 0.0005312517285346984,
+              "min": 0.0001406259834766388,
+              "max": 0.0005312517285346984
+            },
+            "localWallMs": {
+              "median": 1.448843750357628,
+              "p95": 1.6009374998509882,
+              "min": 1.4200468748807906,
+              "max": 1.6009374998509882
+            },
+            "callerWallMs": {
+              "median": 1.4497343756258487,
+              "p95": 1.6018125005066395,
+              "min": 1.4214531257748604,
+              "max": 1.6018125005066395
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 2.6774998903274536,
+              "p95": 2.8400001525878906,
+              "min": 2.5349998474121094,
+              "max": 2.9600000381469727
+            },
+            "P": {
+              "median": 1.190000057220459,
+              "p95": 1.320000171661377,
+              "min": 1.125,
+              "max": 1.5399999618530273
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 1.6169531293213368,
+              "decodeFinishMs": 1.439531248062849,
+              "copyFreeMs": 0.17712500616908072,
+              "setupMs": 0.0002968750894069672,
+              "localWallMs": 1.6184062510728836,
+              "callerWallMs": 1.6196093745529652
+            },
+            {
+              "stagesMs": 1.5806249998509885,
+              "decodeFinishMs": 1.4267343781888484,
+              "copyFreeMs": 0.15371874570846558,
+              "setupMs": 0.00017187595367431643,
+              "localWallMs": 1.5817187502980232,
+              "callerWallMs": 1.583484374731779
+            },
+            {
+              "stagesMs": 1.4192499995231627,
+              "decodeFinishMs": 1.306281252205372,
+              "copyFreeMs": 0.11285937130451201,
+              "setupMs": 0.00010937601327896119,
+              "localWallMs": 1.4197656258940696,
+              "callerWallMs": 1.4203906245529652
+            },
+            {
+              "stagesMs": 1.4307812452316284,
+              "decodeFinishMs": 1.3114687487483025,
+              "copyFreeMs": 0.11914062052965163,
+              "setupMs": 0.0001718759536743164,
+              "localWallMs": 1.4313281252980232,
+              "callerWallMs": 1.4321875005960465
+            },
+            {
+              "stagesMs": 1.4471562512218954,
+              "decodeFinishMs": 1.323937500268221,
+              "copyFreeMs": 0.12307812571525573,
+              "setupMs": 0.0001406252384185791,
+              "localWallMs": 1.4478437498211862,
+              "callerWallMs": 1.4494062498211862
+            },
+            {
+              "stagesMs": 1.577859376370907,
+              "decodeFinishMs": 1.434828129410744,
+              "copyFreeMs": 0.14295312091708184,
+              "setupMs": 7.812604308128357e-05,
+              "localWallMs": 1.5790468744933603,
+              "callerWallMs": 1.5799531258642672
+            },
+            {
+              "stagesMs": 1.4170312494039536,
+              "decodeFinishMs": 1.3074843756854535,
+              "copyFreeMs": 0.10935937315225601,
+              "setupMs": 0.00018750056624412538,
+              "localWallMs": 1.4176718749105932,
+              "callerWallMs": 1.418328124284744
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 1.4471562512218954,
+              "p95": 1.6169531293213368,
+              "min": 1.4170312494039536,
+              "max": 1.6169531293213368
+            },
+            "decodeFinishMs": {
+              "median": 1.323937500268221,
+              "p95": 1.439531248062849,
+              "min": 1.306281252205372,
+              "max": 1.439531248062849
+            },
+            "copyFreeMs": {
+              "median": 0.12307812571525573,
+              "p95": 0.17712500616908072,
+              "min": 0.10935937315225601,
+              "max": 0.17712500616908072
+            },
+            "setupMs": {
+              "median": 0.0001718759536743164,
+              "p95": 0.0002968750894069672,
+              "min": 7.812604308128357e-05,
+              "max": 0.0002968750894069672
+            },
+            "localWallMs": {
+              "median": 1.4478437498211862,
+              "p95": 1.6184062510728836,
+              "min": 1.4176718749105932,
+              "max": 1.6184062510728836
+            },
+            "callerWallMs": {
+              "median": 1.4494062498211862,
+              "p95": 1.6196093745529652,
+              "min": 1.418328124284744,
+              "max": 1.6196093745529652
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 2.7850000858306885,
+              "p95": 3,
+              "min": 2.5900001525878906,
+              "max": 3.259999990463257
+            },
+            "P": {
+              "median": 1.1949999332427979,
+              "p95": 1.3250000476837158,
+              "min": 1.125,
+              "max": 1.6400001049041748
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 0.01651134018301874,
+          "p95": 0.19259356501303848,
+          "min": -4.7541494686079275,
+          "max": 0.19259356501303848
+        },
+        "decodeFinishMs": {
+          "median": -0.5170009935707001,
+          "p95": 0.2155091139627439,
+          "min": -4.09680822863469,
+          "max": 0.2155091139627439
+        },
+        "copyFreeMs": {
+          "median": -1.4031877961908534,
+          "p95": 9.60868737006451,
+          "min": -11.94176863746508,
+          "max": 9.60868737006451
+        },
+        "setupMs": {
+          "median": 29.999952316693435,
+          "p95": 58.33290285664332,
+          "min": -33.33280351797399,
+          "max": 58.33290285664332
+        },
+        "localWallMs": {
+          "median": 0.019805612877716067,
+          "p95": 0.2056798308269035,
+          "min": -4.77212404989857,
+          "max": 0.2056798308269035
+        },
+        "callerWallMs": {
+          "median": 0.022633512054297512,
+          "p95": 0.21984555336024894,
+          "min": -4.777941331428655,
+          "max": 0.21984555336024894
+        }
+      }
+    },
+    {
+      "mode": "core-0",
+      "name": "swat",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 31.276343747973442,
+              "decodeFinishMs": 30.876640624552962,
+              "copyFreeMs": 0.39937499836087226,
+              "setupMs": 0.00032812505960464475,
+              "localWallMs": 31.27785937488079,
+              "callerWallMs": 31.27892187461257
+            },
+            {
+              "stagesMs": 31.241140624135735,
+              "decodeFinishMs": 30.85476562306285,
+              "copyFreeMs": 0.3861562490463257,
+              "setupMs": 0.00021875202655792237,
+              "localWallMs": 31.242578125,
+              "callerWallMs": 31.243484374880794
+            },
+            {
+              "stagesMs": 31.421124996244906,
+              "decodeFinishMs": 31.023734371364114,
+              "copyFreeMs": 0.3970937497913838,
+              "setupMs": 0.0002968750894069672,
+              "localWallMs": 31.422687499970195,
+              "callerWallMs": 31.424062500149013
+            },
+            {
+              "stagesMs": 31.365531250834465,
+              "decodeFinishMs": 30.977375003695485,
+              "copyFreeMs": 0.38798437267541885,
+              "setupMs": 0.000171874463558197,
+              "localWallMs": 31.366953124850987,
+              "callerWallMs": 31.369046875834464
+            },
+            {
+              "stagesMs": 33.03173437416554,
+              "decodeFinishMs": 32.604624992609025,
+              "copyFreeMs": 0.42687500715255733,
+              "setupMs": 0.00023437440395355225,
+              "localWallMs": 33.03475000038743,
+              "callerWallMs": 33.03610937520861
+            },
+            {
+              "stagesMs": 32.36370311975479,
+              "decodeFinishMs": 31.94670312181115,
+              "copyFreeMs": 0.41676562279462814,
+              "setupMs": 0.00023437514901161193,
+              "localWallMs": 32.36587499976159,
+              "callerWallMs": 32.36731249988079
+            },
+            {
+              "stagesMs": 31.97373436912894,
+              "decodeFinishMs": 31.567734381556512,
+              "copyFreeMs": 0.4057343639433384,
+              "setupMs": 0.0002656236290931702,
+              "localWallMs": 31.97546875029802,
+              "callerWallMs": 31.977203124761584
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 31.421124996244906,
+              "p95": 33.03173437416554,
+              "min": 31.241140624135735,
+              "max": 33.03173437416554
+            },
+            "decodeFinishMs": {
+              "median": 31.023734371364114,
+              "p95": 32.604624992609025,
+              "min": 30.85476562306285,
+              "max": 32.604624992609025
+            },
+            "copyFreeMs": {
+              "median": 0.39937499836087226,
+              "p95": 0.42687500715255733,
+              "min": 0.3861562490463257,
+              "max": 0.42687500715255733
+            },
+            "setupMs": {
+              "median": 0.00023437514901161193,
+              "p95": 0.00032812505960464475,
+              "min": 0.000171874463558197,
+              "max": 0.00032812505960464475
+            },
+            "localWallMs": {
+              "median": 31.422687499970195,
+              "p95": 33.03475000038743,
+              "min": 31.242578125,
+              "max": 33.03475000038743
+            },
+            "callerWallMs": {
+              "median": 31.424062500149013,
+              "p95": 33.03610937520861,
+              "min": 31.243484374880794,
+              "max": 33.03610937520861
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 35.77249991893768,
+              "p95": 38.49000000953674,
+              "min": 34.859999895095825,
+              "max": 40.19500017166138
+            },
+            "B": {
+              "median": 30.919999957084656,
+              "p95": 35.07000017166138,
+              "min": 22.509999990463257,
+              "max": 43.99500012397766
+            },
+            "P": {
+              "median": 31.31749987602234,
+              "p95": 36.855000019073486,
+              "min": 28.90000009536743,
+              "max": 40.50999999046326
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 20.08754687309265,
+              "decodeFinishMs": 19.700999992340805,
+              "copyFreeMs": 0.38629688173532484,
+              "setupMs": 0.00024999901652336123,
+              "localWallMs": 20.088859375566244,
+              "callerWallMs": 20.094874999672175
+            },
+            {
+              "stagesMs": 20.019453129917384,
+              "decodeFinishMs": 19.63356250077486,
+              "copyFreeMs": 0.3857500024139881,
+              "setupMs": 0.00014062672853469848,
+              "localWallMs": 20.021124999970198,
+              "callerWallMs": 20.022968750447035
+            },
+            {
+              "stagesMs": 19.990984378010033,
+              "decodeFinishMs": 19.607624999433757,
+              "copyFreeMs": 0.3830937534570694,
+              "setupMs": 0.00026562511920928954,
+              "localWallMs": 19.992468749731778,
+              "callerWallMs": 19.994890625029804
+            },
+            {
+              "stagesMs": 20.051437502354382,
+              "decodeFinishMs": 19.663874995708465,
+              "copyFreeMs": 0.38714063316583636,
+              "setupMs": 0.00042187348008155824,
+              "localWallMs": 20.05289062485099,
+              "callerWallMs": 20.054296875
+            },
+            {
+              "stagesMs": 20.576828122138977,
+              "decodeFinishMs": 20.174015624076127,
+              "copyFreeMs": 0.4026718728244305,
+              "setupMs": 0.0001406252384185791,
+              "localWallMs": 20.579062499850988,
+              "callerWallMs": 20.581171875447033
+            },
+            {
+              "stagesMs": 20.628484380990265,
+              "decodeFinishMs": 20.217250000685453,
+              "copyFreeMs": 0.410890630632639,
+              "setupMs": 0.00034374967217445376,
+              "localWallMs": 20.630765625089406,
+              "callerWallMs": 20.6328125
+            },
+            {
+              "stagesMs": 20.561328129470347,
+              "decodeFinishMs": 20.156328128278254,
+              "copyFreeMs": 0.4047656267881393,
+              "setupMs": 0.00023437440395355222,
+              "localWallMs": 20.56314062550664,
+              "callerWallMs": 20.564593750238416
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 20.08754687309265,
+              "p95": 20.628484380990265,
+              "min": 19.990984378010033,
+              "max": 20.628484380990265
+            },
+            "decodeFinishMs": {
+              "median": 19.700999992340805,
+              "p95": 20.217250000685453,
+              "min": 19.607624999433757,
+              "max": 20.217250000685453
+            },
+            "copyFreeMs": {
+              "median": 0.38714063316583636,
+              "p95": 0.410890630632639,
+              "min": 0.3830937534570694,
+              "max": 0.410890630632639
+            },
+            "setupMs": {
+              "median": 0.00024999901652336123,
+              "p95": 0.00042187348008155824,
+              "min": 0.0001406252384185791,
+              "max": 0.00042187348008155824
+            },
+            "localWallMs": {
+              "median": 20.088859375566244,
+              "p95": 20.630765625089406,
+              "min": 19.992468749731778,
+              "max": 20.630765625089406
+            },
+            "callerWallMs": {
+              "median": 20.094874999672175,
+              "p95": 20.6328125,
+              "min": 19.994890625029804,
+              "max": 20.6328125
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 20.414999961853027,
+              "p95": 21.890000104904175,
+              "min": 19.414999961853027,
+              "max": 23.394999980926514
+            },
+            "B": {
+              "median": 20.329999923706055,
+              "p95": 22.87999987602234,
+              "min": 14.009999990463257,
+              "max": 32.204999923706055
+            },
+            "P": {
+              "median": 19.177499890327454,
+              "p95": 22.519999980926514,
+              "min": 17.569999933242798,
+              "max": 30.34500002861023
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 36.07174276118495,
+          "p95": 37.70588038443319,
+          "min": 35.69306640226993,
+          "max": 37.70588038443319
+        },
+        "decodeFinishMs": {
+          "median": 36.521816347051235,
+          "p95": 38.125294713098924,
+          "min": 36.14895549788136,
+          "max": 38.125294713098924
+        },
+        "copyFreeMs": {
+          "median": 1.4096633312974136,
+          "p95": 5.669841036038228,
+          "min": 0.10520265652591688,
+          "max": 5.669841036038228
+        },
+        "setupMs": {
+          "median": 11.764474887381715,
+          "p95": 39.9997456862022,
+          "min": -145.45442723008767,
+          "max": 39.9997456862022
+        },
+        "localWallMs": {
+          "median": 36.07000799524977,
+          "p95": 37.70480327652053,
+          "min": 35.69088607867559,
+          "max": 37.70480327652053
+        },
+        "callerWallMs": {
+          "median": 36.06979212859325,
+          "p95": 37.700981548112246,
+          "min": 35.68982981405838,
+          "max": 37.700981548112246
+        }
+      }
+    },
+    {
+      "mode": "core-0",
+      "name": "live2vod",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 35.69584375396371,
+              "decodeFinishMs": 35.299000007659195,
+              "copyFreeMs": 0.3964843712747097,
+              "setupMs": 0.0003593750298023224,
+              "localWallMs": 35.69740625098348,
+              "callerWallMs": 35.69907812550664
+            },
+            {
+              "stagesMs": 37.280578126013275,
+              "decodeFinishMs": 36.80648437738418,
+              "copyFreeMs": 0.4738437496125698,
+              "setupMs": 0.00024999901652336123,
+              "localWallMs": 37.28371874988079,
+              "callerWallMs": 37.28570312410593
+            },
+            {
+              "stagesMs": 36.08857812434435,
+              "decodeFinishMs": 35.67918750867247,
+              "copyFreeMs": 0.4091406151652336,
+              "setupMs": 0.0002500005066394806,
+              "localWallMs": 36.09051562547684,
+              "callerWallMs": 36.09267187491059
+            },
+            {
+              "stagesMs": 35.396265622973445,
+              "decodeFinishMs": 35.013890621066096,
+              "copyFreeMs": 0.3820937514305115,
+              "setupMs": 0.0002812504768371582,
+              "localWallMs": 35.39770312458277,
+              "callerWallMs": 35.39896875023842
+            },
+            {
+              "stagesMs": 36.83146874606609,
+              "decodeFinishMs": 36.41349999085069,
+              "copyFreeMs": 0.41776562854647636,
+              "setupMs": 0.00020312666893005372,
+              "localWallMs": 36.83425000011921,
+              "callerWallMs": 36.836531250178815
+            },
+            {
+              "stagesMs": 36.706109379976986,
+              "decodeFinishMs": 36.29685937985778,
+              "copyFreeMs": 0.40904687643051146,
+              "setupMs": 0.00020312368869781496,
+              "localWallMs": 36.70848437473178,
+              "callerWallMs": 36.709859375655654
+            },
+            {
+              "stagesMs": 35.467828126251696,
+              "decodeFinishMs": 35.063765624910594,
+              "copyFreeMs": 0.40385937616229056,
+              "setupMs": 0.00020312517881393433,
+              "localWallMs": 35.46918749958277,
+              "callerWallMs": 35.47137500047684
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 36.08857812434435,
+              "p95": 37.280578126013275,
+              "min": 35.396265622973445,
+              "max": 37.280578126013275
+            },
+            "decodeFinishMs": {
+              "median": 35.67918750867247,
+              "p95": 36.80648437738418,
+              "min": 35.013890621066096,
+              "max": 36.80648437738418
+            },
+            "copyFreeMs": {
+              "median": 0.40904687643051146,
+              "p95": 0.4738437496125698,
+              "min": 0.3820937514305115,
+              "max": 0.4738437496125698
+            },
+            "setupMs": {
+              "median": 0.00024999901652336123,
+              "p95": 0.0003593750298023224,
+              "min": 0.00020312368869781496,
+              "max": 0.0003593750298023224
+            },
+            "localWallMs": {
+              "median": 36.09051562547684,
+              "p95": 37.28371874988079,
+              "min": 35.39770312458277,
+              "max": 37.28371874988079
+            },
+            "callerWallMs": {
+              "median": 36.09267187491059,
+              "p95": 37.28570312410593,
+              "min": 35.39896875023842,
+              "max": 37.28570312410593
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 36.55999994277954,
+              "p95": 41.169999837875366,
+              "min": 25.59500002861023,
+              "max": 61.69000005722046
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 19.054374997317794,
+              "decodeFinishMs": 18.683156245946883,
+              "copyFreeMs": 0.3710156261920929,
+              "setupMs": 0.00020312517881393433,
+              "localWallMs": 19.055375000089406,
+              "callerWallMs": 19.057515624910593
+            },
+            {
+              "stagesMs": 19.987234381586312,
+              "decodeFinishMs": 19.573000004887582,
+              "copyFreeMs": 0.41406249850988386,
+              "setupMs": 0.00017187818884849547,
+              "localWallMs": 19.98910937532783,
+              "callerWallMs": 19.990203124284744
+            },
+            {
+              "stagesMs": 19.182187496870753,
+              "decodeFinishMs": 18.80642187297344,
+              "copyFreeMs": 0.37554687410593035,
+              "setupMs": 0.00021874979138374328,
+              "localWallMs": 19.18398437425494,
+              "callerWallMs": 19.185468750447036
+            },
+            {
+              "stagesMs": 19.029640623927115,
+              "decodeFinishMs": 18.665078115463256,
+              "copyFreeMs": 0.364312507212162,
+              "setupMs": 0.00025000125169754027,
+              "localWallMs": 19.03082812577486,
+              "callerWallMs": 19.032750000059607
+            },
+            {
+              "stagesMs": 20.040937496721746,
+              "decodeFinishMs": 19.63317187204957,
+              "copyFreeMs": 0.4075468748807907,
+              "setupMs": 0.0002187497913837433,
+              "localWallMs": 20.043343749642375,
+              "callerWallMs": 20.044734375178813
+            },
+            {
+              "stagesMs": 19.722328135371207,
+              "decodeFinishMs": 19.32378125935793,
+              "copyFreeMs": 0.3983750015497208,
+              "setupMs": 0.000171874463558197,
+              "localWallMs": 19.72442187443376,
+              "callerWallMs": 19.726328125596048
+            },
+            {
+              "stagesMs": 19.4709531262517,
+              "decodeFinishMs": 19.08406249433756,
+              "copyFreeMs": 0.3866718806326389,
+              "setupMs": 0.00021875128149986267,
+              "localWallMs": 19.4726874999702,
+              "callerWallMs": 19.47398437485099
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 19.4709531262517,
+              "p95": 20.040937496721746,
+              "min": 19.029640623927115,
+              "max": 20.040937496721746
+            },
+            "decodeFinishMs": {
+              "median": 19.08406249433756,
+              "p95": 19.63317187204957,
+              "min": 18.665078115463256,
+              "max": 19.63317187204957
+            },
+            "copyFreeMs": {
+              "median": 0.3866718806326389,
+              "p95": 0.41406249850988386,
+              "min": 0.364312507212162,
+              "max": 0.41406249850988386
+            },
+            "setupMs": {
+              "median": 0.00021874979138374328,
+              "p95": 0.00025000125169754027,
+              "min": 0.000171874463558197,
+              "max": 0.00025000125169754027
+            },
+            "localWallMs": {
+              "median": 19.4726874999702,
+              "p95": 20.043343749642375,
+              "min": 19.03082812577486,
+              "max": 20.043343749642375
+            },
+            "callerWallMs": {
+              "median": 19.47398437485099,
+              "p95": 20.044734375178813,
+              "min": 19.032750000059607,
+              "max": 20.044734375178813
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 19.382500052452087,
+              "p95": 22.394999980926514,
+              "min": 13.380000114440918,
+              "max": 29.645000219345093
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 46.26963067317168,
+          "p95": 46.84692915642752,
+          "min": 45.10249385177274,
+          "max": 46.84692915642752
+        },
+        "decodeFinishMs": {
+          "median": 46.76183672772174,
+          "p95": 47.290218230439805,
+          "min": 45.57326586514845,
+          "max": 47.290218230439805
+        },
+        "copyFreeMs": {
+          "median": 4.653633866499704,
+          "p95": 12.61623713546186,
+          "min": 2.446049403642791,
+          "max": 12.61623713546186
+        },
+        "setupMs": {
+          "median": 12.500260769792432,
+          "p95": 43.478215799894265,
+          "min": -7.692843780948536,
+          "max": 43.478215799894265
+        },
+        "localWallMs": {
+          "median": 46.26740327091513,
+          "p95": 46.84480384449626,
+          "min": 45.09970802066087,
+          "max": 46.84480384449626
+        },
+        "callerWallMs": {
+          "median": 46.264223123999024,
+          "p95": 46.84386676348116,
+          "min": 45.09943757582219,
+          "max": 46.84386676348116
+        }
+      }
+    },
+    {
+      "mode": "core-0",
+      "name": "1080p-420-IPB-60",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 5.979916664626863,
+              "decodeFinishMs": 5.778902782996496,
+              "copyFreeMs": 0.2007638825310601,
+              "setupMs": 0.0002499990993075901,
+              "localWallMs": 5.980805555317137,
+              "callerWallMs": 5.9824305547608265
+            },
+            {
+              "stagesMs": 6.336472219891018,
+              "decodeFinishMs": 6.109486107031504,
+              "copyFreeMs": 0.2268472241030799,
+              "setupMs": 0.00013888875643412274,
+              "localWallMs": 6.33795833322737,
+              "callerWallMs": 6.3387777785460155
+            },
+            {
+              "stagesMs": 6.284819447331959,
+              "decodeFinishMs": 6.058458331558439,
+              "copyFreeMs": 0.22622222635481093,
+              "setupMs": 0.00013888941870795357,
+              "localWallMs": 6.286083332697551,
+              "callerWallMs": 6.286902777353923
+            },
+            {
+              "stagesMs": 6.002180557118522,
+              "decodeFinishMs": 5.801930548085107,
+              "copyFreeMs": 0.2001388967037201,
+              "setupMs": 0.00011111232969495985,
+              "localWallMs": 6.003097222248713,
+              "callerWallMs": 6.003930556111865
+            },
+            {
+              "stagesMs": 5.993611114554936,
+              "decodeFinishMs": 5.797819444206026,
+              "copyFreeMs": 0.19566667013698152,
+              "setupMs": 0.00012500021192762587,
+              "localWallMs": 5.994347221983803,
+              "callerWallMs": 5.995138889551162
+            },
+            {
+              "stagesMs": 6.543097220526802,
+              "decodeFinishMs": 6.288847216632631,
+              "copyFreeMs": 0.25412500301996865,
+              "setupMs": 0.00012500087420145672,
+              "localWallMs": 6.545361111561457,
+              "callerWallMs": 6.546555556191338
+            },
+            {
+              "stagesMs": 5.973152777221468,
+              "decodeFinishMs": 5.76529166566001,
+              "copyFreeMs": 0.20775000121858384,
+              "setupMs": 0.00011111034287346734,
+              "localWallMs": 5.973986111084621,
+              "callerWallMs": 5.974722222487132
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 6.002180557118522,
+              "p95": 6.543097220526802,
+              "min": 5.973152777221468,
+              "max": 6.543097220526802
+            },
+            "decodeFinishMs": {
+              "median": 5.801930548085107,
+              "p95": 6.288847216632631,
+              "min": 5.76529166566001,
+              "max": 6.288847216632631
+            },
+            "copyFreeMs": {
+              "median": 0.20775000121858384,
+              "p95": 0.25412500301996865,
+              "min": 0.19566667013698152,
+              "max": 0.25412500301996865
+            },
+            "setupMs": {
+              "median": 0.00012500087420145672,
+              "p95": 0.0002499990993075901,
+              "min": 0.00011111034287346734,
+              "max": 0.0002499990993075901
+            },
+            "localWallMs": {
+              "median": 6.003097222248713,
+              "p95": 6.545361111561457,
+              "min": 5.973986111084621,
+              "max": 6.545361111561457
+            },
+            "callerWallMs": {
+              "median": 6.003930556111865,
+              "p95": 6.546555556191338,
+              "min": 5.974722222487132,
+              "max": 6.546555556191338
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 7.295000076293945,
+              "p95": 7.829999923706055,
+              "min": 6.8999998569488525,
+              "max": 8.174999952316284
+            },
+            "P": {
+              "median": 5.809999942779541,
+              "p95": 6.329999923706055,
+              "min": 5.389999866485596,
+              "max": 6.989999771118164
+            },
+            "B": {
+              "median": 5.740000009536743,
+              "p95": 6.365000009536743,
+              "min": 5.2149999141693115,
+              "max": 7.2200000286102295
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 4.932597220606274,
+              "decodeFinishMs": 4.73365277118153,
+              "copyFreeMs": 0.19873611595895557,
+              "setupMs": 0.0002083334657880995,
+              "localWallMs": 4.933416666587194,
+              "callerWallMs": 4.934291666746139
+            },
+            {
+              "stagesMs": 5.271374999814563,
+              "decodeFinishMs": 5.038152777486378,
+              "copyFreeMs": 0.23312500052981905,
+              "setupMs": 9.72217983669705e-05,
+              "localWallMs": 5.272875000370873,
+              "callerWallMs": 5.273736111323039
+            },
+            {
+              "stagesMs": 5.162874998648961,
+              "decodeFinishMs": 4.956194443835153,
+              "copyFreeMs": 0.20661111076672872,
+              "setupMs": 6.944404708014594e-05,
+              "localWallMs": 5.164027777645323,
+              "callerWallMs": 5.164861110846202
+            },
+            {
+              "stagesMs": 4.92634722325537,
+              "decodeFinishMs": 4.733083339532216,
+              "copyFreeMs": 0.1931249956289927,
+              "setupMs": 0.00013888809416029188,
+              "localWallMs": 4.927180555793974,
+              "callerWallMs": 4.929097221957313
+            },
+            {
+              "stagesMs": 4.946194446086883,
+              "decodeFinishMs": 4.74877777894338,
+              "copyFreeMs": 0.1973194440205892,
+              "setupMs": 9.722312291463215e-05,
+              "localWallMs": 4.946902777089013,
+              "callerWallMs": 4.947666666242812
+            },
+            {
+              "stagesMs": 5.387958336538739,
+              "decodeFinishMs": 5.150625004371007,
+              "copyFreeMs": 0.23720833195580376,
+              "setupMs": 0.00012500021192762587,
+              "localWallMs": 5.389819444550408,
+              "callerWallMs": 5.390777777963214
+            },
+            {
+              "stagesMs": 4.879249998595979,
+              "decodeFinishMs": 4.694277774625354,
+              "copyFreeMs": 0.18490278058581883,
+              "setupMs": 6.94433848063151e-05,
+              "localWallMs": 4.879888889524672,
+              "callerWallMs": 4.8805555555555555
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 4.946194446086883,
+              "p95": 5.387958336538739,
+              "min": 4.879249998595979,
+              "max": 5.387958336538739
+            },
+            "decodeFinishMs": {
+              "median": 4.74877777894338,
+              "p95": 5.150625004371007,
+              "min": 4.694277774625354,
+              "max": 5.150625004371007
+            },
+            "copyFreeMs": {
+              "median": 0.19873611595895557,
+              "p95": 0.23720833195580376,
+              "min": 0.18490278058581883,
+              "max": 0.23720833195580376
+            },
+            "setupMs": {
+              "median": 9.722312291463215e-05,
+              "p95": 0.0002083334657880995,
+              "min": 6.94433848063151e-05,
+              "max": 0.0002083334657880995
+            },
+            "localWallMs": {
+              "median": 4.946902777089013,
+              "p95": 5.389819444550408,
+              "min": 4.879888889524672,
+              "max": 5.389819444550408
+            },
+            "callerWallMs": {
+              "median": 4.947666666242812,
+              "p95": 5.390777777963214,
+              "min": 4.8805555555555555,
+              "max": 5.390777777963214
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 6.365000009536743,
+              "p95": 6.855000019073486,
+              "min": 6.045000076293945,
+              "max": 7.080000162124634
+            },
+            "P": {
+              "median": 4.650000095367432,
+              "p95": 5.0950000286102295,
+              "min": 4.319999933242798,
+              "max": 9.255000114440918
+            },
+            "B": {
+              "median": 4.675000071525574,
+              "p95": 5.21999979019165,
+              "min": 4.25,
+              "max": 7.1600000858306885
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 17.654313317616563,
+          "p95": 18.313658120332562,
+          "min": 16.808993760486704,
+          "max": 18.313658120332562
+        },
+        "decodeFinishMs": {
+          "median": 18.099059701295868,
+          "p95": 18.576924692534995,
+          "min": 17.5355719086113,
+          "max": 18.576924692534995
+        },
+        "copyFreeMs": {
+          "median": 3.5045167082691373,
+          "p95": 10.99745872382756,
+          "min": -2.7674027978788582,
+          "max": 10.99745872382756
+        },
+        "setupMs": {
+          "median": 22.221633535370668,
+          "p95": 50.00047683533922,
+          "min": -24.997913860312085,
+          "max": 50.00047683533922
+        },
+        "localWallMs": {
+          "median": 17.654360810894715,
+          "p95": 18.314358306422434,
+          "min": 16.804833305272652,
+          "max": 18.314358306422434
+        },
+        "callerWallMs": {
+          "median": 17.654746351843897,
+          "p95": 18.313264218601635,
+          "min": 16.80200354755574,
+          "max": 18.313264218601635
+        }
+      }
+    },
+    {
+      "mode": "core-4",
+      "name": "cosmos",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 0.8446875013411045,
+              "decodeFinishMs": 0.6451562486588955,
+              "copyFreeMs": 0.19915625303983686,
+              "setupMs": 0.0003749996423721314,
+              "localWallMs": 0.8455624997615814,
+              "callerWallMs": 0.8466406255960465
+            },
+            {
+              "stagesMs": 0.8424687489867211,
+              "decodeFinishMs": 0.6549999997019768,
+              "copyFreeMs": 0.18723437413573263,
+              "setupMs": 0.00023437514901161196,
+              "localWallMs": 0.8435624994337558,
+              "callerWallMs": 0.8445781253278255
+            },
+            {
+              "stagesMs": 0.8372656226158142,
+              "decodeFinishMs": 0.6466406278312207,
+              "copyFreeMs": 0.1902812421321869,
+              "setupMs": 0.0003437526524066925,
+              "localWallMs": 0.8379062503576279,
+              "callerWallMs": 0.8388593748211861
+            },
+            {
+              "stagesMs": 0.8326562494039536,
+              "decodeFinishMs": 0.6414999902248383,
+              "copyFreeMs": 0.1909531347453594,
+              "setupMs": 0.00020312443375587462,
+              "localWallMs": 0.8335156254470348,
+              "callerWallMs": 0.8353281252086162
+            },
+            {
+              "stagesMs": 0.7875937484204769,
+              "decodeFinishMs": 0.6125156328082084,
+              "copyFreeMs": 0.17489061653614044,
+              "setupMs": 0.000187499076128006,
+              "localWallMs": 0.7882500007748604,
+              "callerWallMs": 0.789249999821186
+            },
+            {
+              "stagesMs": 0.7857343755662441,
+              "decodeFinishMs": 0.6100156240165233,
+              "copyFreeMs": 0.17554687708616257,
+              "setupMs": 0.000171874463558197,
+              "localWallMs": 0.7864375002682209,
+              "callerWallMs": 0.7871562503278255
+            },
+            {
+              "stagesMs": 0.7731562450528144,
+              "decodeFinishMs": 0.610812496393919,
+              "copyFreeMs": 0.1621718741953373,
+              "setupMs": 0.000171874463558197,
+              "localWallMs": 0.7739687502384186,
+              "callerWallMs": 0.775500001013279
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 0.8326562494039536,
+              "p95": 0.8446875013411045,
+              "min": 0.7731562450528144,
+              "max": 0.8446875013411045
+            },
+            "decodeFinishMs": {
+              "median": 0.6414999902248383,
+              "p95": 0.6549999997019768,
+              "min": 0.6100156240165233,
+              "max": 0.6549999997019768
+            },
+            "copyFreeMs": {
+              "median": 0.18723437413573263,
+              "p95": 0.19915625303983686,
+              "min": 0.1621718741953373,
+              "max": 0.19915625303983686
+            },
+            "setupMs": {
+              "median": 0.00020312443375587462,
+              "p95": 0.0003749996423721314,
+              "min": 0.000171874463558197,
+              "max": 0.0003749996423721314
+            },
+            "localWallMs": {
+              "median": 0.8335156254470348,
+              "p95": 0.8455624997615814,
+              "min": 0.7739687502384186,
+              "max": 0.8455624997615814
+            },
+            "callerWallMs": {
+              "median": 0.8353281252086162,
+              "p95": 0.8466406255960465,
+              "min": 0.775500001013279,
+              "max": 0.8466406255960465
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 0.9249999523162842,
+              "p95": 1.0449998378753662,
+              "min": 0.8299999237060547,
+              "max": 1.2799999713897705
+            },
+            "P": {
+              "median": 0.5899999141693115,
+              "p95": 0.6749999523162842,
+              "min": 0.5199999809265137,
+              "max": 1.059999942779541
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 0.8232656255364419,
+              "decodeFinishMs": 0.639984379708767,
+              "copyFreeMs": 0.18299999609589576,
+              "setupMs": 0.0002812497317790985,
+              "localWallMs": 0.8238437496125699,
+              "callerWallMs": 0.8246874995529652
+            },
+            {
+              "stagesMs": 0.8277031257748604,
+              "decodeFinishMs": 0.6466406159102916,
+              "copyFreeMs": 0.18095313385128975,
+              "setupMs": 0.00010937601327896119,
+              "localWallMs": 0.8285468749701976,
+              "callerWallMs": 0.8303593747317791
+            },
+            {
+              "stagesMs": 0.8409531258046627,
+              "decodeFinishMs": 0.6544062376022339,
+              "copyFreeMs": 0.18645313680171965,
+              "setupMs": 9.375140070915222e-05,
+              "localWallMs": 0.8417500004172325,
+              "callerWallMs": 0.842484375089407
+            },
+            {
+              "stagesMs": 0.830187501758337,
+              "decodeFinishMs": 0.6422343596816062,
+              "copyFreeMs": 0.1878281407058239,
+              "setupMs": 0.00012500137090682984,
+              "localWallMs": 0.831234374642372,
+              "callerWallMs": 0.8329843759536744
+            },
+            {
+              "stagesMs": 0.779906252026558,
+              "decodeFinishMs": 0.6144687533378601,
+              "copyFreeMs": 0.1652812473475933,
+              "setupMs": 0.00015625134110450745,
+              "localWallMs": 0.7804218754172325,
+              "callerWallMs": 0.7811406247317791
+            },
+            {
+              "stagesMs": 0.767859373986721,
+              "decodeFinishMs": 0.6137499995529652,
+              "copyFreeMs": 0.1540000006556511,
+              "setupMs": 0.0001093737781047821,
+              "localWallMs": 0.7685937501490117,
+              "callerWallMs": 0.7691874995827674
+            },
+            {
+              "stagesMs": 0.7811562471091748,
+              "decodeFinishMs": 0.6148281283676624,
+              "copyFreeMs": 0.1662343680858612,
+              "setupMs": 9.375065565109253e-05,
+              "localWallMs": 0.7818906255066396,
+              "callerWallMs": 0.7835624992847443
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 0.8232656255364419,
+              "p95": 0.8409531258046627,
+              "min": 0.767859373986721,
+              "max": 0.8409531258046627
+            },
+            "decodeFinishMs": {
+              "median": 0.639984379708767,
+              "p95": 0.6544062376022339,
+              "min": 0.6137499995529652,
+              "max": 0.6544062376022339
+            },
+            "copyFreeMs": {
+              "median": 0.18095313385128975,
+              "p95": 0.1878281407058239,
+              "min": 0.1540000006556511,
+              "max": 0.1878281407058239
+            },
+            "setupMs": {
+              "median": 0.00010937601327896119,
+              "p95": 0.0002812497317790985,
+              "min": 9.375065565109253e-05,
+              "max": 0.0002812497317790985
+            },
+            "localWallMs": {
+              "median": 0.8238437496125699,
+              "p95": 0.8417500004172325,
+              "min": 0.7685937501490117,
+              "max": 0.8417500004172325
+            },
+            "callerWallMs": {
+              "median": 0.8246874995529652,
+              "p95": 0.842484375089407,
+              "min": 0.7691874995827674,
+              "max": 0.842484375089407
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 0.9650001525878906,
+              "p95": 1.0600001811981201,
+              "min": 0.8700001239776611,
+              "max": 1.3299999237060547
+            },
+            "P": {
+              "median": 0.5850000381469727,
+              "p95": 0.6599998474121094,
+              "min": 0.5199999809265137,
+              "max": 1.2750000953674316
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 0.9760738209687774,
+          "p95": 2.536071123421529,
+          "min": -1.034719968641504,
+          "max": 2.536071123421529
+        },
+        "decodeFinishMs": {
+          "median": -0.31886868269748303,
+          "p95": 1.2762418008379544,
+          "min": -1.2009158467290362,
+          "max": 1.2762418008379544
+        },
+        "copyFreeMs": {
+          "median": 3.3547473926392346,
+          "p95": 12.274143971205914,
+          "min": -2.5050545359243976,
+          "max": 12.274143971205914
+        },
+        "setupMs": {
+          "median": 38.46069200268496,
+          "p95": 72.72707568864509,
+          "min": 16.665540795606717,
+          "max": 72.72707568864509
+        },
+        "localWallMs": {
+          "median": 0.9931018521957168,
+          "p95": 2.5685564526732674,
+          "min": -1.0235394214276299,
+          "max": 2.5685564526732674
+        },
+        "callerWallMs": {
+          "median": 1.0274786305029047,
+          "p95": 2.59296865510393,
+          "min": -1.0396516132728244,
+          "max": 2.59296865510393
+        }
+      }
+    },
+    {
+      "mode": "core-4",
+      "name": "swat",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 9.972203121334314,
+              "decodeFinishMs": 9.453437490761281,
+              "copyFreeMs": 0.5183437570929528,
+              "setupMs": 0.00042187348008155824,
+              "localWallMs": 9.975484374910593,
+              "callerWallMs": 9.976375000178813
+            },
+            {
+              "stagesMs": 9.670546866953373,
+              "decodeFinishMs": 9.204781244695187,
+              "copyFreeMs": 0.4653906226158142,
+              "setupMs": 0.0003749996423721314,
+              "localWallMs": 9.67303125038743,
+              "callerWallMs": 9.673906249552966
+            },
+            {
+              "stagesMs": 9.673125007748602,
+              "decodeFinishMs": 9.203203129768372,
+              "copyFreeMs": 0.4696718789637089,
+              "setupMs": 0.00024999901652336123,
+              "localWallMs": 9.675546875596048,
+              "callerWallMs": 9.676703124493361
+            },
+            {
+              "stagesMs": 9.918296878039836,
+              "decodeFinishMs": 9.437703117728233,
+              "copyFreeMs": 0.4803750105202198,
+              "setupMs": 0.00021874979138374328,
+              "localWallMs": 9.921531249582767,
+              "callerWallMs": 9.922328125685453
+            },
+            {
+              "stagesMs": 9.395406253635883,
+              "decodeFinishMs": 8.939593757689,
+              "copyFreeMs": 0.4556093722581863,
+              "setupMs": 0.00020312368869781494,
+              "localWallMs": 9.396875000745059,
+              "callerWallMs": 9.39792187511921
+            },
+            {
+              "stagesMs": 9.355453124642374,
+              "decodeFinishMs": 8.904499991238119,
+              "copyFreeMs": 0.4507812559604645,
+              "setupMs": 0.0001718774437904358,
+              "localWallMs": 9.356843749433757,
+              "callerWallMs": 9.358781249821186
+            },
+            {
+              "stagesMs": 9.357953121513129,
+              "decodeFinishMs": 8.910250006616115,
+              "copyFreeMs": 0.44746873974800105,
+              "setupMs": 0.00023437514901161196,
+              "localWallMs": 9.359359375387431,
+              "callerWallMs": 9.36028124988079
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 9.670546866953373,
+              "p95": 9.972203121334314,
+              "min": 9.355453124642374,
+              "max": 9.972203121334314
+            },
+            "decodeFinishMs": {
+              "median": 9.203203129768372,
+              "p95": 9.453437490761281,
+              "min": 8.904499991238119,
+              "max": 9.453437490761281
+            },
+            "copyFreeMs": {
+              "median": 0.4653906226158142,
+              "p95": 0.5183437570929528,
+              "min": 0.44746873974800105,
+              "max": 0.5183437570929528
+            },
+            "setupMs": {
+              "median": 0.00023437514901161196,
+              "p95": 0.00042187348008155824,
+              "min": 0.0001718774437904358,
+              "max": 0.00042187348008155824
+            },
+            "localWallMs": {
+              "median": 9.67303125038743,
+              "p95": 9.975484374910593,
+              "min": 9.356843749433757,
+              "max": 9.975484374910593
+            },
+            "callerWallMs": {
+              "median": 9.673906249552966,
+              "p95": 9.976375000178813,
+              "min": 9.358781249821186,
+              "max": 9.976375000178813
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 10.112499952316284,
+              "p95": 10.804999828338623,
+              "min": 9.640000104904175,
+              "max": 18.740000009536743
+            },
+            "B": {
+              "median": 9.017500042915344,
+              "p95": 10.230000019073486,
+              "min": 6.730000019073486,
+              "max": 17.03000020980835
+            },
+            "P": {
+              "median": 9.21749997138977,
+              "p95": 10.56000018119812,
+              "min": 8.264999866485596,
+              "max": 12.759999990463257
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 7.30635937601328,
+              "decodeFinishMs": 6.810874991118908,
+              "copyFreeMs": 0.4951093837618828,
+              "setupMs": 0.00037500113248825075,
+              "localWallMs": 7.309515623748302,
+              "callerWallMs": 7.311687500774861
+            },
+            {
+              "stagesMs": 7.108999998122453,
+              "decodeFinishMs": 6.640406250953674,
+              "copyFreeMs": 0.4682499967515469,
+              "setupMs": 0.00034375041723251344,
+              "localWallMs": 7.111359374970197,
+              "callerWallMs": 7.112359374761581
+            },
+            {
+              "stagesMs": 7.2575624965131285,
+              "decodeFinishMs": 6.78182813078165,
+              "copyFreeMs": 0.47546874061226846,
+              "setupMs": 0.00026562511920928954,
+              "localWallMs": 7.260343749821186,
+              "callerWallMs": 7.261281250417232
+            },
+            {
+              "stagesMs": 7.219359379261732,
+              "decodeFinishMs": 6.7412656307220455,
+              "copyFreeMs": 0.47792187407612796,
+              "setupMs": 0.000171874463558197,
+              "localWallMs": 7.221906249970198,
+              "callerWallMs": 7.222781250625848
+            },
+            {
+              "stagesMs": 6.795171868801117,
+              "decodeFinishMs": 6.36421874910593,
+              "copyFreeMs": 0.4307968705892563,
+              "setupMs": 0.00015624910593032838,
+              "localWallMs": 6.796359374374152,
+              "callerWallMs": 6.7972812496125705
+            },
+            {
+              "stagesMs": 6.813437498360873,
+              "decodeFinishMs": 6.36335938051343,
+              "copyFreeMs": 0.4499374940991402,
+              "setupMs": 0.00014062374830245972,
+              "localWallMs": 6.814796874672174,
+              "callerWallMs": 6.815999999642372
+            },
+            {
+              "stagesMs": 7.032359371334315,
+              "decodeFinishMs": 6.56387499794364,
+              "copyFreeMs": 0.4683124966919422,
+              "setupMs": 0.0001718766987323761,
+              "localWallMs": 7.0343281254172325,
+              "callerWallMs": 7.035500000417232
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 7.108999998122453,
+              "p95": 7.30635937601328,
+              "min": 6.795171868801117,
+              "max": 7.30635937601328
+            },
+            "decodeFinishMs": {
+              "median": 6.640406250953674,
+              "p95": 6.810874991118908,
+              "min": 6.36335938051343,
+              "max": 6.810874991118908
+            },
+            "copyFreeMs": {
+              "median": 0.4683124966919422,
+              "p95": 0.4951093837618828,
+              "min": 0.4307968705892563,
+              "max": 0.4951093837618828
+            },
+            "setupMs": {
+              "median": 0.0001718766987323761,
+              "p95": 0.00037500113248825075,
+              "min": 0.00014062374830245972,
+              "max": 0.00037500113248825075
+            },
+            "localWallMs": {
+              "median": 7.111359374970197,
+              "p95": 7.309515623748302,
+              "min": 6.796359374374152,
+              "max": 7.309515623748302
+            },
+            "callerWallMs": {
+              "median": 7.112359374761581,
+              "p95": 7.311687500774861,
+              "min": 6.7972812496125705,
+              "max": 7.311687500774861
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 6.759999990463257,
+              "p95": 7.230000019073486,
+              "min": 6.3999998569488525,
+              "max": 8.265000104904175
+            },
+            "B": {
+              "median": 6.700000047683716,
+              "p95": 7.549999952316284,
+              "min": 4.6650002002716064,
+              "max": 16.730000019073486
+            },
+            "P": {
+              "median": 6.422500014305115,
+              "p95": 7.630000114440918,
+              "min": 5.730000019073486,
+              "max": 11.400000095367432
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 26.732746143304947,
+          "p95": 27.67559288698681,
+          "min": 24.851521694765427,
+          "max": 27.67559288698681
+        },
+        "decodeFinishMs": {
+          "median": 27.9534561076319,
+          "p95": 28.808635810413346,
+          "min": 26.310133166078053,
+          "max": 28.808635810413346
+        },
+        "copyFreeMs": {
+          "median": 0.18717767213424016,
+          "p95": 5.4460033484274275,
+          "min": -4.6581481771619675,
+          "max": 5.4460033484274275
+        },
+        "setupMs": {
+          "median": 18.18370974034418,
+          "p95": 26.665988498695057,
+          "min": -6.2504656631191695,
+          "max": 26.665988498695057
+        },
+        "localWallMs": {
+          "median": 26.725206024756922,
+          "p95": 27.674260072255056,
+          "min": 24.841777697781303,
+          "max": 27.674260072255056
+        },
+        "callerWallMs": {
+          "median": 26.709977314968523,
+          "p95": 27.672507391147587,
+          "min": 24.836660217802383,
+          "max": 27.672507391147587
+        }
+      }
+    },
+    {
+      "mode": "core-4",
+      "name": "live2vod",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 10.552156254649162,
+              "decodeFinishMs": 10.078062496334315,
+              "copyFreeMs": 0.47371875792741774,
+              "setupMs": 0.000375000387430191,
+              "localWallMs": 10.55429687574506,
+              "callerWallMs": 10.556578125059605
+            },
+            {
+              "stagesMs": 10.675296878814697,
+              "decodeFinishMs": 10.216109377145767,
+              "copyFreeMs": 0.45895312502980234,
+              "setupMs": 0.00023437663912773132,
+              "localWallMs": 10.677921874821186,
+              "callerWallMs": 10.67878124937415
+            },
+            {
+              "stagesMs": 10.58528125360608,
+              "decodeFinishMs": 10.105593748390675,
+              "copyFreeMs": 0.479250006377697,
+              "setupMs": 0.00043749883770942687,
+              "localWallMs": 10.587562499940397,
+              "callerWallMs": 10.588312499970197
+            },
+            {
+              "stagesMs": 10.493656250834466,
+              "decodeFinishMs": 10.017015632987022,
+              "copyFreeMs": 0.4763749919831753,
+              "setupMs": 0.0002656258642673492,
+              "localWallMs": 10.495906250923872,
+              "callerWallMs": 10.496875
+            },
+            {
+              "stagesMs": 10.282375001907349,
+              "decodeFinishMs": 9.821406258642673,
+              "copyFreeMs": 0.4606406182050705,
+              "setupMs": 0.00032812505960464475,
+              "localWallMs": 10.283437500149013,
+              "callerWallMs": 10.284671875089407
+            },
+            {
+              "stagesMs": 10.360046883672474,
+              "decodeFinishMs": 9.898000008612872,
+              "copyFreeMs": 0.46185937598347665,
+              "setupMs": 0.00018749907612800596,
+              "localWallMs": 10.36143750026822,
+              "callerWallMs": 10.362359375506639
+            },
+            {
+              "stagesMs": 10.286140624433756,
+              "decodeFinishMs": 9.83468750268221,
+              "copyFreeMs": 0.4512656226754188,
+              "setupMs": 0.00018749907612800596,
+              "localWallMs": 10.287234374880791,
+              "callerWallMs": 10.288328124582769
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 10.493656250834466,
+              "p95": 10.675296878814697,
+              "min": 10.282375001907349,
+              "max": 10.675296878814697
+            },
+            "decodeFinishMs": {
+              "median": 10.017015632987022,
+              "p95": 10.216109377145767,
+              "min": 9.821406258642673,
+              "max": 10.216109377145767
+            },
+            "copyFreeMs": {
+              "median": 0.46185937598347665,
+              "p95": 0.479250006377697,
+              "min": 0.4512656226754188,
+              "max": 0.479250006377697
+            },
+            "setupMs": {
+              "median": 0.0002656258642673492,
+              "p95": 0.00043749883770942687,
+              "min": 0.00018749907612800596,
+              "max": 0.00043749883770942687
+            },
+            "localWallMs": {
+              "median": 10.495906250923872,
+              "p95": 10.677921874821186,
+              "min": 10.283437500149013,
+              "max": 10.677921874821186
+            },
+            "callerWallMs": {
+              "median": 10.496875,
+              "p95": 10.67878124937415,
+              "min": 10.284671875089407,
+              "max": 10.67878124937415
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 10.230000019073486,
+              "p95": 11.235000133514404,
+              "min": 7.180000066757202,
+              "max": 21.93999981880188
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 6.798421872407198,
+              "decodeFinishMs": 6.313250003010035,
+              "copyFreeMs": 0.48481249436736107,
+              "setupMs": 0.0003593750298023224,
+              "localWallMs": 6.800515624880791,
+              "callerWallMs": 6.801984374970198
+            },
+            {
+              "stagesMs": 6.599359372258187,
+              "decodeFinishMs": 6.146281254291535,
+              "copyFreeMs": 0.45292186811566354,
+              "setupMs": 0.00015624985098838806,
+              "localWallMs": 6.600828125327825,
+              "callerWallMs": 6.601874999701977
+            },
+            {
+              "stagesMs": 6.74926562383771,
+              "decodeFinishMs": 6.276749995350837,
+              "copyFreeMs": 0.4723437532782555,
+              "setupMs": 0.0001718752086162567,
+              "localWallMs": 6.751421875506639,
+              "callerWallMs": 6.753374999761581
+            },
+            {
+              "stagesMs": 6.729453125596047,
+              "decodeFinishMs": 6.24837498292327,
+              "copyFreeMs": 0.48090626746416093,
+              "setupMs": 0.00017187520861625672,
+              "localWallMs": 6.731218750029802,
+              "callerWallMs": 6.732625000178814
+            },
+            {
+              "stagesMs": 6.546109379827977,
+              "decodeFinishMs": 6.078031253814697,
+              "copyFreeMs": 0.4678906261920929,
+              "setupMs": 0.00018749982118606567,
+              "localWallMs": 6.547265625,
+              "callerWallMs": 6.548796874284744
+            },
+            {
+              "stagesMs": 6.594437500834465,
+              "decodeFinishMs": 6.1249531246721745,
+              "copyFreeMs": 0.469343750923872,
+              "setupMs": 0.0001406252384185791,
+              "localWallMs": 6.595812500268221,
+              "callerWallMs": 6.597843749821186
+            },
+            {
+              "stagesMs": 6.499109373241662,
+              "decodeFinishMs": 6.062328129261732,
+              "copyFreeMs": 0.4365937441587448,
+              "setupMs": 0.00018749982118606567,
+              "localWallMs": 6.4998281255364425,
+              "callerWallMs": 6.500765624642372
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 6.599359372258187,
+              "p95": 6.798421872407198,
+              "min": 6.499109373241662,
+              "max": 6.798421872407198
+            },
+            "decodeFinishMs": {
+              "median": 6.146281254291535,
+              "p95": 6.313250003010035,
+              "min": 6.062328129261732,
+              "max": 6.313250003010035
+            },
+            "copyFreeMs": {
+              "median": 0.469343750923872,
+              "p95": 0.48481249436736107,
+              "min": 0.4365937441587448,
+              "max": 0.48481249436736107
+            },
+            "setupMs": {
+              "median": 0.00017187520861625672,
+              "p95": 0.0003593750298023224,
+              "min": 0.0001406252384185791,
+              "max": 0.0003593750298023224
+            },
+            "localWallMs": {
+              "median": 6.600828125327825,
+              "p95": 6.800515624880791,
+              "min": 6.4998281255364425,
+              "max": 6.800515624880791
+            },
+            "callerWallMs": {
+              "median": 6.601874999701977,
+              "p95": 6.801984374970198,
+              "min": 6.500765624642372,
+              "max": 6.801984374970198
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 6.2749998569488525,
+              "p95": 7.194999933242798,
+              "min": 4.2850000858306885,
+              "max": 13.610000133514404
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 36.336601430956435,
+          "p95": 38.181022531048065,
+          "min": 35.573150090419766,
+          "max": 38.181022531048065
+        },
+        "decodeFinishMs": {
+          "median": 38.11445027573183,
+          "p95": 39.83735855411606,
+          "min": 37.35651068539863,
+          "max": 39.83735855411606
+        },
+        "copyFreeMs": {
+          "median": -0.9511992773007862,
+          "p95": 3.2512732589043303,
+          "min": -2.3418402278347368,
+          "max": 3.2512732589043303
+        },
+        "setupMs": {
+          "median": 33.33386314869268,
+          "p95": 60.71413366121652,
+          "min": -0.0003973662564609083,
+          "max": 60.71413366121652
+        },
+        "localWallMs": {
+          "median": 36.331935455385164,
+          "p95": 38.18246469013088,
+          "min": 35.56637922030478,
+          "max": 38.18246469013088
+        },
+        "callerWallMs": {
+          "median": 36.32468829514491,
+          "p95": 38.17763614093236,
+          "min": 35.56639003292753,
+          "max": 38.17763614093236
+        }
+      }
+    },
+    {
+      "mode": "core-4",
+      "name": "1080p-420-IPB-60",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 2.4899999956289927,
+              "decodeFinishMs": 2.2059305561913383,
+              "copyFreeMs": 0.283888883723153,
+              "setupMs": 0.00018055571450127495,
+              "localWallMs": 2.491305555899938,
+              "callerWallMs": 2.492041666640176
+            },
+            {
+              "stagesMs": 2.4793194479412506,
+              "decodeFinishMs": 2.194138891167111,
+              "copyFreeMs": 0.28506944576899207,
+              "setupMs": 0.00011111100514729818,
+              "localWallMs": 2.48070833351877,
+              "callerWallMs": 2.481388888756434
+            },
+            {
+              "stagesMs": 2.382194443543752,
+              "decodeFinishMs": 2.114361109336217,
+              "copyFreeMs": 0.267736111746894,
+              "setupMs": 9.722246064080133e-05,
+              "localWallMs": 2.382986111773385,
+              "callerWallMs": 2.3836111115084755
+            },
+            {
+              "stagesMs": 2.378166664971246,
+              "decodeFinishMs": 2.101569438642926,
+              "copyFreeMs": 0.2765138930744595,
+              "setupMs": 8.333325386047364e-05,
+              "localWallMs": 2.3790416664547394,
+              "callerWallMs": 2.379819444153044
+            },
+            {
+              "stagesMs": 2.344125003947152,
+              "decodeFinishMs": 2.088430561621984,
+              "copyFreeMs": 0.25555555290646026,
+              "setupMs": 0.00013888941870795357,
+              "localWallMs": 2.344805555873447,
+              "callerWallMs": 2.3454027778572506
+            },
+            {
+              "stagesMs": 2.3427777833408783,
+              "decodeFinishMs": 2.0857083406713275,
+              "copyFreeMs": 0.2569861087534163,
+              "setupMs": 8.333391613430447e-05,
+              "localWallMs": 2.343416666984558,
+              "callerWallMs": 2.3440138883060877
+            },
+            {
+              "stagesMs": 2.3499444431728786,
+              "decodeFinishMs": 2.0869999965031942,
+              "copyFreeMs": 0.26287500129805674,
+              "setupMs": 6.944537162780761e-05,
+              "localWallMs": 2.350722222858005,
+              "callerWallMs": 2.3522361119588213
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 2.378166664971246,
+              "p95": 2.4899999956289927,
+              "min": 2.3427777833408783,
+              "max": 2.4899999956289927
+            },
+            "decodeFinishMs": {
+              "median": 2.101569438642926,
+              "p95": 2.2059305561913383,
+              "min": 2.0857083406713275,
+              "max": 2.2059305561913383
+            },
+            "copyFreeMs": {
+              "median": 0.267736111746894,
+              "p95": 0.28506944576899207,
+              "min": 0.25555555290646026,
+              "max": 0.28506944576899207
+            },
+            "setupMs": {
+              "median": 9.722246064080133e-05,
+              "p95": 0.00018055571450127495,
+              "min": 6.944537162780761e-05,
+              "max": 0.00018055571450127495
+            },
+            "localWallMs": {
+              "median": 2.3790416664547394,
+              "p95": 2.491305555899938,
+              "min": 2.343416666984558,
+              "max": 2.491305555899938
+            },
+            "callerWallMs": {
+              "median": 2.379819444153044,
+              "p95": 2.492041666640176,
+              "min": 2.3440138883060877,
+              "max": 2.492041666640176
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 2.379999876022339,
+              "p95": 2.5899999141693115,
+              "min": 2.190000057220459,
+              "max": 2.9099998474121094
+            },
+            "P": {
+              "median": 2.0899999141693115,
+              "p95": 2.315000057220459,
+              "min": 1.8550000190734863,
+              "max": 3.2950000762939453
+            },
+            "B": {
+              "median": 2.075000047683716,
+              "p95": 2.305000066757202,
+              "min": 1.809999942779541,
+              "max": 4.109999895095825
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 2.2343194484710693,
+              "decodeFinishMs": 1.9524861103958555,
+              "copyFreeMs": 0.2816111160649194,
+              "setupMs": 0.00022222201029459634,
+              "localWallMs": 2.2359166661898295,
+              "callerWallMs": 2.236527777380413
+            },
+            {
+              "stagesMs": 2.3016666743490433,
+              "decodeFinishMs": 2.0155277881357403,
+              "copyFreeMs": 0.28599999745686844,
+              "setupMs": 0.0001388887564341227,
+              "localWallMs": 2.302958332830005,
+              "callerWallMs": 2.303722221983804
+            },
+            {
+              "stagesMs": 2.2031805574893952,
+              "decodeFinishMs": 1.9260277734862434,
+              "copyFreeMs": 0.2770416736602783,
+              "setupMs": 0.00011111034287346734,
+              "localWallMs": 2.204388889339235,
+              "callerWallMs": 2.2051388886239796
+            },
+            {
+              "stagesMs": 2.209097217851215,
+              "decodeFinishMs": 1.9273194366031223,
+              "copyFreeMs": 0.2816666689183977,
+              "setupMs": 0.00011111232969495985,
+              "localWallMs": 2.210333333412806,
+              "callerWallMs": 2.212041666110357
+            },
+            {
+              "stagesMs": 2.1406805548402996,
+              "decodeFinishMs": 1.8791666699780358,
+              "copyFreeMs": 0.2614444408151838,
+              "setupMs": 6.944404708014594e-05,
+              "localWallMs": 2.14123611052831,
+              "callerWallMs": 2.1419305549727548
+            },
+            {
+              "stagesMs": 2.1196805596351624,
+              "decodeFinishMs": 1.8639027767711216,
+              "copyFreeMs": 0.25570833749241295,
+              "setupMs": 6.944537162780761e-05,
+              "localWallMs": 2.120361111561457,
+              "callerWallMs": 2.1209027780426872
+            },
+            {
+              "stagesMs": 2.1331111133098606,
+              "decodeFinishMs": 1.8596527775128684,
+              "copyFreeMs": 0.273347223467297,
+              "setupMs": 0.00011111232969495985,
+              "localWallMs": 2.1336805548932816,
+              "callerWallMs": 2.134486111005147
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 2.2031805574893952,
+              "p95": 2.3016666743490433,
+              "min": 2.1196805596351624,
+              "max": 2.3016666743490433
+            },
+            "decodeFinishMs": {
+              "median": 1.9260277734862434,
+              "p95": 2.0155277881357403,
+              "min": 1.8596527775128684,
+              "max": 2.0155277881357403
+            },
+            "copyFreeMs": {
+              "median": 0.2770416736602783,
+              "p95": 0.28599999745686844,
+              "min": 0.25570833749241295,
+              "max": 0.28599999745686844
+            },
+            "setupMs": {
+              "median": 0.00011111232969495985,
+              "p95": 0.00022222201029459634,
+              "min": 6.944404708014594e-05,
+              "max": 0.00022222201029459634
+            },
+            "localWallMs": {
+              "median": 2.204388889339235,
+              "p95": 2.302958332830005,
+              "min": 2.120361111561457,
+              "max": 2.302958332830005
+            },
+            "callerWallMs": {
+              "median": 2.2051388886239796,
+              "p95": 2.303722221983804,
+              "min": 2.1209027780426872,
+              "max": 2.303722221983804
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 2.1649999618530273,
+              "p95": 2.3949999809265137,
+              "min": 1.994999885559082,
+              "max": 2.819999933242798
+            },
+            "P": {
+              "median": 1.8650000095367432,
+              "p95": 2.049999952316284,
+              "min": 1.6299998760223389,
+              "max": 5.9049999713897705
+            },
+            "B": {
+              "median": 1.875,
+              "p95": 2.1000001430511475,
+              "min": 1.625,
+              "max": 7.924999952316284
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 8.678907855352536,
+          "p95": 10.268295084608484,
+          "min": 7.109234588572239,
+          "max": 10.268295084608484
+        },
+        "decodeFinishMs": {
+          "median": 10.020150800772747,
+          "p95": 11.4892304784548,
+          "min": 8.14037359942895,
+          "max": 11.4892304784548
+        },
+        "copyFreeMs": {
+          "median": -1.8634781010987607,
+          "p95": 0.8023447865802621,
+          "min": -3.983726911090529,
+          "max": 0.8023447865802621
+        },
+        "setupMs": {
+          "median": -23.07669735539008,
+          "p95": 50.00047683533922,
+          "min": -59.99961853536655,
+          "max": 50.00047683533922
+        },
+        "localWallMs": {
+          "median": 8.68171967757499,
+          "p95": 10.251207006916264,
+          "min": 7.091440869690327,
+          "max": 10.251207006916264
+        },
+        "callerWallMs": {
+          "median": 8.675363771436613,
+          "p95": 10.253194907621756,
+          "min": 7.050021313797518,
+          "max": 10.253194907621756
+        }
+      }
+    },
+    {
+      "mode": "facade-1",
+      "name": "cosmos",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 1.4881093800067902,
+              "decodeFinishMs": 1.4865781284868718,
+              "copyFreeMs": 0.0007500015199184418,
+              "setupMs": 0.00078125,
+              "localWallMs": 1.488671875745058,
+              "callerWallMs": 1.488671875745058
+            },
+            {
+              "stagesMs": 1.499312500655651,
+              "decodeFinishMs": 1.4972499974071978,
+              "copyFreeMs": 0.0008125029504299163,
+              "setupMs": 0.001250000298023224,
+              "localWallMs": 1.499812499433756,
+              "callerWallMs": 1.4998437494039536
+            },
+            {
+              "stagesMs": 1.5634062513709068,
+              "decodeFinishMs": 1.5615937508642674,
+              "copyFreeMs": 0.00078125,
+              "setupMs": 0.0010312505066394806,
+              "localWallMs": 1.5638437502086164,
+              "callerWallMs": 1.5638906247913837
+            },
+            {
+              "stagesMs": 1.5037656240165234,
+              "decodeFinishMs": 1.5022187560796736,
+              "copyFreeMs": 0.0007812432944774627,
+              "setupMs": 0.0007656246423721313,
+              "localWallMs": 1.504109375178814,
+              "callerWallMs": 1.5041250005364417
+            },
+            {
+              "stagesMs": 1.5702656254172327,
+              "decodeFinishMs": 1.561328123509884,
+              "copyFreeMs": 0.0008593760430812836,
+              "setupMs": 0.008078125864267349,
+              "localWallMs": 1.5709218747913836,
+              "callerWallMs": 1.5709687501192093
+            },
+            {
+              "stagesMs": 1.6115781262516975,
+              "decodeFinishMs": 1.6095625072717668,
+              "copyFreeMs": 0.001109369844198227,
+              "setupMs": 0.0009062491357326507,
+              "localWallMs": 1.6120625004172324,
+              "callerWallMs": 1.612109375
+            },
+            {
+              "stagesMs": 1.4966875001788138,
+              "decodeFinishMs": 1.4912968710064889,
+              "copyFreeMs": 0.0006406284868717193,
+              "setupMs": 0.004750000685453415,
+              "localWallMs": 1.4972031258046625,
+              "callerWallMs": 1.497249999642372
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 1.5037656240165234,
+              "p95": 1.6115781262516975,
+              "min": 1.4881093800067902,
+              "max": 1.6115781262516975
+            },
+            "decodeFinishMs": {
+              "median": 1.5022187560796736,
+              "p95": 1.6095625072717668,
+              "min": 1.4865781284868718,
+              "max": 1.6095625072717668
+            },
+            "copyFreeMs": {
+              "median": 0.00078125,
+              "p95": 0.001109369844198227,
+              "min": 0.0006406284868717193,
+              "max": 0.001109369844198227
+            },
+            "setupMs": {
+              "median": 0.0010312505066394806,
+              "p95": 0.008078125864267349,
+              "min": 0.0007656246423721313,
+              "max": 0.008078125864267349
+            },
+            "localWallMs": {
+              "median": 1.504109375178814,
+              "p95": 1.6120625004172324,
+              "min": 1.488671875745058,
+              "max": 1.6120625004172324
+            },
+            "callerWallMs": {
+              "median": 1.5041250005364417,
+              "p95": 1.612109375,
+              "min": 1.488671875745058,
+              "max": 1.612109375
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 2.7899999618530273,
+              "p95": 3.059999942779541,
+              "min": 2.549999952316284,
+              "max": 4.625
+            },
+            "P": {
+              "median": 1.3350000381469727,
+              "p95": 1.5499999523162842,
+              "min": 1.2349998950958252,
+              "max": 4.5249998569488525
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 1.5116093769669532,
+              "decodeFinishMs": 1.510375003516674,
+              "copyFreeMs": 0.0004687495529651642,
+              "setupMs": 0.0007656238973140716,
+              "localWallMs": 1.5120781250298023,
+              "callerWallMs": 1.5121250003576279
+            },
+            {
+              "stagesMs": 1.4950625017285348,
+              "decodeFinishMs": 1.4933437511324883,
+              "copyFreeMs": 0.0008749984204769134,
+              "setupMs": 0.0008437521755695343,
+              "localWallMs": 1.4954375006258487,
+              "callerWallMs": 1.4954687498509884
+            },
+            {
+              "stagesMs": 1.611062503606081,
+              "decodeFinishMs": 1.6092343769967556,
+              "copyFreeMs": 0.0010468773543834686,
+              "setupMs": 0.0007812492549419403,
+              "localWallMs": 1.6115781247615815,
+              "callerWallMs": 1.6116093754768372
+            },
+            {
+              "stagesMs": 1.504781249910593,
+              "decodeFinishMs": 1.502656251192093,
+              "copyFreeMs": 0.0009062476456165314,
+              "setupMs": 0.001218751072883606,
+              "localWallMs": 1.5051562495529651,
+              "callerWallMs": 1.5051874995231629
+            },
+            {
+              "stagesMs": 1.5085468739271162,
+              "decodeFinishMs": 1.507156243175268,
+              "copyFreeMs": 0.0007031291723251342,
+              "setupMs": 0.0006875015795230865,
+              "localWallMs": 1.5089687503874303,
+              "callerWallMs": 1.5089999996125698
+            },
+            {
+              "stagesMs": 1.596374998986721,
+              "decodeFinishMs": 1.593937499076128,
+              "copyFreeMs": 0.0009374998509883881,
+              "setupMs": 0.0015000000596046448,
+              "localWallMs": 1.5970000006258487,
+              "callerWallMs": 1.5970312498509882
+            },
+            {
+              "stagesMs": 1.5160156264901161,
+              "decodeFinishMs": 1.5146718725562096,
+              "copyFreeMs": 0.0006406284868717194,
+              "setupMs": 0.0007031254470348358,
+              "localWallMs": 1.5165781252086163,
+              "callerWallMs": 1.516609375178814
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 1.5116093769669532,
+              "p95": 1.611062503606081,
+              "min": 1.4950625017285348,
+              "max": 1.611062503606081
+            },
+            "decodeFinishMs": {
+              "median": 1.510375003516674,
+              "p95": 1.6092343769967556,
+              "min": 1.4933437511324883,
+              "max": 1.6092343769967556
+            },
+            "copyFreeMs": {
+              "median": 0.0008749984204769134,
+              "p95": 0.0010468773543834686,
+              "min": 0.0004687495529651642,
+              "max": 0.0010468773543834686
+            },
+            "setupMs": {
+              "median": 0.0007812492549419403,
+              "p95": 0.0015000000596046448,
+              "min": 0.0006875015795230865,
+              "max": 0.0015000000596046448
+            },
+            "localWallMs": {
+              "median": 1.5120781250298023,
+              "p95": 1.6115781247615815,
+              "min": 1.4954375006258487,
+              "max": 1.6115781247615815
+            },
+            "callerWallMs": {
+              "median": 1.5121250003576279,
+              "p95": 1.6116093754768372,
+              "min": 1.4954687498509884,
+              "max": 1.6116093754768372
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 2.9149999618530273,
+              "p95": 3.190000057220459,
+              "min": 2.6050000190734863,
+              "max": 4.659999847412109
+            },
+            "P": {
+              "median": 1.3299999237060547,
+              "p95": 1.5450000762939453,
+              "min": 1.244999885559082,
+              "max": 4.804999828338623
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": -0.06753884234678528,
+          "p95": 3.9304656798888615,
+          "min": -3.0482321657205733,
+          "max": 3.9304656798888615
+        },
+        "decodeFinishMs": {
+          "median": -0.02912326255072417,
+          "p95": 3.46960254663426,
+          "min": -3.050769517111694,
+          "max": 3.46960254663426
+        },
+        "copyFreeMs": {
+          "median": -1.6924039356723252e-14,
+          "p95": 37.50018626413745,
+          "min": -34.00030136108398,
+          "max": 37.50018626413745
+        },
+        "setupMs": {
+          "median": 24.242533709119364,
+          "p95": 91.48934305958058,
+          "min": -65.51740580607344,
+          "max": 91.48934305958058
+        },
+        "localWallMs": {
+          "median": -0.06960094733979896,
+          "p95": 3.943743186603763,
+          "min": -3.052374928543678,
+          "max": 3.943743186603763
+        },
+        "callerWallMs": {
+          "median": -0.07063900848282123,
+          "p95": 3.944620190690437,
+          "min": -3.051284401159383,
+          "max": 3.944620190690437
+        }
+      }
+    },
+    {
+      "mode": "facade-1",
+      "name": "swat",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 31.463421875983478,
+              "decodeFinishMs": 31.45918750911951,
+              "copyFreeMs": 0.0027187414467334746,
+              "setupMs": 0.0015156254172325133,
+              "localWallMs": 31.464625000208617,
+              "callerWallMs": 31.464656249433755
+            },
+            {
+              "stagesMs": 31.403968744724992,
+              "decodeFinishMs": 31.400062499195336,
+              "copyFreeMs": 0.002437494695186615,
+              "setupMs": 0.0014687508344650268,
+              "localWallMs": 31.40531250014901,
+              "callerWallMs": 31.405343750119208
+            },
+            {
+              "stagesMs": 32.3926875025034,
+              "decodeFinishMs": 32.38774999901652,
+              "copyFreeMs": 0.0033750034868717193,
+              "setupMs": 0.0015625,
+              "localWallMs": 32.3945937499404,
+              "callerWallMs": 32.394656249880796
+            },
+            {
+              "stagesMs": 31.52487499639392,
+              "decodeFinishMs": 31.521046879142524,
+              "copyFreeMs": 0.0024062424898147585,
+              "setupMs": 0.0014218747615814208,
+              "localWallMs": 31.52607812434435,
+              "callerWallMs": 31.526093749701978
+            },
+            {
+              "stagesMs": 32.50950000584126,
+              "decodeFinishMs": 32.50500000566244,
+              "copyFreeMs": 0.003093750774860382,
+              "setupMs": 0.0014062494039535523,
+              "localWallMs": 32.51118750050664,
+              "callerWallMs": 32.5112343750894
+            },
+            {
+              "stagesMs": 31.62376562654972,
+              "decodeFinishMs": 31.619562500715254,
+              "copyFreeMs": 0.0028281264007091523,
+              "setupMs": 0.0013749994337558745,
+              "localWallMs": 31.62481249943376,
+              "callerWallMs": 31.624828124791385
+            },
+            {
+              "stagesMs": 32.131703124940394,
+              "decodeFinishMs": 32.126656256616116,
+              "copyFreeMs": 0.003390619158744812,
+              "setupMs": 0.0016562491655349731,
+              "localWallMs": 32.13309375047684,
+              "callerWallMs": 32.1331406250596
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 31.62376562654972,
+              "p95": 32.50950000584126,
+              "min": 31.403968744724992,
+              "max": 32.50950000584126
+            },
+            "decodeFinishMs": {
+              "median": 31.619562500715254,
+              "p95": 32.50500000566244,
+              "min": 31.400062499195336,
+              "max": 32.50500000566244
+            },
+            "copyFreeMs": {
+              "median": 0.0028281264007091523,
+              "p95": 0.003390619158744812,
+              "min": 0.0024062424898147585,
+              "max": 0.003390619158744812
+            },
+            "setupMs": {
+              "median": 0.0014687508344650268,
+              "p95": 0.0016562491655349731,
+              "min": 0.0013749994337558745,
+              "max": 0.0016562491655349731
+            },
+            "localWallMs": {
+              "median": 31.62481249943376,
+              "p95": 32.51118750050664,
+              "min": 31.40531250014901,
+              "max": 32.51118750050664
+            },
+            "callerWallMs": {
+              "median": 31.624828124791385,
+              "p95": 32.5112343750894,
+              "min": 31.405343750119208,
+              "max": 32.5112343750894
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 36.21749997138977,
+              "p95": 38.27500009536743,
+              "min": 35.1949999332428,
+              "max": 39.77999997138977
+            },
+            "B": {
+              "median": 31.322499990463257,
+              "p95": 35.63000011444092,
+              "min": 22.854999780654907,
+              "max": 40.86500000953674
+            },
+            "P": {
+              "median": 31.945000052452087,
+              "p95": 37.424999952316284,
+              "min": 29.170000076293945,
+              "max": 46.34000015258789
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 20.392984371632338,
+              "decodeFinishMs": 20.38856248781085,
+              "copyFreeMs": 0.002750009298324585,
+              "setupMs": 0.0016718745231628419,
+              "localWallMs": 20.394453124701975,
+              "callerWallMs": 20.3945000000298
+            },
+            {
+              "stagesMs": 19.987859377264975,
+              "decodeFinishMs": 19.984328124672174,
+              "copyFreeMs": 0.002218753844499588,
+              "setupMs": 0.0013124987483024595,
+              "localWallMs": 19.989156249165536,
+              "callerWallMs": 19.989156249165536
+            },
+            {
+              "stagesMs": 20.601218746602534,
+              "decodeFinishMs": 20.596781250834464,
+              "copyFreeMs": 0.003078119456768036,
+              "setupMs": 0.001359376311302185,
+              "localWallMs": 20.602765624970196,
+              "callerWallMs": 20.602796874940395
+            },
+            {
+              "stagesMs": 20.579281256347898,
+              "decodeFinishMs": 20.568109382689002,
+              "copyFreeMs": 0.002421874552965164,
+              "setupMs": 0.008749999105930328,
+              "localWallMs": 20.580859374254942,
+              "callerWallMs": 20.580906249582767
+            },
+            {
+              "stagesMs": 21.02871874421835,
+              "decodeFinishMs": 21.020140615105632,
+              "copyFreeMs": 0.003296879678964615,
+              "setupMs": 0.005281249433755874,
+              "localWallMs": 21.03031250014901,
+              "callerWallMs": 21.03032812476158
+            },
+            {
+              "stagesMs": 20.46029687523842,
+              "decodeFinishMs": 20.452515619248153,
+              "copyFreeMs": 0.002593754976987839,
+              "setupMs": 0.005187501013278961,
+              "localWallMs": 20.46173437461257,
+              "callerWallMs": 20.461765625327825
+            },
+            {
+              "stagesMs": 20.029046871513128,
+              "decodeFinishMs": 20.02592187076807,
+              "copyFreeMs": 0.0018281251192092895,
+              "setupMs": 0.0012968756258487702,
+              "localWallMs": 20.030343750119208,
+              "callerWallMs": 20.030390624701976
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 20.46029687523842,
+              "p95": 21.02871874421835,
+              "min": 19.987859377264975,
+              "max": 21.02871874421835
+            },
+            "decodeFinishMs": {
+              "median": 20.452515619248153,
+              "p95": 21.020140615105632,
+              "min": 19.984328124672174,
+              "max": 21.020140615105632
+            },
+            "copyFreeMs": {
+              "median": 0.002593754976987839,
+              "p95": 0.003296879678964615,
+              "min": 0.0018281251192092895,
+              "max": 0.003296879678964615
+            },
+            "setupMs": {
+              "median": 0.0016718745231628419,
+              "p95": 0.008749999105930328,
+              "min": 0.0012968756258487702,
+              "max": 0.008749999105930328
+            },
+            "localWallMs": {
+              "median": 20.46173437461257,
+              "p95": 21.03031250014901,
+              "min": 19.989156249165536,
+              "max": 21.03031250014901
+            },
+            "callerWallMs": {
+              "median": 20.461765625327825,
+              "p95": 21.03032812476158,
+              "min": 19.989156249165536,
+              "max": 21.03032812476158
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 21.085000157356262,
+              "p95": 22.75,
+              "min": 19.819999933242798,
+              "max": 40.30499982833862
+            },
+            "B": {
+              "median": 20.757500052452087,
+              "p95": 23.40999984741211,
+              "min": 14.330000162124634,
+              "max": 30.02999997138977
+            },
+            "P": {
+              "median": 19.65500009059906,
+              "p95": 22.979999780654907,
+              "min": 17.894999980926514,
+              "max": 30.430000066757202
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 35.315157906335266,
+          "p95": 37.6657788924773,
+          "min": 34.72049846763253,
+          "max": 37.6657788924773
+        },
+        "decodeFinishMs": {
+          "median": 35.33259310431048,
+          "p95": 37.66571375866742,
+          "min": 34.748013092487355,
+          "max": 37.66571375866742
+        },
+        "copyFreeMs": {
+          "median": 8.2871622591743,
+          "p95": 46.08285290625059,
+          "min": -6.565781114459674,
+          "max": 46.08285290625059
+        },
+        "setupMs": {
+          "median": -10.309216522353838,
+          "p95": 21.698035969734317,
+          "min": -515.3846556920743,
+          "max": 21.698035969734317
+        },
+        "localWallMs": {
+          "median": 35.313613199083285,
+          "p95": 37.66444057437835,
+          "min": 34.717983971617265,
+          "max": 37.66444057437835
+        },
+        "callerWallMs": {
+          "median": 35.313658404568805,
+          "p95": 37.664385630949134,
+          "min": 34.71786764011218,
+          "max": 37.664385630949134
+        }
+      }
+    },
+    {
+      "mode": "facade-1",
+      "name": "live2vod",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 35.398562499880796,
+              "decodeFinishMs": 35.39528125077486,
+              "copyFreeMs": 0.0021718755364418026,
+              "setupMs": 0.0011093735694885254,
+              "localWallMs": 35.399703124910594,
+              "callerWallMs": 35.399703124910594
+            },
+            {
+              "stagesMs": 35.514921874552954,
+              "decodeFinishMs": 35.50792188122868,
+              "copyFreeMs": 0.002328118681907654,
+              "setupMs": 0.004671874642372131,
+              "localWallMs": 35.51623437479138,
+              "callerWallMs": 35.51628125011921
+            },
+            {
+              "stagesMs": 36.81232812032103,
+              "decodeFinishMs": 36.80773437544703,
+              "copyFreeMs": 0.0031874939799308778,
+              "setupMs": 0.0014062508940696715,
+              "localWallMs": 36.81390625014901,
+              "callerWallMs": 36.81393750011921
+            },
+            {
+              "stagesMs": 35.47726562842727,
+              "decodeFinishMs": 35.47392187789083,
+              "copyFreeMs": 0.0021250016987323763,
+              "setupMs": 0.001218748837709427,
+              "localWallMs": 35.47840625047684,
+              "callerWallMs": 35.47840625047684
+            },
+            {
+              "stagesMs": 36.79756249785423,
+              "decodeFinishMs": 36.79271875619888,
+              "copyFreeMs": 0.003453116863965988,
+              "setupMs": 0.0013906247913837433,
+              "localWallMs": 36.79915624931455,
+              "callerWallMs": 36.79920312538743
+            },
+            {
+              "stagesMs": 35.48159374520182,
+              "decodeFinishMs": 35.47804686948657,
+              "copyFreeMs": 0.0022656254470348356,
+              "setupMs": 0.0012812502682209015,
+              "localWallMs": 35.48279687538743,
+              "callerWallMs": 35.48287500068545
+            },
+            {
+              "stagesMs": 35.92457812577486,
+              "decodeFinishMs": 35.920640624314544,
+              "copyFreeMs": 0.0025781258940696717,
+              "setupMs": 0.0013593755662441253,
+              "localWallMs": 35.92590625062585,
+              "callerWallMs": 35.925921875238416
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 35.514921874552954,
+              "p95": 36.81232812032103,
+              "min": 35.398562499880796,
+              "max": 36.81232812032103
+            },
+            "decodeFinishMs": {
+              "median": 35.50792188122868,
+              "p95": 36.80773437544703,
+              "min": 35.39528125077486,
+              "max": 36.80773437544703
+            },
+            "copyFreeMs": {
+              "median": 0.002328118681907654,
+              "p95": 0.003453116863965988,
+              "min": 0.0021250016987323763,
+              "max": 0.003453116863965988
+            },
+            "setupMs": {
+              "median": 0.0013593755662441253,
+              "p95": 0.004671874642372131,
+              "min": 0.0011093735694885254,
+              "max": 0.004671874642372131
+            },
+            "localWallMs": {
+              "median": 35.51623437479138,
+              "p95": 36.81390625014901,
+              "min": 35.399703124910594,
+              "max": 36.81390625014901
+            },
+            "callerWallMs": {
+              "median": 35.51628125011921,
+              "p95": 36.81393750011921,
+              "min": 35.399703124910594,
+              "max": 36.81393750011921
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 36.889999866485596,
+              "p95": 40.50499987602234,
+              "min": 25.475000143051147,
+              "max": 81.5699999332428
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 19.157437501847745,
+              "decodeFinishMs": 19.15392187386751,
+              "copyFreeMs": 0.002281252294778824,
+              "setupMs": 0.0012343756854534147,
+              "localWallMs": 19.158468750864266,
+              "callerWallMs": 19.158500000089408
+            },
+            {
+              "stagesMs": 19.085312500596046,
+              "decodeFinishMs": 19.08271874859929,
+              "copyFreeMs": 0.0016718752682209014,
+              "setupMs": 0.0009218767285346986,
+              "localWallMs": 19.086265625059603,
+              "callerWallMs": 19.086296875029802
+            },
+            {
+              "stagesMs": 19.378859372437002,
+              "decodeFinishMs": 19.37498437315226,
+              "copyFreeMs": 0.002406248450279236,
+              "setupMs": 0.0014687508344650268,
+              "localWallMs": 19.38031250089407,
+              "callerWallMs": 19.380359375476836
+            },
+            {
+              "stagesMs": 19.09535937383771,
+              "decodeFinishMs": 19.08845312446356,
+              "copyFreeMs": 0.0018124990165233612,
+              "setupMs": 0.0050937503576278685,
+              "localWallMs": 19.09632812514901,
+              "callerWallMs": 19.09637499973178
+            },
+            {
+              "stagesMs": 19.521703124046326,
+              "decodeFinishMs": 19.51453124806285,
+              "copyFreeMs": 0.0025937505066394805,
+              "setupMs": 0.004578125476837158,
+              "localWallMs": 19.52303125038743,
+              "callerWallMs": 19.523093750327824
+            },
+            {
+              "stagesMs": 19.13004687651992,
+              "decodeFinishMs": 19.122578125447035,
+              "copyFreeMs": 0.0019062533974647522,
+              "setupMs": 0.005562497675418853,
+              "localWallMs": 19.131109374761582,
+              "callerWallMs": 19.13115624934435
+            },
+            {
+              "stagesMs": 19.35100000202656,
+              "decodeFinishMs": 19.343796864897012,
+              "copyFreeMs": 0.002484387159347534,
+              "setupMs": 0.004718749970197678,
+              "localWallMs": 19.35220312476158,
+              "callerWallMs": 19.352265624701978
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 19.157437501847745,
+              "p95": 19.521703124046326,
+              "min": 19.085312500596046,
+              "max": 19.521703124046326
+            },
+            "decodeFinishMs": {
+              "median": 19.15392187386751,
+              "p95": 19.51453124806285,
+              "min": 19.08271874859929,
+              "max": 19.51453124806285
+            },
+            "copyFreeMs": {
+              "median": 0.002281252294778824,
+              "p95": 0.0025937505066394805,
+              "min": 0.0016718752682209014,
+              "max": 0.0025937505066394805
+            },
+            "setupMs": {
+              "median": 0.004578125476837158,
+              "p95": 0.005562497675418853,
+              "min": 0.0009218767285346986,
+              "max": 0.005562497675418853
+            },
+            "localWallMs": {
+              "median": 19.158468750864266,
+              "p95": 19.52303125038743,
+              "min": 19.086265625059603,
+              "max": 19.52303125038743
+            },
+            "callerWallMs": {
+              "median": 19.158500000089408,
+              "p95": 19.523093750327824,
+              "min": 19.086296875029802,
+              "max": 19.523093750327824
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 19.65750002861023,
+              "p95": 22.164999961853027,
+              "min": 13.480000019073486,
+              "max": 23.789999961853027
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 46.175785998183144,
+          "p95": 47.3576913986607,
+          "min": 45.880747270705534,
+          "max": 47.3576913986607
+        },
+        "decodeFinishMs": {
+          "median": 46.19018108522006,
+          "p95": 47.36164911558225,
+          "min": 45.885662729553246,
+          "max": 47.36164911558225
+        },
+        "copyFreeMs": {
+          "median": 15.861935609895976,
+          "p95": 28.187713057180943,
+          "min": -5.036050938545671,
+          "max": 28.187713057180943
+        },
+        "setupMs": {
+          "median": -229.21356682284426,
+          "p95": 80.26752001918831,
+          "min": -334.1460691471885,
+          "max": 80.26752001918831
+        },
+        "localWallMs": {
+          "median": 46.17478589559712,
+          "p95": 47.35600082967119,
+          "min": 45.879577907017676,
+          "max": 47.35600082967119
+        },
+        "callerWallMs": {
+          "median": 46.17465377415278,
+          "p95": 47.35591818882705,
+          "min": 45.87948963163008,
+          "max": 47.35591818882705
+        }
+      }
+    },
+    {
+      "mode": "facade-1",
+      "name": "1080p-420-IPB-60",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 6.066694446404775,
+              "decodeFinishMs": 6.065097230010563,
+              "copyFreeMs": 0.0009999937481350368,
+              "setupMs": 0.000597222646077474,
+              "localWallMs": 6.067597221665912,
+              "callerWallMs": 6.067611110872693
+            },
+            {
+              "stagesMs": 6.031402775976392,
+              "decodeFinishMs": 6.029597220155928,
+              "copyFreeMs": 0.001138889127307468,
+              "setupMs": 0.0006666666931576198,
+              "localWallMs": 6.032249999046325,
+              "callerWallMs": 6.032277777459886
+            },
+            {
+              "stagesMs": 6.050597223308351,
+              "decodeFinishMs": 6.048847222328186,
+              "copyFreeMs": 0.0011805560853746203,
+              "setupMs": 0.0005694448947906495,
+              "localWallMs": 6.051152778334088,
+              "callerWallMs": 6.051166667540868
+            },
+            {
+              "stagesMs": 6.034180552429623,
+              "decodeFinishMs": 6.032694441080093,
+              "copyFreeMs": 0.0010416666666666667,
+              "setupMs": 0.0004444446828630235,
+              "localWallMs": 6.034749999973509,
+              "callerWallMs": 6.0347638885180155
+            },
+            {
+              "stagesMs": 6.2472777764002485,
+              "decodeFinishMs": 6.240027780665292,
+              "copyFreeMs": 0.0018333289358350967,
+              "setupMs": 0.005416666799121433,
+              "localWallMs": 6.248222221930822,
+              "callerWallMs": 6.2482638882266155
+            },
+            {
+              "stagesMs": 6.024152778916889,
+              "decodeFinishMs": 6.0222638971275755,
+              "copyFreeMs": 0.001319436894522773,
+              "setupMs": 0.0005694448947906495,
+              "localWallMs": 6.024791667196486,
+              "callerWallMs": 6.024819444947773
+            },
+            {
+              "stagesMs": 6.0850833349757725,
+              "decodeFinishMs": 6.083291672335731,
+              "copyFreeMs": 0.0012083305252922906,
+              "setupMs": 0.0005833321147494846,
+              "localWallMs": 6.0856666664282475,
+              "callerWallMs": 6.085708332724041
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 6.050597223308351,
+              "p95": 6.2472777764002485,
+              "min": 6.024152778916889,
+              "max": 6.2472777764002485
+            },
+            "decodeFinishMs": {
+              "median": 6.048847222328186,
+              "p95": 6.240027780665292,
+              "min": 6.0222638971275755,
+              "max": 6.240027780665292
+            },
+            "copyFreeMs": {
+              "median": 0.0011805560853746203,
+              "p95": 0.0018333289358350967,
+              "min": 0.0009999937481350368,
+              "max": 0.0018333289358350967
+            },
+            "setupMs": {
+              "median": 0.0005833321147494846,
+              "p95": 0.005416666799121433,
+              "min": 0.0004444446828630235,
+              "max": 0.005416666799121433
+            },
+            "localWallMs": {
+              "median": 6.051152778334088,
+              "p95": 6.248222221930822,
+              "min": 6.024791667196486,
+              "max": 6.248222221930822
+            },
+            "callerWallMs": {
+              "median": 6.051166667540868,
+              "p95": 6.2482638882266155,
+              "min": 6.024819444947773,
+              "max": 6.2482638882266155
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 7.457500100135803,
+              "p95": 7.8450000286102295,
+              "min": 6.894999980926514,
+              "max": 8.545000076293945
+            },
+            "P": {
+              "median": 5.984999895095825,
+              "p95": 6.4100000858306885,
+              "min": 5.585000038146973,
+              "max": 7.194999933242798
+            },
+            "B": {
+              "median": 5.865000009536743,
+              "p95": 6.365000009536743,
+              "min": 5.4100000858306885,
+              "max": 6.920000076293945
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 4.94847222103013,
+              "decodeFinishMs": 4.946944444709354,
+              "copyFreeMs": 0.0009583320882585313,
+              "setupMs": 0.0005694442325168186,
+              "localWallMs": 4.94890277783076,
+              "callerWallMs": 4.948930555582047
+            },
+            {
+              "stagesMs": 5.064125000105964,
+              "decodeFinishMs": 5.062277776002884,
+              "copyFreeMs": 0.00129166841506958,
+              "setupMs": 0.0005555556880103218,
+              "localWallMs": 5.06509722272555,
+              "callerWallMs": 5.065138889021343
+            },
+            {
+              "stagesMs": 4.9692499995231625,
+              "decodeFinishMs": 4.967486108673944,
+              "copyFreeMs": 0.0011527803209092882,
+              "setupMs": 0.00061111052831014,
+              "localWallMs": 4.969986110925674,
+              "callerWallMs": 4.970027777883741
+            },
+            {
+              "stagesMs": 4.99930555621783,
+              "decodeFinishMs": 4.997666664918263,
+              "copyFreeMs": 0.001125001907348633,
+              "setupMs": 0.0005138893922170003,
+              "localWallMs": 4.999958333704207,
+              "callerWallMs": 4.9999861114554935
+            },
+            {
+              "stagesMs": 5.2151944418748215,
+              "decodeFinishMs": 5.212708330816692,
+              "copyFreeMs": 0.0019166668256123862,
+              "setupMs": 0.0005694442325168186,
+              "localWallMs": 5.216069444020589,
+              "callerWallMs": 5.2160833332273695
+            },
+            {
+              "stagesMs": 4.994930552774005,
+              "decodeFinishMs": 4.99311110774676,
+              "copyFreeMs": 0.001138889127307468,
+              "setupMs": 0.0006805558999379475,
+              "localWallMs": 4.995472221904331,
+              "callerWallMs": 4.995500000317891
+            },
+            {
+              "stagesMs": 4.981124995152156,
+              "decodeFinishMs": 4.979513886239793,
+              "copyFreeMs": 0.0010972201824188232,
+              "setupMs": 0.0005138887299431695,
+              "localWallMs": 4.981694444020589,
+              "callerWallMs": 4.9817083332273695
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 4.994930552774005,
+              "p95": 5.2151944418748215,
+              "min": 4.94847222103013,
+              "max": 5.2151944418748215
+            },
+            "decodeFinishMs": {
+              "median": 4.99311110774676,
+              "p95": 5.212708330816692,
+              "min": 4.946944444709354,
+              "max": 5.212708330816692
+            },
+            "copyFreeMs": {
+              "median": 0.001138889127307468,
+              "p95": 0.0019166668256123862,
+              "min": 0.0009583320882585313,
+              "max": 0.0019166668256123862
+            },
+            "setupMs": {
+              "median": 0.0005694442325168186,
+              "p95": 0.0006805558999379475,
+              "min": 0.0005138887299431695,
+              "max": 0.0006805558999379475
+            },
+            "localWallMs": {
+              "median": 4.995472221904331,
+              "p95": 5.216069444020589,
+              "min": 4.94890277783076,
+              "max": 5.216069444020589
+            },
+            "callerWallMs": {
+              "median": 4.995500000317891,
+              "p95": 5.2160833332273695,
+              "min": 4.948930555582047,
+              "max": 5.2160833332273695
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 6.552499890327454,
+              "p95": 7.0299999713897705,
+              "min": 6.099999904632568,
+              "max": 9.069999933242798
+            },
+            "P": {
+              "median": 4.815000057220459,
+              "p95": 5.295000076293945,
+              "min": 4.559999942779541,
+              "max": 5.960000038146973
+            },
+            "B": {
+              "median": 4.820000052452087,
+              "p95": 5.384999990463257,
+              "min": 4.450000047683716,
+              "max": 9.25
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 17.150215960891455,
+          "p95": 18.43215008194986,
+          "min": 16.037359993983173,
+          "max": 18.43215008194986
+        },
+        "decodeFinishMs": {
+          "median": 17.156973327104534,
+          "p95": 18.435859193954947,
+          "min": 16.04285342509211,
+          "max": 18.435859193954947
+        },
+        "copyFreeMs": {
+          "median": 2.3527695811688676,
+          "p95": 13.683698550858482,
+          "min": -13.414763922042939,
+          "max": 13.683698550858482
+        },
+        "setupMs": {
+          "median": 4.651265946310385,
+          "p95": 89.48718365676136,
+          "min": -19.51216108244273,
+          "max": 89.48718365676136
+        },
+        "localWallMs": {
+          "median": 17.14721680722225,
+          "p95": 18.43719025779376,
+          "min": 16.033035376081532,
+          "max": 18.43719025779376
+        },
+        "callerWallMs": {
+          "median": 17.14694719094697,
+          "p95": 18.436919157294973,
+          "min": 16.032731318380918,
+          "max": 18.436919157294973
+        }
+      }
+    },
+    {
+      "mode": "facade-4",
+      "name": "cosmos",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 0.8609687514603139,
+              "decodeFinishMs": 0.8589531227946281,
+              "copyFreeMs": 0.0006562530994415282,
+              "setupMs": 0.0013593755662441255,
+              "localWallMs": 0.861328125,
+              "callerWallMs": 0.8613437503576279
+            },
+            {
+              "stagesMs": 0.8642500028014184,
+              "decodeFinishMs": 0.8627500012516975,
+              "copyFreeMs": 0.0006875008344650268,
+              "setupMs": 0.0008125007152557373,
+              "localWallMs": 0.8648125000298024,
+              "callerWallMs": 0.8648281246423721
+            },
+            {
+              "stagesMs": 0.8636093735694885,
+              "decodeFinishMs": 0.8620468735694885,
+              "copyFreeMs": 0.0007031254470348358,
+              "setupMs": 0.0008593745529651642,
+              "localWallMs": 0.8640624992549419,
+              "callerWallMs": 0.8640781238675117
+            },
+            {
+              "stagesMs": 0.8952500008046627,
+              "decodeFinishMs": 0.890359377861023,
+              "copyFreeMs": 0.0008593738079071046,
+              "setupMs": 0.004031249135732651,
+              "localWallMs": 0.8957499995827675,
+              "callerWallMs": 0.8957656249403954
+            },
+            {
+              "stagesMs": 0.8678593769669531,
+              "decodeFinishMs": 0.8662656269967556,
+              "copyFreeMs": 0.0007656261324882508,
+              "setupMs": 0.0008281238377094268,
+              "localWallMs": 0.8684062503278256,
+              "callerWallMs": 0.8684374995529651
+            },
+            {
+              "stagesMs": 0.8627812504768371,
+              "decodeFinishMs": 0.8611250005662441,
+              "copyFreeMs": 0.000640624761581421,
+              "setupMs": 0.0010156251490116121,
+              "localWallMs": 0.8630937494337558,
+              "callerWallMs": 0.8631093747913837
+            },
+            {
+              "stagesMs": 0.9009375005960465,
+              "decodeFinishMs": 0.8985625013709069,
+              "copyFreeMs": 0.0013437479734420775,
+              "setupMs": 0.0010312512516975404,
+              "localWallMs": 0.9014531247317791,
+              "callerWallMs": 0.9014843747019767
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 0.8642500028014184,
+              "p95": 0.9009375005960465,
+              "min": 0.8609687514603139,
+              "max": 0.9009375005960465
+            },
+            "decodeFinishMs": {
+              "median": 0.8627500012516975,
+              "p95": 0.8985625013709069,
+              "min": 0.8589531227946281,
+              "max": 0.8985625013709069
+            },
+            "copyFreeMs": {
+              "median": 0.0007031254470348358,
+              "p95": 0.0013437479734420775,
+              "min": 0.000640624761581421,
+              "max": 0.0013437479734420775
+            },
+            "setupMs": {
+              "median": 0.0010156251490116121,
+              "p95": 0.004031249135732651,
+              "min": 0.0008125007152557373,
+              "max": 0.004031249135732651
+            },
+            "localWallMs": {
+              "median": 0.8648125000298024,
+              "p95": 0.9014531247317791,
+              "min": 0.861328125,
+              "max": 0.9014531247317791
+            },
+            "callerWallMs": {
+              "median": 0.8648281246423721,
+              "p95": 0.9014843747019767,
+              "min": 0.8613437503576279,
+              "max": 0.9014843747019767
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 1.125,
+              "p95": 1.315000057220459,
+              "min": 0.8549997806549072,
+              "max": 4.5249998569488525
+            },
+            "P": {
+              "median": 0.7950000762939453,
+              "p95": 0.9150002002716064,
+              "min": 0.7050001621246338,
+              "max": 4.5299999713897705
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 0.8582343727350235,
+              "decodeFinishMs": 0.8567812502384187,
+              "copyFreeMs": 0.0006718724966049195,
+              "setupMs": 0.00078125,
+              "localWallMs": 0.8586718760430813,
+              "callerWallMs": 0.8587187506258487
+            },
+            {
+              "stagesMs": 0.8754843778908252,
+              "decodeFinishMs": 0.873765630275011,
+              "copyFreeMs": 0.0007968731224536896,
+              "setupMs": 0.0009218744933605194,
+              "localWallMs": 0.875874999910593,
+              "callerWallMs": 0.8759218752384186
+            },
+            {
+              "stagesMs": 0.8694687500596048,
+              "decodeFinishMs": 0.8679062470793724,
+              "copyFreeMs": 0.00076562762260437,
+              "setupMs": 0.0007968753576278686,
+              "localWallMs": 0.8697499997913838,
+              "callerWallMs": 0.8697812497615814
+            },
+            {
+              "stagesMs": 0.9172343708574773,
+              "decodeFinishMs": 0.9154843747615815,
+              "copyFreeMs": 0.0007968716323375701,
+              "setupMs": 0.000953124463558197,
+              "localWallMs": 0.9177812494337558,
+              "callerWallMs": 0.9178125001490116
+            },
+            {
+              "stagesMs": 0.8559062503278255,
+              "decodeFinishMs": 0.854312501847744,
+              "copyFreeMs": 0.0007968731224536896,
+              "setupMs": 0.0007968753576278687,
+              "localWallMs": 0.8564062498509883,
+              "callerWallMs": 0.8564218752086162
+            },
+            {
+              "stagesMs": 0.8559375002980232,
+              "decodeFinishMs": 0.8544999986886979,
+              "copyFreeMs": 0.0007343761622905731,
+              "setupMs": 0.0007031254470348358,
+              "localWallMs": 0.8563906252384186,
+              "callerWallMs": 0.8564218752086163
+            },
+            {
+              "stagesMs": 0.8909687466919423,
+              "decodeFinishMs": 0.8892812460660935,
+              "copyFreeMs": 0.0007812514901161194,
+              "setupMs": 0.0009062491357326507,
+              "localWallMs": 0.8915781244635582,
+              "callerWallMs": 0.8916093744337559
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 0.8694687500596048,
+              "p95": 0.9172343708574773,
+              "min": 0.8559062503278255,
+              "max": 0.9172343708574773
+            },
+            "decodeFinishMs": {
+              "median": 0.8679062470793724,
+              "p95": 0.9154843747615815,
+              "min": 0.854312501847744,
+              "max": 0.9154843747615815
+            },
+            "copyFreeMs": {
+              "median": 0.0007812514901161194,
+              "p95": 0.0007968731224536896,
+              "min": 0.0006718724966049195,
+              "max": 0.0007968731224536896
+            },
+            "setupMs": {
+              "median": 0.0007968753576278687,
+              "p95": 0.000953124463558197,
+              "min": 0.0007031254470348358,
+              "max": 0.000953124463558197
+            },
+            "localWallMs": {
+              "median": 0.8697499997913838,
+              "p95": 0.9177812494337558,
+              "min": 0.8563906252384186,
+              "max": 0.9177812494337558
+            },
+            "callerWallMs": {
+              "median": 0.8697812497615814,
+              "p95": 0.9178125001490116,
+              "min": 0.8564218752086162,
+              "max": 0.9178125001490116
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 1.1599998474121094,
+              "p95": 1.2850000858306885,
+              "min": 0.8949999809265137,
+              "max": 5.424999952316284
+            },
+            "P": {
+              "median": 0.7900002002716064,
+              "p95": 0.9149999618530273,
+              "min": 0.6899998188018799,
+              "max": 5.0299999713897705
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 0.3175932599937707,
+          "p95": 1.3773114580961403,
+          "min": -2.4556682527846716,
+          "max": 1.3773114580961403
+        },
+        "decodeFinishMs": {
+          "median": 0.2528511159192463,
+          "p95": 1.3798452549077487,
+          "min": -2.8218938919830476,
+          "max": 1.3798452549077487
+        },
+        "copyFreeMs": {
+          "median": -4.081233468858681,
+          "p95": 41.86026654128417,
+          "min": -15.908677125282324,
+          "max": 41.86026654128417
+        },
+        "setupMs": {
+          "median": 12.121402593124026,
+          "p95": 76.3565973854163,
+          "min": -13.461376224186623,
+          "max": 76.3565973854163
+        },
+        "localWallMs": {
+          "median": 0.30838990157423907,
+          "p95": 1.3818417903264995,
+          "min": -2.4595311036841006,
+          "max": 1.3818417903264995
+        },
+        "callerWallMs": {
+          "median": 0.30475634503522153,
+          "p95": 1.383591145077685,
+          "min": -2.4612325584701096,
+          "max": 1.383591145077685
+        }
+      }
+    },
+    {
+      "mode": "facade-4",
+      "name": "swat",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 9.462859378010034,
+              "decodeFinishMs": 9.454499999433757,
+              "copyFreeMs": 0.0020156271755695345,
+              "setupMs": 0.006343751400709152,
+              "localWallMs": 9.464109375327826,
+              "callerWallMs": 9.464140625298024
+            },
+            {
+              "stagesMs": 9.449250000715255,
+              "decodeFinishMs": 9.444796871393919,
+              "copyFreeMs": 0.0017812520265579224,
+              "setupMs": 0.002671877294778824,
+              "localWallMs": 9.450281249731779,
+              "callerWallMs": 9.450296875089407
+            },
+            {
+              "stagesMs": 9.415156253427266,
+              "decodeFinishMs": 9.412265624850988,
+              "copyFreeMs": 0.0017812542617321014,
+              "setupMs": 0.0011093743145465852,
+              "localWallMs": 9.416187500208615,
+              "callerWallMs": 9.416218750178814
+            },
+            {
+              "stagesMs": 9.620031249523162,
+              "decodeFinishMs": 9.616265628486872,
+              "copyFreeMs": 0.002562496066093445,
+              "setupMs": 0.0012031249701976777,
+              "localWallMs": 9.621109375357628,
+              "callerWallMs": 9.621156249940395
+            },
+            {
+              "stagesMs": 9.43651562333107,
+              "decodeFinishMs": 9.426140628755093,
+              "copyFreeMs": 0.001874995231628418,
+              "setupMs": 0.008499999344348906,
+              "localWallMs": 9.437546875327826,
+              "callerWallMs": 9.437578124552964
+            },
+            {
+              "stagesMs": 9.450015623867511,
+              "decodeFinishMs": 9.446765626221895,
+              "copyFreeMs": 0.0018906213343143463,
+              "setupMs": 0.001359376311302185,
+              "localWallMs": 9.451078124344349,
+              "callerWallMs": 9.451140625029803
+            },
+            {
+              "stagesMs": 9.529156256467104,
+              "decodeFinishMs": 9.52545313462615,
+              "copyFreeMs": 0.0023437485098838804,
+              "setupMs": 0.0013593733310699463,
+              "localWallMs": 9.530624999850989,
+              "callerWallMs": 9.530656249821185
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 9.450015623867511,
+              "p95": 9.620031249523162,
+              "min": 9.415156253427266,
+              "max": 9.620031249523162
+            },
+            "decodeFinishMs": {
+              "median": 9.446765626221895,
+              "p95": 9.616265628486872,
+              "min": 9.412265624850988,
+              "max": 9.616265628486872
+            },
+            "copyFreeMs": {
+              "median": 0.0018906213343143463,
+              "p95": 0.002562496066093445,
+              "min": 0.0017812520265579224,
+              "max": 0.002562496066093445
+            },
+            "setupMs": {
+              "median": 0.001359376311302185,
+              "p95": 0.008499999344348906,
+              "min": 0.0011093743145465852,
+              "max": 0.008499999344348906
+            },
+            "localWallMs": {
+              "median": 9.451078124344349,
+              "p95": 9.621109375357628,
+              "min": 9.416187500208615,
+              "max": 9.621109375357628
+            },
+            "callerWallMs": {
+              "median": 9.451140625029803,
+              "p95": 9.621156249940395,
+              "min": 9.416218750178814,
+              "max": 9.621156249940395
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 10.244999885559082,
+              "p95": 10.664999961853027,
+              "min": 10.004999876022339,
+              "max": 11.204999923706055
+            },
+            "B": {
+              "median": 9.43500018119812,
+              "p95": 10.440000057220459,
+              "min": 7.119999885559082,
+              "max": 11.31499981880188
+            },
+            "P": {
+              "median": 9.509999990463257,
+              "p95": 10.960000038146973,
+              "min": 8.710000038146973,
+              "max": 12.174999952316284
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 7.0112343661487095,
+              "decodeFinishMs": 7.0079374894499775,
+              "copyFreeMs": 0.002187503129243851,
+              "setupMs": 0.0011093735694885252,
+              "localWallMs": 7.012562499940396,
+              "callerWallMs": 7.012609375268221
+            },
+            {
+              "stagesMs": 6.959828127920628,
+              "decodeFinishMs": 6.957046876847745,
+              "copyFreeMs": 0.0018437512218952177,
+              "setupMs": 0.000937499850988388,
+              "localWallMs": 6.9608750000596045,
+              "callerWallMs": 6.960906250029803
+            },
+            {
+              "stagesMs": 6.904140623658895,
+              "decodeFinishMs": 6.901328117400408,
+              "copyFreeMs": 0.0016718812286853789,
+              "setupMs": 0.0011406250298023222,
+              "localWallMs": 6.905171874910593,
+              "callerWallMs": 6.905203125625849
+            },
+            {
+              "stagesMs": 7.021578126400708,
+              "decodeFinishMs": 7.018265625834465,
+              "copyFreeMs": 0.002312500774860382,
+              "setupMs": 0.0009999997913837434,
+              "localWallMs": 7.0230624996125695,
+              "callerWallMs": 7.023109374940395
+            },
+            {
+              "stagesMs": 6.926624997705222,
+              "decodeFinishMs": 6.923593752831221,
+              "copyFreeMs": 0.001890619844198227,
+              "setupMs": 0.0011406250298023224,
+              "localWallMs": 6.927890624850988,
+              "callerWallMs": 6.927906249463558
+            },
+            {
+              "stagesMs": 7.1392812468111515,
+              "decodeFinishMs": 7.135093754529953,
+              "copyFreeMs": 0.0030156180262565615,
+              "setupMs": 0.0011718742549419402,
+              "localWallMs": 7.1409062497317795,
+              "callerWallMs": 7.1409218743443486
+            },
+            {
+              "stagesMs": 7.018578123301268,
+              "decodeFinishMs": 7.015390623360872,
+              "copyFreeMs": 0.001906248927116394,
+              "setupMs": 0.001281251013278961,
+              "localWallMs": 7.020249999314546,
+              "callerWallMs": 7.020296874642372
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 7.0112343661487095,
+              "p95": 7.1392812468111515,
+              "min": 6.904140623658895,
+              "max": 7.1392812468111515
+            },
+            "decodeFinishMs": {
+              "median": 7.0079374894499775,
+              "p95": 7.135093754529953,
+              "min": 6.901328117400408,
+              "max": 7.135093754529953
+            },
+            "copyFreeMs": {
+              "median": 0.001906248927116394,
+              "p95": 0.0030156180262565615,
+              "min": 0.0016718812286853789,
+              "max": 0.0030156180262565615
+            },
+            "setupMs": {
+              "median": 0.0011406250298023222,
+              "p95": 0.001281251013278961,
+              "min": 0.000937499850988388,
+              "max": 0.001281251013278961
+            },
+            "localWallMs": {
+              "median": 7.012562499940396,
+              "p95": 7.1409062497317795,
+              "min": 6.905171874910593,
+              "max": 7.1409062497317795
+            },
+            "callerWallMs": {
+              "median": 7.012609375268221,
+              "p95": 7.1409218743443486,
+              "min": 6.905203125625849,
+              "max": 7.1409218743443486
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 7.019999980926514,
+              "p95": 7.5249998569488525,
+              "min": 6.559999942779541,
+              "max": 8.5
+            },
+            "B": {
+              "median": 7.134999990463257,
+              "p95": 7.875,
+              "min": 5.180000066757202,
+              "max": 8.984999895095825
+            },
+            "P": {
+              "median": 6.827499985694885,
+              "p95": 7.894999980926514,
+              "min": 6.174999952316284,
+              "max": 8.585000038146973
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 26.346279414423446,
+          "p95": 27.01085948396739,
+          "min": 24.452175202972512,
+          "max": 27.01085948396739
+        },
+        "decodeFinishMs": {
+          "median": 26.35110871671715,
+          "p95": 27.016724610395407,
+          "min": 24.470511529102726,
+          "max": 27.016724610395407
+        },
+        "copyFreeMs": {
+          "median": -0.833314789618913,
+          "p95": 18.666660732689365,
+          "min": -59.50407263071572,
+          "max": 18.666660732689365
+        },
+        "setupMs": {
+          "median": 16.883132163781802,
+          "p95": 86.5808809672362,
+          "min": -2.816967622736929,
+          "max": 86.5808809672362
+        },
+        "localWallMs": {
+          "median": 26.34213928546126,
+          "p95": 27.003610232302197,
+          "min": 24.443474535058225,
+          "max": 27.003610232302197
+        },
+        "callerWallMs": {
+          "median": 26.34193039608666,
+          "p95": 27.003478662100463,
+          "min": 24.443808872838236,
+          "max": 27.003478662100463
+        }
+      }
+    },
+    {
+      "mode": "facade-4",
+      "name": "live2vod",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 10.364015620201826,
+              "decodeFinishMs": 10.360953122377396,
+              "copyFreeMs": 0.001796869933605194,
+              "setupMs": 0.0012656278908252717,
+              "localWallMs": 10.365109375119209,
+              "callerWallMs": 10.365171875804663
+            },
+            {
+              "stagesMs": 10.351140621304511,
+              "decodeFinishMs": 10.34818749576807,
+              "copyFreeMs": 0.0018437504768371582,
+              "setupMs": 0.0011093750596046447,
+              "localWallMs": 10.352124999463559,
+              "callerWallMs": 10.352156249433754
+            },
+            {
+              "stagesMs": 10.350453121215104,
+              "decodeFinishMs": 10.347328124940395,
+              "copyFreeMs": 0.0019999973475933073,
+              "setupMs": 0.001124998927116394,
+              "localWallMs": 10.351499999314546,
+              "callerWallMs": 10.351531250029803
+            },
+            {
+              "stagesMs": 10.58907812461257,
+              "decodeFinishMs": 10.574140622466803,
+              "copyFreeMs": 0.0024062514305114744,
+              "setupMs": 0.012531250715255737,
+              "localWallMs": 10.59006250053644,
+              "callerWallMs": 10.590093749761582
+            },
+            {
+              "stagesMs": 10.42521874383092,
+              "decodeFinishMs": 10.421624995023013,
+              "copyFreeMs": 0.0021093733608722686,
+              "setupMs": 0.0014843754470348358,
+              "localWallMs": 10.42632812485099,
+              "callerWallMs": 10.426374999433754
+            },
+            {
+              "stagesMs": 10.437281250953674,
+              "decodeFinishMs": 10.433593761920928,
+              "copyFreeMs": 0.0025156140327453613,
+              "setupMs": 0.0011718750000000002,
+              "localWallMs": 10.438843749463558,
+              "callerWallMs": 10.438875000178815
+            },
+            {
+              "stagesMs": 10.522109378874301,
+              "decodeFinishMs": 10.518484377861022,
+              "copyFreeMs": 0.0024218760430812832,
+              "setupMs": 0.0012031249701976777,
+              "localWallMs": 10.523375000804663,
+              "callerWallMs": 10.523390625417232
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 10.42521874383092,
+              "p95": 10.58907812461257,
+              "min": 10.350453121215104,
+              "max": 10.58907812461257
+            },
+            "decodeFinishMs": {
+              "median": 10.421624995023013,
+              "p95": 10.574140622466803,
+              "min": 10.347328124940395,
+              "max": 10.574140622466803
+            },
+            "copyFreeMs": {
+              "median": 0.0021093733608722686,
+              "p95": 0.0025156140327453613,
+              "min": 0.001796869933605194,
+              "max": 0.0025156140327453613
+            },
+            "setupMs": {
+              "median": 0.0012031249701976777,
+              "p95": 0.012531250715255737,
+              "min": 0.0011093750596046447,
+              "max": 0.012531250715255737
+            },
+            "localWallMs": {
+              "median": 10.42632812485099,
+              "p95": 10.59006250053644,
+              "min": 10.351499999314546,
+              "max": 10.59006250053644
+            },
+            "callerWallMs": {
+              "median": 10.426374999433754,
+              "p95": 10.590093749761582,
+              "min": 10.351531250029803,
+              "max": 10.590093749761582
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 10.690000057220459,
+              "p95": 11.690000057220459,
+              "min": 7.184999942779541,
+              "max": 13.294999837875366
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 6.602296870946884,
+              "decodeFinishMs": 6.599859370291233,
+              "copyFreeMs": 0.0014218755066394805,
+              "setupMs": 0.0010156251490116121,
+              "localWallMs": 6.602984374761581,
+              "callerWallMs": 6.602999999374152
+            },
+            {
+              "stagesMs": 6.595624997466802,
+              "decodeFinishMs": 6.593078118562698,
+              "copyFreeMs": 0.0014843791723251343,
+              "setupMs": 0.0010624997317790984,
+              "localWallMs": 6.596531250327825,
+              "callerWallMs": 6.596562500298023
+            },
+            {
+              "stagesMs": 6.624765626341104,
+              "decodeFinishMs": 6.622343751043081,
+              "copyFreeMs": 0.0013906255364418028,
+              "setupMs": 0.001031249761581421,
+              "localWallMs": 6.62579687461257,
+              "callerWallMs": 6.625843749195337
+            },
+            {
+              "stagesMs": 6.718828120827675,
+              "decodeFinishMs": 6.715406239032745,
+              "copyFreeMs": 0.0022031307220458985,
+              "setupMs": 0.001218751072883606,
+              "localWallMs": 6.720062500238418,
+              "callerWallMs": 6.7200937502086155
+            },
+            {
+              "stagesMs": 6.615796879678965,
+              "decodeFinishMs": 6.60998438000679,
+              "copyFreeMs": 0.0013906247913837433,
+              "setupMs": 0.0044218748807907104,
+              "localWallMs": 6.616656249761581,
+              "callerWallMs": 6.616718749701977
+            },
+            {
+              "stagesMs": 6.759109374880791,
+              "decodeFinishMs": 6.754656244069338,
+              "copyFreeMs": 0.0031875066459178926,
+              "setupMs": 0.0012656241655349732,
+              "localWallMs": 6.760937500745058,
+              "callerWallMs": 6.760968749970198
+            },
+            {
+              "stagesMs": 6.839812497794629,
+              "decodeFinishMs": 6.835671872645617,
+              "copyFreeMs": 0.0029218770563602444,
+              "setupMs": 0.0012187480926513672,
+              "localWallMs": 6.841453124582767,
+              "callerWallMs": 6.841484374552966
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 6.624765626341104,
+              "p95": 6.839812497794629,
+              "min": 6.595624997466802,
+              "max": 6.839812497794629
+            },
+            "decodeFinishMs": {
+              "median": 6.622343751043081,
+              "p95": 6.835671872645617,
+              "min": 6.593078118562698,
+              "max": 6.835671872645617
+            },
+            "copyFreeMs": {
+              "median": 0.0014843791723251343,
+              "p95": 0.0031875066459178926,
+              "min": 0.0013906247913837433,
+              "max": 0.0031875066459178926
+            },
+            "setupMs": {
+              "median": 0.0012187480926513672,
+              "p95": 0.0044218748807907104,
+              "min": 0.0010156251490116121,
+              "max": 0.0044218748807907104
+            },
+            "localWallMs": {
+              "median": 6.62579687461257,
+              "p95": 6.841453124582767,
+              "min": 6.596531250327825,
+              "max": 6.841453124582767
+            },
+            "callerWallMs": {
+              "median": 6.625843749195337,
+              "p95": 6.841484374552966,
+              "min": 6.596562500298023,
+              "max": 6.841484374552966
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 6.7799999713897705,
+              "p95": 7.68500018119812,
+              "min": 4.309999942779541,
+              "max": 9.775000095367432
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 36.28117674402163,
+          "p95": 36.54945178645094,
+          "min": 34.99580500914371,
+          "max": 36.54945178645094
+        },
+        "decodeFinishMs": {
+          "median": 36.28760474953742,
+          "p95": 36.574340535535704,
+          "min": 35.012767742155646,
+          "max": 36.574340535535704
+        },
+        "copyFreeMs": {
+          "median": 19.49131994956842,
+          "p95": 34.07403273507295,
+          "min": -26.708891126643767,
+          "max": 34.07403273507295
+        },
+        "setupMs": {
+          "median": 4.225381436125987,
+          "p95": 90.27430620792002,
+          "min": -197.89463909712165,
+          "max": 90.27430620792002
+        },
+        "localWallMs": {
+          "median": 36.278481464726774,
+          "p95": 36.54369367604759,
+          "min": 34.988032603041894,
+          "max": 36.54369367604759
+        },
+        "callerWallMs": {
+          "median": 36.27837195116869,
+          "p95": 36.54358583596196,
+          "min": 34.987832172373494,
+          "max": 36.54358583596196
+        }
+      }
+    },
+    {
+      "mode": "facade-4",
+      "name": "1080p-420-IPB-60",
+      "variants": {
+        "A": {
+          "rounds": [
+            {
+              "stagesMs": 2.490763890743256,
+              "decodeFinishMs": 2.4892500009801655,
+              "copyFreeMs": 0.0009722226195865208,
+              "setupMs": 0.0005416671435038248,
+              "localWallMs": 2.4913472221957313,
+              "callerWallMs": 2.4913611114025116
+            },
+            {
+              "stagesMs": 2.478597225083245,
+              "decodeFinishMs": 2.477138896120919,
+              "copyFreeMs": 0.000888885392083062,
+              "setupMs": 0.0005694435702429878,
+              "localWallMs": 2.479236110713747,
+              "callerWallMs": 2.4792638884650335
+            },
+            {
+              "stagesMs": 2.483180555370119,
+              "decodeFinishMs": 2.481694447331958,
+              "copyFreeMs": 0.000763885842429267,
+              "setupMs": 0.0007222221957312691,
+              "localWallMs": 2.483722221851349,
+              "callerWallMs": 2.4837499996026358
+            },
+            {
+              "stagesMs": 2.5121805548667906,
+              "decodeFinishMs": 2.5103611085149975,
+              "copyFreeMs": 0.0013055576218499077,
+              "setupMs": 0.0005138887299431695,
+              "localWallMs": 2.512944444682863,
+              "callerWallMs": 2.512986110978656
+            },
+            {
+              "stagesMs": 2.4973750008477107,
+              "decodeFinishMs": 2.4955138842264812,
+              "copyFreeMs": 0.001236116886138916,
+              "setupMs": 0.0006249997350904677,
+              "localWallMs": 2.4979027774598865,
+              "callerWallMs": 2.497930555873447
+            },
+            {
+              "stagesMs": 2.5962638868225945,
+              "decodeFinishMs": 2.5936249997880725,
+              "copyFreeMs": 0.0019444419278038872,
+              "setupMs": 0.0006944451067182753,
+              "localWallMs": 2.597152778175142,
+              "callerWallMs": 2.5971944444709356
+            },
+            {
+              "stagesMs": 2.5076666626665327,
+              "decodeFinishMs": 2.505847220288383,
+              "copyFreeMs": 0.0012499981456332737,
+              "setupMs": 0.0005694442325168186,
+              "localWallMs": 2.508319444126553,
+              "callerWallMs": 2.5083472218778398
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 2.4973750008477107,
+              "p95": 2.5962638868225945,
+              "min": 2.478597225083245,
+              "max": 2.5962638868225945
+            },
+            "decodeFinishMs": {
+              "median": 2.4955138842264812,
+              "p95": 2.5936249997880725,
+              "min": 2.477138896120919,
+              "max": 2.5936249997880725
+            },
+            "copyFreeMs": {
+              "median": 0.001236116886138916,
+              "p95": 0.0019444419278038872,
+              "min": 0.000763885842429267,
+              "max": 0.0019444419278038872
+            },
+            "setupMs": {
+              "median": 0.0005694442325168186,
+              "p95": 0.0007222221957312691,
+              "min": 0.0005138887299431695,
+              "max": 0.0007222221957312691
+            },
+            "localWallMs": {
+              "median": 2.4979027774598865,
+              "p95": 2.597152778175142,
+              "min": 2.479236110713747,
+              "max": 2.597152778175142
+            },
+            "callerWallMs": {
+              "median": 2.497930555873447,
+              "p95": 2.5971944444709356,
+              "min": 2.4792638884650335,
+              "max": 2.5971944444709356
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 2.7149999141693115,
+              "p95": 2.990000009536743,
+              "min": 2.140000104904175,
+              "max": 4.784999847412109
+            },
+            "P": {
+              "median": 2.450000047683716,
+              "p95": 2.7100000381469727,
+              "min": 2.180000066757202,
+              "max": 5.2850000858306885
+            },
+            "B": {
+              "median": 2.429999828338623,
+              "p95": 2.694999933242798,
+              "min": 2.130000114440918,
+              "max": 6.019999980926514
+            }
+          }
+        },
+        "B": {
+          "rounds": [
+            {
+              "stagesMs": 2.25416666732894,
+              "decodeFinishMs": 2.252708339691162,
+              "copyFreeMs": 0.0009444395701090494,
+              "setupMs": 0.0005138880676693387,
+              "localWallMs": 2.25474999944369,
+              "callerWallMs": 2.2547777771949766
+            },
+            {
+              "stagesMs": 2.2939722226725685,
+              "decodeFinishMs": 2.2922500014305114,
+              "copyFreeMs": 0.00122222105662028,
+              "setupMs": 0.0005000001854366726,
+              "localWallMs": 2.294597222407659,
+              "callerWallMs": 2.2946250001589457
+            },
+            {
+              "stagesMs": 2.2579861137602064,
+              "decodeFinishMs": 2.2565000063843197,
+              "copyFreeMs": 0.0009722186459435358,
+              "setupMs": 0.0005138887299431695,
+              "localWallMs": 2.2583750009536745,
+              "callerWallMs": 2.2584027780426874
+            },
+            {
+              "stagesMs": 2.4017777760823567,
+              "decodeFinishMs": 2.399472220738729,
+              "copyFreeMs": 0.0016527778572506375,
+              "setupMs": 0.0006527774863772922,
+              "localWallMs": 2.402541666560703,
+              "callerWallMs": 2.4025694443119896
+            },
+            {
+              "stagesMs": 2.231694445345137,
+              "decodeFinishMs": 2.2299166626400417,
+              "copyFreeMs": 0.0010277820958031548,
+              "setupMs": 0.0007500006092919244,
+              "localWallMs": 2.2322083334128062,
+              "callerWallMs": 2.232236111164093
+            },
+            {
+              "stagesMs": 2.402486111058129,
+              "decodeFinishMs": 2.398861108885871,
+              "copyFreeMs": 0.002236113945643107,
+              "setupMs": 0.0013888882266150581,
+              "localWallMs": 2.4038611114025112,
+              "callerWallMs": 2.4038888891537984
+            },
+            {
+              "stagesMs": 2.3432083335187697,
+              "decodeFinishMs": 2.3412361098660366,
+              "copyFreeMs": 0.0013472225930955674,
+              "setupMs": 0.0006250010596381293,
+              "localWallMs": 2.3442777772744496,
+              "callerWallMs": 2.344319444894791
+            }
+          ],
+          "summary": {
+            "stagesMs": {
+              "median": 2.2939722226725685,
+              "p95": 2.402486111058129,
+              "min": 2.231694445345137,
+              "max": 2.402486111058129
+            },
+            "decodeFinishMs": {
+              "median": 2.2922500014305114,
+              "p95": 2.399472220738729,
+              "min": 2.2299166626400417,
+              "max": 2.399472220738729
+            },
+            "copyFreeMs": {
+              "median": 0.00122222105662028,
+              "p95": 0.002236113945643107,
+              "min": 0.0009444395701090494,
+              "max": 0.002236113945643107
+            },
+            "setupMs": {
+              "median": 0.0006250010596381293,
+              "p95": 0.0013888882266150581,
+              "min": 0.0005000001854366726,
+              "max": 0.0013888882266150581
+            },
+            "localWallMs": {
+              "median": 2.294597222407659,
+              "p95": 2.4038611114025112,
+              "min": 2.2322083334128062,
+              "max": 2.4038611114025112
+            },
+            "callerWallMs": {
+              "median": 2.2946250001589457,
+              "p95": 2.4038888891537984,
+              "min": 2.232236111164093,
+              "max": 2.4038888891537984
+            }
+          },
+          "packetMsByType": {
+            "I": {
+              "median": 2.510000228881836,
+              "p95": 2.7049999237060547,
+              "min": 2.0250000953674316,
+              "max": 4.940000057220459
+            },
+            "P": {
+              "median": 2.2249999046325684,
+              "p95": 2.509999990463257,
+              "min": 2,
+              "max": 6.4700000286102295
+            },
+            "B": {
+              "median": 2.240000009536743,
+              "p95": 2.5249998569488525,
+              "min": 1.9249999523162842,
+              "max": 6.515000104904175
+            }
+          }
+        }
+      },
+      "pairedReductionPercent": {
+        "stagesMs": {
+          "median": 7.4637164869098855,
+          "p95": 10.638392528650725,
+          "min": 4.394699201478697,
+          "max": 10.638392528650725
+        },
+        "decodeFinishMs": {
+          "median": 7.509331183888023,
+          "p95": 10.642987132438456,
+          "min": 4.417248474736961,
+          "max": 10.642987132438456
+        },
+        "copyFreeMs": {
+          "median": -15.000294617625482,
+          "p95": 16.853971713509,
+          "min": -37.50040978354488,
+          "max": 16.853971713509
+        },
+        "setupMs": {
+          "median": -9.75632449129596,
+          "p95": 28.846173244115885,
+          "min": -99.99971389797793,
+          "max": 28.846173244115885
+        },
+        "localWallMs": {
+          "median": 7.447410414368813,
+          "p95": 10.636700773328919,
+          "min": 4.3933632657801605,
+          "max": 10.636700773328919
+        },
+        "callerWallMs": {
+          "median": 7.4473269733461835,
+          "p95": 10.636582513657958,
+          "min": 4.393843093054978,
+          "max": 10.636582513657958
+        }
+      }
+    }
+  ],
+  "sizes": {
+    "scalarA": {
+      "raw": 154484,
+      "gzip": 55562
+    },
+    "scalarB": {
+      "raw": 144238,
+      "gzip": 51480
+    },
+    "sharedA": {
+      "raw": 343849,
+      "gzip": 100814
+    },
+    "sharedB": {
+      "raw": 332979,
+      "gzip": 97209
+    }
+  }
+}

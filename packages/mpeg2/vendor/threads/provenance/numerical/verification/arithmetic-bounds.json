@@ -1,0 +1,206 @@
+{
+  "row/rotation0": {
+    "inputAbsBound": 2048,
+    "preAdd": 4096,
+    "shared": 36319232,
+    "firstProduct": 25681920,
+    "secondProduct": 62001152,
+    "firstSum": 62001152,
+    "secondSum": 98320384,
+    "width": 32
+  },
+  "row/rot0/first-round": {
+    "inputAbsBound": 62001152,
+    "bias": 256,
+    "biasedAbsBound": 62001409,
+    "width": 32
+  },
+  "row/rot0/second-round": {
+    "inputAbsBound": 62001152,
+    "bias": 256,
+    "biasedAbsBound": 62001409,
+    "width": 32
+  },
+  "row/rotation1": {
+    "inputAbsBound": 2048,
+    "preAdd": 4096,
+    "shared": 18513920,
+    "firstProduct": 37283840,
+    "secondProduct": 55799808,
+    "firstSum": 55797760,
+    "secondSum": 74313728,
+    "width": 32
+  },
+  "row/rot1/first-round": {
+    "inputAbsBound": 55797760,
+    "bias": 256,
+    "biasedAbsBound": 55798017,
+    "width": 32
+  },
+  "row/rot1/second-round": {
+    "inputAbsBound": 55799808,
+    "bias": 256,
+    "biasedAbsBound": 55800065,
+    "width": 32
+  },
+  "row/rotation2": {
+    "inputAbsBound": 2048,
+    "preAdd": 4096,
+    "shared": 52727808,
+    "firstProduct": 13092864,
+    "secondProduct": 65818624,
+    "firstSum": 65820672,
+    "secondSum": 118546432,
+    "width": 32
+  },
+  "row/rot2/first-round": {
+    "inputAbsBound": 65820672,
+    "bias": 256,
+    "biasedAbsBound": 65820929,
+    "width": 32
+  },
+  "row/rot2/second-round": {
+    "inputAbsBound": 65818624,
+    "bias": 256,
+    "biasedAbsBound": 65818881,
+    "width": 32
+  },
+  "row/inverse-root-round": {
+    "inputAbsBound": 5503709120,
+    "bias": 8192,
+    "biasedAbsBound": 5503717313,
+    "width": 64
+  },
+  "row/butterflies": {
+    "dcPreAdd": 4096,
+    "dcScaled": 131072,
+    "even": 252168,
+    "p": 237536,
+    "q": 237536,
+    "oddPreAdd": 475072,
+    "odd": 335920,
+    "result": 588088,
+    "width": 32
+  },
+  "column/rotation0": {
+    "inputAbsBound": 588088,
+    "preAdd": 1176176,
+    "shared": 10429152592,
+    "firstProduct": 7374623520,
+    "secondProduct": 17803776112,
+    "firstSum": 17803776112,
+    "secondSum": 28232928704,
+    "width": 64
+  },
+  "column/rot0/first-round": {
+    "inputAbsBound": 17803776112,
+    "bias": 8192,
+    "biasedAbsBound": 17803784305,
+    "width": 64
+  },
+  "column/rot0/second-round": {
+    "inputAbsBound": 17803776112,
+    "bias": 8192,
+    "biasedAbsBound": 17803784305,
+    "width": 64
+  },
+  "column/rotation1": {
+    "inputAbsBound": 588088,
+    "preAdd": 1176176,
+    "shared": 5316315520,
+    "firstProduct": 10706142040,
+    "secondProduct": 16023045648,
+    "firstSum": 16022457560,
+    "secondSum": 21339361168,
+    "width": 64
+  },
+  "column/rot1/first-round": {
+    "inputAbsBound": 16022457560,
+    "bias": 8192,
+    "biasedAbsBound": 16022465753,
+    "width": 64
+  },
+  "column/rot1/second-round": {
+    "inputAbsBound": 16023045648,
+    "bias": 8192,
+    "biasedAbsBound": 16023053841,
+    "width": 64
+  },
+  "column/rotation2": {
+    "inputAbsBound": 588088,
+    "preAdd": 1176176,
+    "shared": 15140913648,
+    "firstProduct": 3759646584,
+    "secondProduct": 18899972144,
+    "firstSum": 18900560232,
+    "secondSum": 34040885792,
+    "width": 64
+  },
+  "column/rot2/first-round": {
+    "inputAbsBound": 18900560232,
+    "bias": 8192,
+    "biasedAbsBound": 18900568425,
+    "width": 64
+  },
+  "column/rot2/second-round": {
+    "inputAbsBound": 18899972144,
+    "bias": 8192,
+    "biasedAbsBound": 18899980337,
+    "width": 64
+  },
+  "column/inverse-root-round": {
+    "inputAbsBound": 49387596440,
+    "bias": 8192,
+    "biasedAbsBound": 49387604633,
+    "width": 64
+  },
+  "column/butterflies": {
+    "dcPreAdd": 1176176,
+    "dcScaled": 1176176,
+    "even": 2262832,
+    "p": 2131532,
+    "q": 2131532,
+    "oddPreAdd": 4263064,
+    "odd": 3014380,
+    "result": 5277212,
+    "width": 32
+  },
+  "final-round": {
+    "inputAbsBound": 5277212,
+    "bias": 128,
+    "biasedAbsBound": 5277341,
+    "width": 32
+  },
+  "sparse": {
+    "dcShiftRange": [
+      -256,
+      255
+    ],
+    "dcRoundBiasedAbsBound": 2053,
+    "dcPatternIncrementRange": [
+      -256,
+      256
+    ],
+    "rowDcScaledAbsBound": 65536,
+    "maskShiftRange": [
+      0,
+      63
+    ],
+    "maskBitRange": [
+      0,
+      1
+    ],
+    "residualAfterClip": [
+      -256,
+      255
+    ],
+    "predictionPlusResidual": [
+      -256,
+      510
+    ],
+    "pixelAfterClip": [
+      0,
+      255
+    ]
+  }
+}
