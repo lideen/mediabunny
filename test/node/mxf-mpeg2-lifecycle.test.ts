@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { setImmediate } from 'node:timers/promises';
-import { BufferSource, CustomSource, Input, MXF, registerDecoder, VideoSampleSink } from '../../src/index.js';
-import { Mpeg2Decoder } from '@mediabunny/mpeg2';
+import { BufferSource, CustomSource, Input, MXF, VideoSampleSink } from '../../src/index.js';
+import * as core from '../../src/index.js';
+import { registerMpeg2Decoder } from '@mediabunny/mpeg2';
 import manifest from '../fixtures/mpeg2/open/open422.json' with { type: 'json' };
 import regression from '../fixtures/mpeg2/wasm-idct-v1.json' with { type: 'json' };
 
@@ -16,16 +17,10 @@ const deferred = () => {
 	});
 	return { promise, resolve, reject };
 };
-class GatedMpeg2Decoder extends Mpeg2Decoder {
-	static gate = Promise.resolve();
-	static entered = () => {};
-	override async init() {
-		GatedMpeg2Decoder.entered();
-		await GatedMpeg2Decoder.gate;
-		await super.init();
-	}
-}
-registerDecoder(GatedMpeg2Decoder);
+const registration = vi.spyOn(core, 'registerDecoder');
+registerMpeg2Decoder();
+const Decoder = registration.mock.calls[0]![0] as typeof core.CustomVideoDecoder;
+registration.mockRestore();
 const bytes = () => readFileSync(new URL('../fixtures/mpeg2/open/open422.mxf', import.meta.url));
 
 describe('given an open-GOP range with asynchronously initialized real MPEG-2 decoding', () => {
@@ -34,8 +29,15 @@ describe('given an open-GOP range with asynchronously initialized real MPEG-2 de
 			const gate = deferred();
 			const initEntered = deferred();
 			const nextPictureRead = deferred();
-			GatedMpeg2Decoder.gate = gate.promise;
-			GatedMpeg2Decoder.entered = initEntered.resolve;
+			// eslint-disable-next-line @typescript-eslint/unbound-method -- Called with the sink-created instance.
+			const init = Decoder.prototype.init;
+			const initialization = vi.spyOn(Decoder.prototype, 'init').mockImplementation(async function (
+				this: core.CustomVideoDecoder,
+			) {
+				initEntered.resolve();
+				await gate.promise;
+				await init.call(this);
+			});
 			const data = bytes();
 			const nextPicture = Number(manifest.packets[15]!.pos) + 20;
 			using input = new Input({ formats: [MXF], source: new CustomSource({
@@ -88,8 +90,7 @@ describe('given an open-GOP range with asynchronously initialized real MPEG-2 de
 				clearTimeout(timer);
 				await range.return();
 				gate.resolve();
-				GatedMpeg2Decoder.gate = Promise.resolve();
-				GatedMpeg2Decoder.entered = () => {};
+				initialization.mockRestore();
 			}
 		},
 	);

@@ -4,8 +4,6 @@ import { defineConfig } from 'vitest/config';
 import path from 'node:path';
 
 export default defineConfig({
-	// Thread runtime modules must be served unchanged, not rewritten for the test-runner realm.
-	publicDir: path.resolve(__dirname, 'packages/mpeg2/dist'),
 	server: {
 		headers: {
 			'Cross-Origin-Opener-Policy': 'same-origin',

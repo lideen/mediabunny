@@ -1,13 +1,17 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import {
 	Input, MXF, BufferSource, EncodedPacket, EncodedPacketSink, VideoSampleSink, VideoSample,
 } from '../../src/index.js';
-import { Mpeg2Decoder, registerMpeg2Decoder } from '@mediabunny/mpeg2';
+import * as core from '../../src/index.js';
+import { registerMpeg2Decoder } from '@mediabunny/mpeg2';
 import pixels from '../fixtures/mpeg2/pixels.json' with { type: 'json' };
 import regression from '../fixtures/mpeg2/wasm-idct-v1.json' with { type: 'json' };
 import packets from '../fixtures/mpeg2/packets.json' with { type: 'json' };
+
+const registration = vi.spyOn(core, 'registerDecoder');
+afterAll(() => registration.mockRestore());
 
 const fixture = () => new Uint8Array(readFileSync(new URL('../fixtures/mpeg2/main420.mxf', import.meta.url)));
 const inputFor = () => new Input({ source: new BufferSource(fixture()), formats: [MXF] });
@@ -23,7 +27,10 @@ const verify = async (sample: VideoSample, frame: number) => {
 };
 
 const direct = (onSample: (sample: VideoSample) => void, config: Partial<VideoDecoderConfig> = {}) => {
-	return Object.assign(new Mpeg2Decoder(), {
+	registerMpeg2Decoder();
+	const Decoder = registration.mock.calls[0]![0];
+	const decoder = Reflect.construct(Decoder, []) as core.CustomVideoDecoder;
+	return Object.assign(decoder, {
 		codec: 'mpeg2' as const,
 		config: { codec: 'mpeg2', codedWidth: 1280, codedHeight: 720,
 			colorSpace: { matrix: 'bt709' as const, fullRange: false }, ...config },
@@ -43,52 +50,33 @@ const encoded = async () => {
 
 describe('given the private MPEG-2 WASM extension', () => {
 	describe('when explicitly registering and initializing it', () => {
-		it('should enable real decoding, report compile failures, and recover without native fallback', async () => {
+		it('should enable real decoding through idempotent registration', async () => {
 			using input = inputFor();
 			const track = (await input.getPrimaryVideoTrack())!;
 			expect(await track.canDecode()).toBe(false);
 			registerMpeg2Decoder();
 			registerMpeg2Decoder();
 			expect(await track.canDecode()).toBe(true);
-			const compilation = vi.spyOn(WebAssembly, 'compile').mockRejectedValueOnce(new Error('compile denied'));
-			try {
-				await expect(new VideoSampleSink(track).getSample(0))
-					.rejects.toThrow('MPEG-2 WASM initialization failed');
-			} finally {
-				compilation.mockRestore();
-			}
-			// Delay the real compilation boundary, not a fake decoder. Closing must not resurrect native state.
-			let release!: () => void;
-			const gate = new Promise<void>((resolve) => {
-				release = resolve;
-			});
-			const compile = WebAssembly.compile;
-			const delayed = vi.spyOn(WebAssembly, 'compile').mockImplementation(async (bytes) => {
-				const data = ArrayBuffer.isView(bytes)
-					? new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-					: new Uint8Array(bytes);
-				expect(data.byteLength).toBe(144238);
-				expect(hash(data)).toBe(regression.qualifiedWasmSha256);
-				await gate;
-				return compile(bytes);
-			});
+			using sample = (await new VideoSampleSink(track).getSample(0))!;
+			await verify(sample, 0);
+		});
+
+		it.each(['before', 'during'] as const)('should reject initialization when closed %s startup', async (when) => {
 			const onSample = vi.fn();
 			const decoder = direct(onSample);
 			try {
+				if (when === 'before') await decoder.close();
 				const pending = decoder.init();
-				decoder.close();
-				release();
-				await pending;
-				expect(() => decoder.flush()).toThrow(/closed/);
-				expect(() => decoder.decode(new EncodedPacket(new Uint8Array(), 'key', 0, 0))).toThrow(/closed/);
+				const rejected = expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+				await decoder.close();
+				await rejected;
+				await expect(decoder.flush()).rejects.toMatchObject({ name: 'AbortError' });
+				await expect(decoder.decode(new EncodedPacket(new Uint8Array(), 'key', 0, 0)))
+					.rejects.toMatchObject({ name: 'AbortError' });
 				expect(onSample).not.toHaveBeenCalled();
 			} finally {
-				release();
-				decoder.close();
-				delayed.mockRestore();
+				await decoder.close();
 			}
-			using recovered = (await new VideoSampleSink(track).getSample(0))!;
-			await verify(recovered, 0);
 		});
 	});
 
@@ -163,36 +151,36 @@ describe('given the private MPEG-2 WASM extension', () => {
 		});
 	});
 
-	describe('when reusing direct packet decoders', () => {
+	describe('when reusing registered packet decoders', () => {
 		it('should preserve timing across selection flushes and more than 64 packets', async () => {
 			const source = await encoded();
 			const outputs: VideoSample[] = [];
 			const decoder = direct(sample => outputs.push(sample));
 			await decoder.init();
 			try {
-				decoder.flush();
-				decoder.flush();
+				await decoder.flush();
+				await decoder.flush();
 				for (const [index, timestamp, duration] of [[0, -2.5, 0.125], [1, 7, 0.375], [2, -2.5, 0.25]]) {
 					const packet = source[index!]!;
-					decoder.decode(new EncodedPacket(packet.data, packet.type, timestamp!, duration!));
+					await decoder.decode(new EncodedPacket(packet.data, packet.type, timestamp!, duration!));
 				}
-				decoder.flush();
+				await decoder.flush();
 				expect(outputs.map(s => [s.timestamp, s.duration])).toEqual([[-2.5, 0.125], [-2.5, 0.25], [7, 0.375]]);
 				outputs.splice(0).forEach(s => s.close());
 				// Five closed-GOP streams, no flush/reset between streams: 90 packets in one native lifetime.
 				for (let cycle = 0; cycle < 5; cycle++) {
 					for (const packet of source) {
-						decoder.decode(packet);
+						await decoder.decode(packet);
 					}
 				}
-				decoder.flush();
+				await decoder.flush();
 				expect(outputs.length).toBe(90);
-				decoder.close();
+				await decoder.close();
 				for (let i = 0; i < outputs.length; i++) {
 					await verify(outputs[i]!, i % 18);
 				}
 			} finally {
-				decoder.close();
+				await decoder.close();
 				outputs.forEach(s => s.close());
 			}
 		});
@@ -204,43 +192,52 @@ describe('given the private MPEG-2 WASM extension', () => {
 			const healthy = direct(sample => outputs.push(sample));
 			await Promise.all([broken.init(), healthy.init()]);
 			try {
-				broken.decode(source[0]!);
+				await broken.decode(source[0]!);
 				const truncated = new EncodedPacket(source[1]!.data.subarray(0, 30), 'delta', 0.12, 0.04);
-				expect(() => broken.decode(truncated)).toThrow();
-				expect(() => broken.decode(source[1]!)).toThrow();
-				expect(() => broken.flush()).toThrow();
-				healthy.decode(source[0]!);
-				healthy.flush();
+				await expect(broken.decode(truncated)).rejects.toThrow();
+				await expect(broken.decode(source[1]!)).rejects.toThrow();
+				await expect(broken.flush()).rejects.toThrow();
+				await healthy.decode(source[0]!);
+				await healthy.flush();
 				expect(outputs.length).toBe(1);
 				await verify(outputs[0]!, 0);
 			} finally {
-				broken.close();
-				healthy.close();
+				await broken.close();
+				await healthy.close();
 				outputs.forEach(s => s.close());
 			}
 		});
 
-		it('should discard remaining native outputs when a callback closes the decoder', async () => {
+		it.each(['close', 'throw'] as const)('should stop outputs when a callback invokes %s', async (action) => {
 			const source = await encoded();
 			const outputs: VideoSample[] = [];
+			const failure = new Error('Consumer callback failed');
 			const decoder = direct((sample) => {
 				outputs.push(sample);
 				if (sample.timestamp === 8 / 25) {
-					decoder.close();
+					if (action === 'throw') throw failure;
+					void decoder.close();
 				}
 			});
 			await decoder.init();
 			try {
-				for (const packet of source.slice(0, 10)) {
-					decoder.decode(packet);
+				for (const packet of source.slice(0, 9)) {
+					await decoder.decode(packet);
 				}
+				if (action === 'throw') await expect(decoder.decode(source[9]!)).rejects.toBe(failure);
+				else await decoder.decode(source[9]!);
 				expect(outputs.map(s => s.timestamp)).toEqual(Array.from({ length: 9 }, (_, i) => i / 25));
-				expect(() => decoder.flush()).toThrow(/closed/);
+				if (action === 'throw') {
+					await expect(decoder.flush()).rejects.toBe(failure);
+					expect(() => outputs.pop()!.clone()).toThrow('closed');
+				} else {
+					await expect(decoder.flush()).rejects.toMatchObject({ name: 'AbortError' });
+				}
 				for (let i = 0; i < outputs.length; i++) {
 					await verify(outputs[i]!, i);
 				}
 			} finally {
-				decoder.close();
+				await decoder.close();
 				outputs.forEach(s => s.close());
 			}
 		});
@@ -252,17 +249,17 @@ describe('given the private MPEG-2 WASM extension', () => {
 				try {
 					await expect(decoder.init()).rejects.toThrow(/configuration/);
 				} finally {
-					decoder.close();
+					await decoder.close();
 				}
 			}
 			const decoder = direct(onSample, { codedWidth: 640 });
 			await decoder.init();
 			try {
-				decoder.decode((await encoded())[0]!);
-				expect(() => decoder.flush()).toThrow(/dimensions/);
+				await decoder.decode((await encoded())[0]!);
+				await expect(decoder.flush()).rejects.toThrow(/dimensions/);
 				expect(onSample).not.toHaveBeenCalled();
 			} finally {
-				decoder.close();
+				await decoder.close();
 			}
 		});
 	});

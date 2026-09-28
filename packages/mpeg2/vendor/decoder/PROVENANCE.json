@@ -1,0 +1,427 @@
+{
+  "schema": 1,
+  "built": "2026-09-28T13:36:41.245Z",
+  "esbuild": {
+    "version": "0.28.2",
+    "license": "MIT",
+    "role": "build-only dependency"
+  },
+  "description": "Self-contained packaging derived from frozen WASM inputs. Only name/producers custom sections are removed; standard-section bytes are unchanged. Current working-tree JS is identified separately.",
+  "binaryInputs": {
+    "scalar": {
+      "path": "/Users/lideen/Code/arvid/code/mediabunny/packages/mpeg2/vendor",
+      "wasm": {
+        "bytes": 144238,
+        "sha256": "c06ed93c42aa17dfe45bcad2e55b6d14fca5e0c07b5bca1cc469b52999407b9b"
+      },
+      "derivedWasm": {
+        "bytes": 126458,
+        "sha256": "78c810d649f34fb574f5d1dd8aae1407dda6c3e960a4102e835553bc7ab6da54"
+      },
+      "glue": {
+        "bytes": 22772,
+        "sha256": "f39fd77f03ade8555978a9a133fabec05e00a210f971c1be867a7c1af271fd92"
+      },
+      "originalProvenance": "{\n  \"sourceRepository\": \"mpeg2-rs, user-supplied local repository\",\n  \"sourceCommit\": \"3ccd64065dd45e6675b0a3602d1804315935b515\",\n  \"sourceBaseCommit\": \"1fafe8f611afab696ce8b90d2d54b46f4c252789\",\n  \"sourceState\": \"All 565 final snapshot source identities match the reviewed commit. The artifacts predate that commit; the two identified post-build tooling changes do not change compiled inputs. Original dirty-build records are preserved; no post-commit rebuild is claimed.\",\n  \"numericalVersion\": \"h262-butterfly-q14-q5-v1\",\n  \"permission\": \"User-authorized private local integration only. UNLICENSED MPEG-2 project. No npm publication or public/upstream distribution authorized. Dependency licenses do not license the combined package.\",\n  \"inputBundle\": \"mpeg2-butterfly-idct-20260927/integration-ready-final\",\n  \"numericalManifest\": \"threads/provenance/numerical/numerical-migration.json\",\n  \"numericalManifestSha256\": \"6ea6cb87b90ba047924ca524c2d429ece1466c72d1d3a2c43a4662d25957a3dc\",\n  \"sourcePatchSha256\": \"15736878317bef392bcea7b7c34450217295dcada61b6fb9747a2cf3d6d09080\",\n  \"sourceHashes\": \"threads/provenance/numerical/numerical-migration.json#/source/files\",\n  \"buildRecords\": [\n    \"threads/provenance/numerical/verification/scalar-build.json\",\n    \"threads/provenance/numerical/verification/suite-build.json\"\n  ],\n  \"postBuildToolingChanges\": [\"tools/package-mpeg2-web.py\", \"tools/record-wasm-idct-regressions.mjs\"],\n  \"verification\": \"All supplied artifact, evidence and source hashes verified. Compiled inputs match the original build. Final source.patch contains no ANSI and passes git apply --check against the canonical base. Original build and qualification records remain unchanged.\",\n  \"files\": {\n    \"js/index.mjs\": { \"source\": \"scalar/js/index.mjs\", \"bytes\": 4975, \"sha256\": \"7fc979b850e5c0b5dd9aec5557da7e8303279a4de98caa330faa33df42192da5\" },\n    \"pkg/mpeg2_wasm.js\": { \"source\": \"scalar/pkg/mpeg2_wasm.js\", \"bytes\": 22772, \"sha256\": \"f39fd77f03ade8555978a9a133fabec05e00a210f971c1be867a7c1af271fd92\" },\n    \"pkg/mpeg2_wasm.d.ts\": { \"source\": \"scalar/pkg/mpeg2_wasm.d.ts\", \"bytes\": 8712, \"sha256\": \"7d3949290bd58e7da30dbe27ecc42ceff2726d7a29426e3c8a691d18f7837cdd\" },\n    \"pkg/mpeg2_wasm_bg.wasm\": { \"source\": \"scalar/pkg/mpeg2_wasm_bg.wasm\", \"bytes\": 144238, \"sha256\": \"c06ed93c42aa17dfe45bcad2e55b6d14fca5e0c07b5bca1cc469b52999407b9b\" }\n  },\n  \"localAdditions\": [\"js/index.d.mts remains the adapter-authored declaration for the used facade API.\"],\n  \"previousProvenance\": \"threads/provenance/previous/scalar-provenance.json\",\n  \"dependencies\": \"Unchanged from threads/provenance/previous/scalar-provenance.json. Complete locked dependency metadata and licenses are retained in the optional threads tree.\",\n  \"limits\": \"Numerical regression records are not independent accuracy oracles. Native f64 is unchanged. No IEEE 1180 or full H.262 conformance claim. Observed predictive drift is not an unseen-stream bound.\"\n}\n",
+      "packing": {
+        "removed": [
+          {
+            "name": "name",
+            "sectionBytes": 17666,
+            "payloadBytes": 17662,
+            "sha256": "2df3426dbe74c07f018cd5bc5672bbbf3a6e8f4f96ef7da3df1bb9d734de65bd"
+          },
+          {
+            "name": "producers",
+            "sectionBytes": 114,
+            "payloadBytes": 112,
+            "sha256": "a9bae61c3496c11865c58512e0a68dcf30406d11e4c5e92fb6702de9b96ee72b"
+          }
+        ],
+        "retainedCustom": [
+          {
+            "name": "target_features",
+            "sectionBytes": 151,
+            "sha256": "b50a3cb070fec5f84e7560fd1b3a74d3ba464d3fcdd952795238eb27a97fc499"
+          }
+        ],
+        "standardSections": {
+          "bytes": 126299,
+          "originalSha256": "368e01cd5cbff7d1988f955e4775c69debe8f36ffd9e0037d22b9c183d2e6517",
+          "derivedSha256": "368e01cd5cbff7d1988f955e4775c69debe8f36ffd9e0037d22b9c183d2e6517",
+          "equal": true
+        }
+      }
+    },
+    "shared": {
+      "path": "/Users/lideen/Code/arvid/code/mediabunny/packages/mpeg2/vendor/threads",
+      "wasm": {
+        "bytes": 332988,
+        "sha256": "32270a44364331fe90b2d22aeb590471c767a0bf4bd5c2e4e6346561e6ef7281"
+      },
+      "derivedWasm": {
+        "bytes": 244600,
+        "sha256": "362a9776dabca4ffd182e628d9848d67e30e1a707a9098bfcbde18d6e25e2bf0"
+      },
+      "glue": {
+        "bytes": 27298,
+        "sha256": "430f5d39b7f6e0a5abb1648c27a62ae06161a73f4a73d6ee428bad5f9655e40b"
+      },
+      "originalProvenance": "{\n  \"permission\": \"Private local integration only. UNLICENSED mpeg2-rs code; no public distribution authorized. Dependency licenses do not license the combined package.\",\n  \"sourceCommit\": \"3ccd64065dd45e6675b0a3602d1804315935b515\",\n  \"sourceBaseCommit\": \"1fafe8f611afab696ce8b90d2d54b46f4c252789\",\n  \"sourceState\": \"All 565 final snapshot source identities match the reviewed commit. The artifacts predate that commit; the two identified post-build tooling changes do not change compiled inputs. Original dirty-build records are preserved; no post-commit rebuild is claimed.\",\n  \"numericalVersion\": \"h262-butterfly-q14-q5-v1\",\n  \"inputBundle\": \"mpeg2-butterfly-idct-20260927/integration-ready-final\",\n  \"numericalManifest\": \"provenance/numerical/numerical-migration.json\",\n  \"numericalManifestSha256\": \"6ea6cb87b90ba047924ca524c2d429ece1466c72d1d3a2c43a4662d25957a3dc\",\n  \"sourcePatchSha256\": \"15736878317bef392bcea7b7c34450217295dcada61b6fb9747a2cf3d6d09080\",\n  \"sourceHashes\": \"provenance/numerical/numerical-migration.json#/source/files\",\n  \"buildRecords\": [\"provenance/numerical/verification/suite-build.json\"],\n  \"postBuildToolingChanges\": [\"tools/package-mpeg2-web.py\", \"tools/record-wasm-idct-regressions.mjs\"],\n  \"mapping\": \"Shared js/ and pkg/ from the qualified handoff. scalar/js/threaded.mjs, scalar/js/threaded-worker.mjs and scalar/js/threaded.d.ts remain adjacent to shared/js/index.mjs. Relative imports and APIs unchanged. No duplicate scalar WASM. The numerical manifest lists all upstream artifact hashes.\",\n  \"wasm\": { \"path\": \"pkg/mpeg2_wasm_bg.wasm\", \"bytes\": 332988, \"sha256\": \"32270a44364331fe90b2d22aeb590471c767a0bf4bd5c2e4e6346561e6ef7281\" },\n  \"compatibility\": \"Generated glue, declarations, facade, coordinator and adapted Rayon helper are byte-identical to the previous consumer runtime. Only the WASM binary changed. Direct, serial-worker, pooling, sizing, CSP rejection and no-fallback contracts are unchanged.\",\n  \"helperAdaptation\": \"helper-adaptation.json retains original/patched hashes and the Apache-2.0 adaptation identity; identical to provenance/numerical/verification/shared-helper-adaptation.json.\",\n  \"lockedDependencies\": \"Unchanged complete license/checksum metadata in provenance/previous/shared-provenance.json. Original license texts remain under licenses/ and NOTICE.txt remains unchanged.\",\n  \"previousProvenance\": \"provenance/previous/shared-provenance.json\",\n  \"historicalInputManifest\": \"INPUT-MANIFEST.json describes the previous f64 build, not the current numerical version.\",\n  \"limits\": \"Numerical regression records are not independent accuracy oracles. No IEEE 1180 or full H.262 conformance claim. Observed predictive drift is not an unseen-stream bound.\"\n}\n",
+      "packing": {
+        "removed": [
+          {
+            "name": "name",
+            "sectionBytes": 88281,
+            "payloadBytes": 88277,
+            "sha256": "f7a78bf55150378508fbf45051c9113281392adaef482c79a50b1c2d36dec71b"
+          },
+          {
+            "name": "producers",
+            "sectionBytes": 107,
+            "payloadBytes": 105,
+            "sha256": "af06dca76a290045a6b8615f5211fe23a4ea8959d4beaf5ebe8172d4616de86f"
+          }
+        ],
+        "retainedCustom": [
+          {
+            "name": "target_features",
+            "sectionBytes": 160,
+            "sha256": "d5db9befd58d433c7714fb5e7ceb693d939190b7e919c73bac3e2143fee3da36"
+          }
+        ],
+        "standardSections": {
+          "bytes": 244432,
+          "originalSha256": "7f99fc7bb7f5bbddbfaa8715f2285bbfa87ccbf1b0b183e123f62afac8cddba3",
+          "derivedSha256": "7f99fc7bb7f5bbddbfaa8715f2285bbfa87ccbf1b0b183e123f62afac8cddba3",
+          "equal": true
+        }
+      }
+    }
+  },
+  "sourceFiles": {
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/js/index.mjs": {
+      "bytes": 4975,
+      "sha256": "7fc979b850e5c0b5dd9aec5557da7e8303279a4de98caa330faa33df42192da5"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/js/threaded-worker.mjs": {
+      "bytes": 3511,
+      "sha256": "4af7beeca2f9f1736d545cfebf496f9386eabee33a19dfa3bcfae1809b33bba7"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/js/frames.mjs": {
+      "bytes": 1222,
+      "sha256": "00050fb0b4d164de73916e29d01da6e351d366e21f722e54a98152cd5cc744fa"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/js/decoder.mjs": {
+      "bytes": 7256,
+      "sha256": "80f3d8abcaf10407b404495858965323ded867b2610a6769777a9ab06965dbb7"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/js/threaded.mjs": {
+      "bytes": 8308,
+      "sha256": "e47540c71ce3450200191aa79d3f7978b1ea8e27c6d39eda81202dc8b06d2cf1"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/js/decoder.d.mts": {
+      "bytes": 2835,
+      "sha256": "a8ff17bf0353bde28fba6e8d72daf0bb0322245a216d446d00fbdba9d1f29cfc"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/build.mjs": {
+      "bytes": 10957,
+      "sha256": "1529e6c88bbf6dc87b6755c43c776ec1e390c0aeaf3edc637aceb05f47f978bd"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/packing.mjs": {
+      "bytes": 3988,
+      "sha256": "d6fed570acb3e571457198aaa2b2dc3d80b9e6f6d3155591db8129b60c9cdd16"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/package.json": {
+      "bytes": 505,
+      "sha256": "581e811191d7a86e733988322698575b32ec69d3a983342289a40d7f8818c057"
+    },
+    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/package-lock.json": {
+      "bytes": 14479,
+      "sha256": "6d26e32f6ebb7c11825b3001507c20f55906cfe34206580f67304e5cc0073794"
+    }
+  },
+  "packaging": {
+    "graph": [
+      "coordinator",
+      "scalar-runtime",
+      "rayon-helper",
+      "shared-runtime"
+    ],
+    "diagnostics": "Function names and producer metadata are omitted from embedded WASM. WASM stack traces may show indices instead of names. Original symbolled inputs and their provenance remain at binaryInputs paths.",
+    "scalarPayload": {
+      "encoding": "base64",
+      "characters": 168612,
+      "occurrencesInOuterBundle": 1,
+      "workerConstruction": "Replace one private scalar-worker placeholder at concurrency-1 initialization only; runtime instances remain separate."
+    },
+    "helper": {
+      "license": "Apache-2.0",
+      "priorAdaptation": {
+        "dependency": "wasm-bindgen-rayon",
+        "version": "1.3.0",
+        "license": "Apache-2.0",
+        "path": "snippets/wasm-bindgen-rayon-38edf6e439f6d70d/src/workerHelpers.no-bundler.js",
+        "originalSha256": "9801503f464f848c6c7405462fca9a5c721556904c5fee5ee0afcb0887ea1b7f",
+        "patchedSha256": "e335cb4321a3a05f21951f81cd2890d9da8161c182466ef006ebfe9c430c1f48",
+        "reason": "Forward async child initialization rejection through Worker error instead of waiting for the parent operation deadline.",
+        "adaptationScriptSha256": "d0985fdeab7a3c9f188159607bf54d1e4fc5bb1c457b0c8e688e1184ca6ad96d"
+      },
+      "input": {
+        "bytes": 3180,
+        "sha256": "e335cb4321a3a05f21951f81cd2890d9da8161c182466ef006ebfe9c430c1f48"
+      },
+      "output": {
+        "bytes": 1928,
+        "sha256": "ffdfb8f9d9794bf1fc30840c7d7de1f8ca6a80046139c967dca9a406eca1f684"
+      },
+      "changes": "Direct self-spawn from the factory-owned helper Blob URL; preserve child rejection forwarding; use the generated object-form initializer."
+    },
+    "glue": {
+      "scalar": {
+        "adapted": {
+          "bytes": 22757,
+          "sha256": "d0bc9a2f4c96e576ab88e8267d9bf432aedaca89da538b5365711cc2d9fc2a8d"
+        },
+        "change": "Remove default external WASM URL discovery; initialization always supplies embedded bytes or the child module/memory."
+      },
+      "shared": {
+        "adapted": {
+          "bytes": 27283,
+          "sha256": "2e28da8445018798c8323fe9f588ea3fd3d6fdaca368c1704029c3c47b8e8e01"
+        },
+        "change": "Remove default external WASM URL discovery; initialization always supplies embedded bytes or the child module/memory."
+      }
+    }
+  },
+  "outputs": {
+    "mpeg2-decoder.mjs": {
+      "bytes": 588783,
+      "sha256": "57b577ebb4c4ffec36ba586e0b84f7b41d080bf67aaa66dcc6822402a57d6c09"
+    },
+    "mpeg2-decoder.d.mts": {
+      "bytes": 2835,
+      "sha256": "a8ff17bf0353bde28fba6e8d72daf0bb0322245a216d446d00fbdba9d1f29cfc"
+    },
+    "NOTICE.txt": {
+      "bytes": 1357,
+      "sha256": "5f464ffbe9b216479ba6250db42cc3be3ff3f808964562cef2e58878e1ffd6eb"
+    },
+    "licenses/bumpalo-3.20.3/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/bumpalo-3.20.3/LICENSE-MIT": {
+      "bytes": 1059,
+      "sha256": "65f94e99ddaf4f5d1782a6dae23f35d4293a9a01444a13135a6887017d353cee"
+    },
+    "licenses/cfg-if-1.0.5/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/cfg-if-1.0.5/LICENSE-MIT": {
+      "bytes": 1057,
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    },
+    "licenses/crossbeam-channel-0.5.17/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/crossbeam-channel-0.5.17/LICENSE-MIT": {
+      "bytes": 1099,
+      "sha256": "5734ed989dfca1f625b40281ee9f4530f91b2411ec01cb748223e7eb87e201ab"
+    },
+    "licenses/crossbeam-channel-0.5.17/LICENSE-THIRD-PARTY": {
+      "bytes": 33447,
+      "sha256": "b16db96b93b1d7cf7bea533f572091ec6bca3234fbe0a83038be772ff391a44c"
+    },
+    "licenses/crossbeam-deque-0.8.8/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/crossbeam-deque-0.8.8/LICENSE-MIT": {
+      "bytes": 1099,
+      "sha256": "5734ed989dfca1f625b40281ee9f4530f91b2411ec01cb748223e7eb87e201ab"
+    },
+    "licenses/crossbeam-epoch-0.9.21/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/crossbeam-epoch-0.9.21/LICENSE-MIT": {
+      "bytes": 1099,
+      "sha256": "5734ed989dfca1f625b40281ee9f4530f91b2411ec01cb748223e7eb87e201ab"
+    },
+    "licenses/crossbeam-utils-0.8.23/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/crossbeam-utils-0.8.23/LICENSE-MIT": {
+      "bytes": 1099,
+      "sha256": "5734ed989dfca1f625b40281ee9f4530f91b2411ec01cb748223e7eb87e201ab"
+    },
+    "licenses/either-1.18.0/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/either-1.18.0/LICENSE-MIT": {
+      "bytes": 1043,
+      "sha256": "7576269ea71f767b99297934c0b2367532690f8c4badc695edf8e04ab6a1e545"
+    },
+    "licenses/futures-core-0.3.34/LICENSE-APACHE": {
+      "bytes": 10874,
+      "sha256": "275c491d6d1160553c32fd6127061d7f9606c3ea25abfad6ca3f6ed088785427"
+    },
+    "licenses/futures-core-0.3.34/LICENSE-MIT": {
+      "bytes": 1094,
+      "sha256": "6652c868f35dfe5e8ef636810a4e576b9d663f3a17fb0f5613ad73583e1b88fd"
+    },
+    "licenses/futures-task-0.3.34/LICENSE-APACHE": {
+      "bytes": 10874,
+      "sha256": "275c491d6d1160553c32fd6127061d7f9606c3ea25abfad6ca3f6ed088785427"
+    },
+    "licenses/futures-task-0.3.34/LICENSE-MIT": {
+      "bytes": 1094,
+      "sha256": "6652c868f35dfe5e8ef636810a4e576b9d663f3a17fb0f5613ad73583e1b88fd"
+    },
+    "licenses/futures-util-0.3.34/LICENSE-APACHE": {
+      "bytes": 10874,
+      "sha256": "275c491d6d1160553c32fd6127061d7f9606c3ea25abfad6ca3f6ed088785427"
+    },
+    "licenses/futures-util-0.3.34/LICENSE-MIT": {
+      "bytes": 1094,
+      "sha256": "6652c868f35dfe5e8ef636810a4e576b9d663f3a17fb0f5613ad73583e1b88fd"
+    },
+    "licenses/js-sys-0.3.106/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/js-sys-0.3.106/LICENSE-MIT": {
+      "bytes": 1057,
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    },
+    "licenses/once_cell-1.21.4/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/once_cell-1.21.4/LICENSE-MIT": {
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "licenses/pin-project-lite-0.2.17/LICENSE-APACHE": {
+      "bytes": 10174,
+      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+    },
+    "licenses/pin-project-lite-0.2.17/LICENSE-MIT": {
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "licenses/proc-macro2-1.0.107/LICENSE-APACHE": {
+      "bytes": 9723,
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+    },
+    "licenses/proc-macro2-1.0.107/LICENSE-MIT": {
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "licenses/quote-1.0.47/LICENSE-APACHE": {
+      "bytes": 9723,
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+    },
+    "licenses/quote-1.0.47/LICENSE-MIT": {
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "licenses/rayon-1.11.0/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/rayon-1.11.0/LICENSE-MIT": {
+      "bytes": 1071,
+      "sha256": "0621878e61f0d0fda054bcbe02df75192c28bde1ecc8289cbd86aeba2dd72720"
+    },
+    "licenses/rayon-core-1.13.0/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/rayon-core-1.13.0/LICENSE-MIT": {
+      "bytes": 1071,
+      "sha256": "0621878e61f0d0fda054bcbe02df75192c28bde1ecc8289cbd86aeba2dd72720"
+    },
+    "licenses/rustversion-1.0.23/LICENSE-APACHE": {
+      "bytes": 9723,
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+    },
+    "licenses/rustversion-1.0.23/LICENSE-MIT": {
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "licenses/slab-0.4.12/LICENSE": {
+      "bytes": 1055,
+      "sha256": "8ce0830173fdac609dfb4ea603fdc002c2f4af0dc9b1a005653f5da9cf534b18"
+    },
+    "licenses/syn-3.0.6/LICENSE-APACHE": {
+      "bytes": 9723,
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+    },
+    "licenses/syn-3.0.6/LICENSE-MIT": {
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "licenses/unicode-ident-1.0.26/LICENSE-APACHE": {
+      "bytes": 9723,
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+    },
+    "licenses/unicode-ident-1.0.26/LICENSE-MIT": {
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "licenses/unicode-ident-1.0.26/LICENSE-UNICODE": {
+      "bytes": 1995,
+      "sha256": "f7db81051789b729fea528a63ec4c938fdcb93d9d61d97dc8cc2e9df6d47f2a1"
+    },
+    "licenses/wasm-bindgen-0.2.129/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/wasm-bindgen-0.2.129/LICENSE-MIT": {
+      "bytes": 1057,
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    },
+    "licenses/wasm-bindgen-macro-0.2.129/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/wasm-bindgen-macro-0.2.129/LICENSE-MIT": {
+      "bytes": 1057,
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    },
+    "licenses/wasm-bindgen-macro-support-0.2.129/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/wasm-bindgen-macro-support-0.2.129/LICENSE-MIT": {
+      "bytes": 1057,
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    },
+    "licenses/wasm-bindgen-rayon-1.3.0/LICENSE": {
+      "bytes": 11560,
+      "sha256": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5"
+    },
+    "licenses/wasm-bindgen-shared-0.2.129/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/wasm-bindgen-shared-0.2.129/LICENSE-MIT": {
+      "bytes": 1057,
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    },
+    "licenses/web-sys-0.3.106/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/web-sys-0.3.106/LICENSE-MIT": {
+      "bytes": 1057,
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    }
+  }
+}

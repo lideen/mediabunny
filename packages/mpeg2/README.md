@@ -17,71 +17,56 @@ if (track) {
 input.dispose();
 ```
 
+The only extension export is `registerMpeg2Decoder()`. Like `registerProresDecoder()`, it accepts no arguments. Call it before starting a decoding task, then use Mediabunny's `VideoSampleSink` or `CanvasSink`. Mediabunny creates decoder instances and manages packet ordering, selection flushes and cleanup. The decoder class is internal.
+
 Registration is explicit and idempotent. Neither core nor `@mediabunny/server` registers this decoder. MXF remains opt-in and outside `ALL_FORMATS`. There is no native WebCodecs fallback, FFmpeg fallback, encoder, or muxer.
 
-## Optional slice pool
+## Execution and standalone configuration
 
-Registration accepts optional `threadCount: 1 | 2 | 4`.
-`registerMpeg2Decoder()` still decodes directly, and `{ useWorker: true }` without a
-runtime URL uses the existing embedded serial worker without shared memory.
-Supplying a runtime URL enables automatic sizing when `threadCount` is omitted.
-Counts `2` and `4` imply worker mode;
-combining either with explicit `useWorker: false` throws. Registration compares the
-effective worker mode, thread count and runtime URL, rejecting conflicting repeats.
+The adapter calls the self-contained `createMpeg2Decoder` factory from `mpeg2-rs`
+during each decoder's initialization. It supplies 8 MiB packet/frame budgets and an
+AbortSignal, but no execution override. The factory chooses its default:
 
-Parallel mode requires an absolute `threadedRuntimeUrl` pointing to the shared build's
-`js/threaded-runtime.mjs`. The adjacent `threaded.mjs` facade and `threaded-worker.mjs`
-coordinator are resolved from that URL. Serve the complete private `js/` and `pkg/`
-asset tree unchanged, including the generated Rayon snippets. These are separate
-assets, not embedded in the default bundle. `npm run build` copies the runtime to
-`packages/mpeg2/dist/threads/`; copy that entire directory to your application's
-static asset directory. The package also exposes these files as `@mediabunny/mpeg2/threads/*`.
-Do not ask an application bundler to rewrite the generated worker modules or flatten
-the directory structure. Both ESM and global bundles use the same explicit asset URL.
+| Environment | Execution |
+| --- | --- |
+| No browser Worker | Direct decoding in the calling realm. |
+| Worker without cross-origin isolation or SharedArrayBuffer | One embedded serial worker. |
+| Worker with cross-origin isolation and SharedArrayBuffer | Automatic slice-pool sizing. |
 
-```ts
-registerMpeg2Decoder({
-    threadedRuntimeUrl: new URL('/mpeg2-threads/js/threaded-runtime.mjs', location.href),
-});
-```
+Automatic sizing selects the largest supported `1`, `2` or `4` not exceeding a valid
+positive integer `navigator.hardwareConcurrency`. Missing or invalid hints select
+one worker. No core is subtracted for the coordinator. Two/four pool workers require
+three/five total workers per decoder. There is no global shared pool or Node
+`worker_threads` backend. A selected backend's initialization failure rejects the
+decoding task without retrying another backend.
 
-Automatic pooling requires `crossOriginIsolated === true`, `SharedArrayBuffer` and
-`Worker`, and is disabled by `useWorker: false`. For a finite positive integer
-`navigator.hardwareConcurrency`, sizing uses `max(1, count - 1)` and selects the
-largest supported count, 1, 2 or 4, within that budget. Reported counts 1–2 select 1,
-3–4 select 2, and 5 or more select 4. Missing or invalid hints select 1. The browser
-may reduce its reported logical availability; this is not a current-load measure.
-Subtracting one is a sizing heuristic, not a reservation of a core. The four-thread
-cap bounds each decoder's pool to the supported sizes; it is not a claim that four
-threads are optimal for every stream or device.
+Advanced callers that supply elementary-picture packets use the separate
+[standalone factory contract](vendor/decoder/mpeg2-decoder.d.mts). Its `concurrency`
+option supports `0` for direct, `1` for a serial worker, and `2`/`4` for slice pools.
+Those options belong to `createMpeg2Decoder`, not `registerMpeg2Decoder`. There is no
+registration configuration object, setter, or re-export of the factory here.
+This is the same separation as Mediabunny's zero-argument ProRes registration and
+TurboRes's lower-level `Decoder.create` options. MPEG-2 parallelizes eligible slices,
+not independent frames; reference dependencies and delayed output remain stateful.
 
-When prerequisites are unavailable, automatic selection chooses 1 before initialization.
-At count 1, `useWorker: true` selects the serial worker; otherwise decoding is direct.
-The supplied URL is still validated, normalized and compared on repeat registration.
-Choose one configuration before registration; explicit overrides include:
+## Browser deployment
 
-```ts
-registerMpeg2Decoder({ threadedRuntimeUrl, threadCount: 1 }); // Direct, even when pooling is available.
-// Alternatively, force a supported pool size and reject if its requirements are unavailable:
-registerMpeg2Decoder({ threadedRuntimeUrl, threadCount: 4 });
-// Or suppress automatic pooling:
-registerMpeg2Decoder({ threadedRuntimeUrl, useWorker: false });
-```
+The factory embeds the scalar/shared WASM and worker graph. ESM and global extension
+bundles need no external runtime URL, worker URL, CDN or copied asset tree. The
+factory manages its Blob URLs and workers; Mediabunny does not build another
+transport around it. Old vendored runtime trees remain audit material, not runtime
+dependencies or package exports.
 
-Explicit `threadCount` always wins. Explicit 2/4 never downgrade on an incapable page.
-For pooled decoding the page must be cross-origin isolated and support `SharedArrayBuffer` and `Worker`.
-Serve it with `Cross-Origin-Opener-Policy: same-origin` and
-`Cross-Origin-Embedder-Policy: require-corp`, with the assets on the same origin.
-CSP must permit scripts and connections to those assets, WebAssembly compilation
-(`'wasm-unsafe-eval'`) and both same-origin module workers and `blob:` workers.
-Once pooling is selected, CSP, import, asset or initialization failures reject without
-retrying scalar decoding. Explicit pooling also rejects missing capabilities or runtime URL.
-Individual ineligible slice layouts still use the Rust kernel's
-serial path inside the requested backend. Two/four pool workers require **three/five
-total workers per decoder**, including the coordinator, with separate decoder memory.
-Explicit counts are not clamped to hardware concurrency. There is no shared global pool.
+CSP must permit WebAssembly compilation under the applicable script policy,
+including `'wasm-unsafe-eval'`, and `blob:` module workers/scripts. Enable automatic
+pooling by serving the page with `Cross-Origin-Opener-Policy: same-origin` and
+`Cross-Origin-Embedder-Policy: require-corp`, with compatible policies on its resources.
+Ineligible slice layouts still use the kernel's serial path inside the selected
+backend. Automatic sizing is not a throughput, optimality or real-time playback claim.
 
-The optional shared module is 332,988 bytes, SHA-256
+## Historical WASM qualification
+
+The qualified shared module is 332,988 bytes, SHA-256
 `32270a44364331fe90b2d22aeb590471c767a0bf4bd5c2e4e6346561e6ef7281`.
 Its `PROVENANCE.json` records the qualified input manifest and source-file mapping.
 The Rayon helper has a controlled Apache-2.0 adaptation that forwards asynchronous
@@ -113,6 +98,9 @@ Neither observation bounds unseen streams. The [numerical migration record](NUME
 describes the consumer checks and retained old references.
 
 ### Historical f64 measurements
+
+These records describe the previous adapter, transports and configuration API.
+They are not deployment instructions or measurements of the factory-backed adapter.
 
 The previous f64 consumer integration was compared against frozen production bundles
 from Mediabunny `3a6e0b8`, using five warm and seven measured old/new ABBA rounds.
@@ -152,17 +140,15 @@ decode and segment finish, capability rejection and partial startup failure were
 checked separately. The `browser-threads` Vitest project serves built runtime files
 unchanged and checks real-worker lifecycle and independent pixel goldens.
 
-## Optional browser worker
+## Factory ownership and cancellation
 
-`registerMpeg2Decoder({ useWorker: true })` without a runtime URL selects an embedded browser worker instead of main-thread decoding. Calling `registerMpeg2Decoder()` without options retains direct decoding. Repeating the same effective configuration is idempotent; changing it after registration throws. Worker mode does not silently fall back to direct decoding if Worker support, initialization or CSP permission is missing. Applications that need a different mode must decide before registration in a fresh registry/application context.
+The adapter uses the existing custom-decoder serializer. It adds no packet queue or worker protocol. The standalone factory owns decoding, worker transport, cancellation and native resources. It returns owned planes; the adapter packs them into I420/I422 samples with Mediabunny timing, scan and color metadata, then frees every returned frame in `finally`.
 
-Each decoder creates one worker lazily during initialization. The existing custom-decoder serializer owns scheduling; the transport permits only one outstanding request and has no packet queue of its own. Packet transfers copy only the caller's visible packet bytes, never detaching the caller's storage. The worker uses the same private vendored WASM, returns at most two packed owned frame buffers per decode, and frees native frames before sending them. The host validates reply IDs, dimensions, format, scan, timing and packed plane bounds before constructing samples. Held samples and clones own storage independently of the worker.
+Abort/disposal invokes the synchronous custom-decoder `cancel()` hook before awaiting serialized cleanup. The adapter aborts pending factory creation and cancels an active factory decoder immediately. Close awaits that same initialization promise, including factory cleanup. Shared scalar compilation can continue into the factory's cache after cancellation, but cannot allocate a decoder for the canceled request. Late initialization cannot attach a decoder or emit frames. Close is idempotent. Errors remain sticky per decoder, including adapter output/callback failures. Other custom decoders without `cancel()` retain their previous close ordering.
 
-The build embeds a self-contained IIFE worker script and its WASM in the ESM/global extension bundles. It does not use a relative `import.meta.url`, external worker URL, CDN, SharedArrayBuffer, worker pool or Rust threads. Browser policy must permit `worker-src blob:` and WebAssembly compilation under the applicable script policy. Worker URLs are revoked after initialization or on failure/cancellation. Bundles remain private and unlicensed for distribution; worker packaging grants no additional permission.
+`test/node/mpeg2-worker.test.ts` covers cancellation and startup-error propagation through the real factory and Input/sinks, blocking only worker startup. `test/node/sink-decoder-abort.test.ts` owns shared iterator cancellation and legacy close ordering. Browser tests cover real serial/pool initialization cancellation, default worker creation, I420/I422 pixels, backward open-GOP selections and held clones. The standalone factory's tests own concurrency policy, worker messages, transfer validation, lost replies, child startup and per-operation transport failure handling.
 
-Abort/disposal invokes the optional synchronous custom-decoder `cancel()` hook before awaiting serialized cleanup. Worker cancellation terminates the worker and rejects pending work, including initialization; queued calls cannot recreate it. Normal flush does not cancel: it runs `finishSegment`, packs the result, then resets only after success. Errors are sticky. Normal close remains idempotent. Other custom decoders without `cancel()` retain their previous close ordering.
-
-`test/node/mpeg2-worker.test.ts` exercises real Input/sink ownership and cancellation against a fake browser transport. `test/node/sink-decoder-abort.test.ts` covers shared iterator cancellation and legacy decoder close ordering. `test/browser/mpeg2-worker.test.ts` exercises the rebuilt embedded worker with I420/I422 pixel and held-clone checks, stalled-request cancellation, and failed error reporting. The browser tests are required alongside Node tests; fake transport coverage alone does not establish browser-worker correctness. Worker mode remains opt-in and does not promise higher decode throughput or real-time playback.
+### Historical worker responsiveness
 
 Retained c9cae measurements cover main-thread responsiveness during unpaced 30/32-frame public-sink bursts with warmed caches, not paced playback or a later Rust optimization artifact. They time track setup through decoding, full sample copies, canvas draw-call execution and Input disposal; Input construction, fetch and hashing are excluded. Draw-call execution does not establish compositor completion or presentation. Worker heap/module duplication, bundle cost and aggregate memory with concurrent decoders were not measured. No heap or GC improvement is claimed; natural GC was included without forced-GC control. Lifecycle observations confirm calls to `Worker.terminate()`, not independently measured thread exit or heap reclamation.
 
@@ -172,11 +158,11 @@ The MXF subset includes progressive MPEG-2 Main Profile / High or High-1440 Leve
 
 Stored macroblock padding may exceed visible dimensions, with zero sampled/display offsets and matching sampled/display rectangles. Decoder configuration and owned planes use visible sequence dimensions. FrameLayout 1 descriptor heights are per-field and become full-frame heights. Sony D-10 remains unsupported. LXF uses a separate opt-in version-1 input with a narrower closed all-I contract; see `src/lxf/README.md`. Separate field pictures, repeated-field cadence, scalable coding, other profiles/levels and incomplete headers remain unsupported.
 
-The adapter outputs owned planar I420 or I422 `VideoSample`s. Native per-picture flags set `scan` to progressive, interlaced-top-first or interlaced-bottom-first. Interlaced samples retain woven lines at the original frame rate; no deinterlacing is performed. Canvas and VideoFrame conversions do not retain this scan metadata. Native `takeY`, `takeCb`, and `takeCr` transfer independent JS plane copies; the adapter combines them using the reported strides and frees each Rust frame in `finally`. Held samples survive later decode, flush, close, and input disposal. Color metadata is forwarded from decoder configuration without filling in unspecified primaries or transfer.
+The adapter outputs owned planar I420 or I422 `VideoSample`s. Native per-picture flags set `scan` to progressive, interlaced-top-first or interlaced-bottom-first. Interlaced samples retain woven lines at the original frame rate; no deinterlacing is performed. Canvas and VideoFrame conversions do not retain this scan metadata. The factory's `takeY`, `takeCb`, and `takeCr` return owned JS planes; the adapter combines them using the reported strides and frees each factory frame in `finally`. Held samples survive later decode, flush, close, and input disposal. Color metadata is forwarded from decoder configuration without filling in unspecified primaries or transfer.
 
 Packet timing passes directly to `decode(bytes, { timestamp, duration })`. The native decoder associates delayed frames with their packets and returns display-ordered timed output. The adapter neither sorts temporal references nor maintains a timestamp map, packet history, or second operation queue.
 
-In direct mode, the embedded 144,238-byte default-scalar module is compiled lazily, shared between decoder instances in that realm, and loaded without fetches. Worker mode initializes a separate WASM environment per decoder worker. Each decoder owns its own native references. Input and padded frame budgets are 8 MiB each; native reference storage is bounded to 24 MiB per decoder. Width is at most 4096 and height at most 2304, subject to the tighter padded-frame budget. There is no 64-picture lifetime cap. Authored tests and bounded local 1080p I422 selections provide targeted evidence, not general MPEG-2 conformance certification.
+In direct mode, the embedded 126,458-byte metadata-stripped scalar module is compiled lazily, shared between decoder instances in that realm, and loaded without fetches. Worker mode initializes a separate WASM environment per decoder worker. Each decoder owns its own native references. Input and padded frame budgets are 8 MiB each; native reference storage is bounded to 24 MiB per decoder. Width is at most 4096 and height at most 2304, subject to the tighter padded-frame budget. There is no 64-picture lifetime cap. Authored tests and bounded local 1080p I422 selections provide targeted evidence, not general MPEG-2 conformance certification.
 
 ## Selection lifecycle
 
@@ -186,14 +172,19 @@ Both sample iteration paths execute explicit header-only preroll through the exi
 
 Malformed native pictures throw sticky errors. A failed finish does not reset away that error. Close frees references without draining, is idempotent, and invalidates pending lazy initialization. Native decode itself is synchronous and cannot be interrupted mid-call. Closing from a sample callback suppresses any remaining output from that call and frees its frames.
 
-`Mpeg2Decoder` is also exported for applications already supplying complete elementary-picture packets. Direct callers set the inherited `codec`, `config`, `onSample`, and `onError` fields through their custom-coder setup, serialize calls, and close the decoder. Capability checks retain the I420 geometry envelope. Native parsing enforces the actual chroma-specific padded-frame budget before allocation; configuration geometry alone does not prove I422 will fit.
+Capability checks retain the I420 geometry envelope. Native parsing enforces the actual chroma-specific padded-frame budget before allocation; configuration geometry alone does not prove I422 will fit.
 
 ## Provenance and validation
 
-`vendor/PROVENANCE.json` records the source commit, source/compiler hashes, dependency license metadata, original build-record hash, and every copied artifact hash. Upstream files are unmodified; only `vendor/js/index.d.mts` is an adapter-authored declaration for the used facade API. The license-header checker visits `src` only, never `vendor`. Bundle banners retain the distribution restriction and exact WASM identity.
+`vendor/decoder/PROVENANCE.json` identifies the self-contained factory bundle and its embedded runtimes. The earlier `vendor/PROVENANCE.json` and `vendor/threads/` records retain the native build history and qualified WASM identities. They do not identify the new JS bundle. The license-header checker visits `src` only, never `vendor`. Bundle banners retain the distribution restriction and WASM identities.
 
-- Reviewed source commit: `3ccd64065dd45e6675b0a3602d1804315935b515`; original build base: `1fafe8f611afab696ce8b90d2d54b46f4c252789`.
-- Scalar WASM SHA-256: `c06ed93c42aa17dfe45bcad2e55b6d14fca5e0c07b5bca1cc469b52999407b9b`.
+The integrated factory module is 588,783 bytes, SHA-256 `57b577ebb4c4ffec36ba586e0b84f7b41d080bf67aaa66dcc6822402a57d6c09`. Its supplied provenance records the current JS source identities and packaging adaptations separately from the frozen WASM inputs. Packaging removes only the WASM `name` and `producers` custom sections and deduplicates the scalar base64 payload; it does not minify the inner worker/runtime JavaScript. The WASM header, standard sections and `target_features` bytes are unchanged, but the complete deployed binaries have different hashes. Stack traces may show function indices instead of names. The build copies the provenance, `NOTICE.txt` and all dependency licenses into `dist/decoder/`, which is included in the private package. No old external runtime tree is shipped.
+
+- Original WASM source commit: `3ccd64065dd45e6675b0a3602d1804315935b515`; original build base: `1fafe8f611afab696ce8b90d2d54b46f4c252789`.
+- Original scalar WASM SHA-256: `c06ed93c42aa17dfe45bcad2e55b6d14fca5e0c07b5bca1cc469b52999407b9b`.
+- Original shared WASM SHA-256: `32270a44364331fe90b2d22aeb590471c767a0bf4bd5c2e4e6346561e6ef7281`.
+- Deployed scalar WASM: 126,458 bytes, SHA-256 `78c810d649f34fb574f5d1dd8aae1407dda6c3e960a4102e835553bc7ab6da54`.
+- Deployed shared WASM: 244,600 bytes, SHA-256 `362a9776dabca4ffd182e628d9848d67e30e1a707a9098bfcbde18d6e25e2bf0`.
 - Original build records pin compiler identities and separate scalar/shared flags. Packaging-only source changes after the build are recorded separately. No Rust rebuild or source modification is part of this package integration.
 
 `test/node/mpeg2.test.ts` imports the actual bundled package and verifies all 18 authored MXF frames against qualified WASM regression hashes, unchanged independent PCM hashes, individual and batched backward selections, native error behavior, timing, ownership, close during initialization, and more than 64 packets without reset. Original FAANI/native/f64 references remain unchanged. The new hashes are regression records, not independent mathematical accuracy evidence. Browser canvas rendering requires separate real-browser verification; Node planar equality is not a canvas color-conversion proof.
