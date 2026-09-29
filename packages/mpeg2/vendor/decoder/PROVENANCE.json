@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "built": "2026-09-28T16:33:19.384Z",
+  "built": "2026-09-28T21:22:44.428Z",
   "esbuild": {
     "version": "0.28.2",
     "license": "MIT",
@@ -14,27 +14,27 @@
   "description": "Self-contained packaging derived from frozen WASM inputs. Only name/producers custom sections are removed; standard-section bytes are unchanged. Current working-tree JS is identified separately.",
   "binaryInputs": {
     "scalar": {
-      "path": "/Users/lideen/Code/arvid/code/mpeg2-rs/vendor/wasm/scalar",
+      "path": "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/vendor/wasm/scalar",
       "wasm": {
-        "bytes": 144238,
-        "sha256": "c06ed93c42aa17dfe45bcad2e55b6d14fca5e0c07b5bca1cc469b52999407b9b"
+        "bytes": 144159,
+        "sha256": "42e40217c4246aea6e6aaf69f3ce44f5c8806b11a72924fa46a1983574b8dd0f"
       },
       "derivedWasm": {
-        "bytes": 126458,
-        "sha256": "78c810d649f34fb574f5d1dd8aae1407dda6c3e960a4102e835553bc7ab6da54"
+        "bytes": 126426,
+        "sha256": "911c4b9577897531a876c3a08a029399cbc0f09a5b791a1984ef00c31b17ba50"
       },
       "glue": {
         "bytes": 22772,
         "sha256": "f39fd77f03ade8555978a9a133fabec05e00a210f971c1be867a7c1af271fd92"
       },
-      "originalProvenance": "{\n  \"sourceRepository\": \"mpeg2-rs, user-supplied local repository\",\n  \"sourceCommit\": \"3ccd64065dd45e6675b0a3602d1804315935b515\",\n  \"sourceBaseCommit\": \"1fafe8f611afab696ce8b90d2d54b46f4c252789\",\n  \"sourceState\": \"All 565 final snapshot source identities match the reviewed commit. The artifacts predate that commit; the two identified post-build tooling changes do not change compiled inputs. Original dirty-build records are preserved; no post-commit rebuild is claimed.\",\n  \"numericalVersion\": \"h262-butterfly-q14-q5-v1\",\n  \"permission\": \"User-authorized private local integration only. UNLICENSED MPEG-2 project. No npm publication or public/upstream distribution authorized. Dependency licenses do not license the combined package.\",\n  \"inputBundle\": \"mpeg2-butterfly-idct-20260927/integration-ready-final\",\n  \"numericalManifest\": \"threads/provenance/numerical/numerical-migration.json\",\n  \"numericalManifestSha256\": \"6ea6cb87b90ba047924ca524c2d429ece1466c72d1d3a2c43a4662d25957a3dc\",\n  \"sourcePatchSha256\": \"15736878317bef392bcea7b7c34450217295dcada61b6fb9747a2cf3d6d09080\",\n  \"sourceHashes\": \"threads/provenance/numerical/numerical-migration.json#/source/files\",\n  \"buildRecords\": [\n    \"threads/provenance/numerical/verification/scalar-build.json\",\n    \"threads/provenance/numerical/verification/suite-build.json\"\n  ],\n  \"postBuildToolingChanges\": [\"tools/package-mpeg2-web.py\", \"tools/record-wasm-idct-regressions.mjs\"],\n  \"verification\": \"All supplied artifact, evidence and source hashes verified. Compiled inputs match the original build. Final source.patch contains no ANSI and passes git apply --check against the canonical base. Original build and qualification records remain unchanged.\",\n  \"files\": {\n    \"js/index.mjs\": { \"source\": \"scalar/js/index.mjs\", \"bytes\": 4975, \"sha256\": \"7fc979b850e5c0b5dd9aec5557da7e8303279a4de98caa330faa33df42192da5\" },\n    \"pkg/mpeg2_wasm.js\": { \"source\": \"scalar/pkg/mpeg2_wasm.js\", \"bytes\": 22772, \"sha256\": \"f39fd77f03ade8555978a9a133fabec05e00a210f971c1be867a7c1af271fd92\" },\n    \"pkg/mpeg2_wasm.d.ts\": { \"source\": \"scalar/pkg/mpeg2_wasm.d.ts\", \"bytes\": 8712, \"sha256\": \"7d3949290bd58e7da30dbe27ecc42ceff2726d7a29426e3c8a691d18f7837cdd\" },\n    \"pkg/mpeg2_wasm_bg.wasm\": { \"source\": \"scalar/pkg/mpeg2_wasm_bg.wasm\", \"bytes\": 144238, \"sha256\": \"c06ed93c42aa17dfe45bcad2e55b6d14fca5e0c07b5bca1cc469b52999407b9b\" }\n  },\n  \"localAdditions\": [\"js/index.d.mts remains the adapter-authored declaration for the used facade API.\"],\n  \"previousProvenance\": \"threads/provenance/previous/scalar-provenance.json\",\n  \"dependencies\": \"Unchanged from threads/provenance/previous/scalar-provenance.json. Complete locked dependency metadata and licenses are retained in the optional threads tree.\",\n  \"limits\": \"Numerical regression records are not independent accuracy oracles. Native f64 is unchanged. No IEEE 1180 or full H.262 conformance claim. Observed predictive drift is not an unseen-stream bound.\"\n}\n",
+      "originalProvenance": "{\n  \"schema\": 1,\n  \"description\": \"Qualified same-worktree rebuild. Only four-worker slice batching changes. Native f64 and WASM h262-butterfly-q14-q5-v1 arithmetic are unchanged.\",\n  \"source\": {\n    \"baseCommit\": \"52ea2749036a70554a5fca0603a505f8d01c9008\",\n    \"dirty\": true,\n    \"changedRustFiles\": [\n      \"src/decoder/slice_parallel.rs\"\n    ],\n    \"snapshot\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/build.source\",\n    \"files\": {\n      \"Cargo.lock\": {\n        \"bytes\": 1558,\n        \"sha256\": \"88d2abb2b8b13966d58a31a86c0cd6cbcd88b3668bed2836a17a6e67e29f6dd9\"\n      },\n      \"Cargo.toml\": {\n        \"bytes\": 400,\n        \"sha256\": \"46fa4429edbb852653748e3e928acac2ebd3b10b4af1c7a78c87fe35a3a2417e\"\n      },\n      \"crates/wasm/Cargo.lock\": {\n        \"bytes\": 6844,\n        \"sha256\": \"8a0b7af14bf2c0541425b8421410b2a85ff32f336b730901c2946fba6ce1049d\"\n      },\n      \"crates/wasm/Cargo.toml\": {\n        \"bytes\": 605,\n        \"sha256\": \"8c908b59e78f94bfdc9a8e53e77b1a7e2ebc6b5cabd38449db17c80c89ee84be\"\n      },\n      \"crates/wasm/src/lib.rs\": {\n        \"bytes\": 15931,\n        \"sha256\": \"5668cfdcd8f12b5f27432beff397b9dbe5474869f70786be3265bf5687ca6b87\"\n      },\n      \"crates/wasm/src/threading.rs\": {\n        \"bytes\": 647,\n        \"sha256\": \"eab546abc1c2ae693eefe99e7f12c02b7d3f355860b6596127aa7353dceded05\"\n      },\n      \"examples/benchmark_packets.rs\": {\n        \"bytes\": 4217,\n        \"sha256\": \"8db47c39b59fecb86856873b91a051559dd47deea85542045206535f11686b11\"\n      },\n      \"examples/decode.rs\": {\n        \"bytes\": 1524,\n        \"sha256\": \"55d82981c07e8c0d549b54e9b8600092755b95629fff0203a7d5838c566ee575\"\n      },\n      \"examples/drain.rs\": {\n        \"bytes\": 1614,\n        \"sha256\": \"bacc1bdfa124c004869c7b462cd48c1af2bb122dfbb707b629368495c44fb48a\"\n      },\n      \"src/bits.rs\": {\n        \"bytes\": 3055,\n        \"sha256\": \"e4c0c4d988c8834f0cd870739d1c18f417fd3c671aa21f43c1516a9c76f214d6\"\n      },\n      \"src/bits/tests.rs\": {\n        \"bytes\": 2540,\n        \"sha256\": \"93102510a6b55a943021c7e2f0831e0a1eac64be27dab6d89be344c444d51984\"\n      },\n      \"src/decoder.rs\": {\n        \"bytes\": 61181,\n        \"sha256\": \"515a13a82282876f190fd3d3d89a59ee32852c1e4494d5232226b06252f419e5\"\n      },\n      \"src/decoder/slice_parallel.rs\": {\n        \"bytes\": 3702,\n        \"sha256\": \"6d61d1720d5daeb152b77ff002e6d3c31fe78c59d1fb8cec73a95edb8524d641\"\n      },\n      \"src/lib.rs\": {\n        \"bytes\": 7222,\n        \"sha256\": \"d632f0af5e8e06a80970a400b59fec3272fd054f48b696fe315f88eb1b2d5898\"\n      },\n      \"src/motion.rs\": {\n        \"bytes\": 9494,\n        \"sha256\": \"e7e5b81dcc8b8d96f3358d8a45f34d58ca1336da6c618e8ccb0cf89218ae4ae3\"\n      },\n      \"src/reconstruction.rs\": {\n        \"bytes\": 5622,\n        \"sha256\": \"4e7db42a5c4724ee091dd9a8853637658fbf35975c346418606f7e74ed63a800\"\n      },\n      \"src/transform.rs\": {\n        \"bytes\": 11038,\n        \"sha256\": \"ceb2092f416d9662c1c8f2c8ec1b905fb4857b790967df952382b29f25f40835\"\n      },\n      \"src/transform/butterfly.rs\": {\n        \"bytes\": 4079,\n        \"sha256\": \"4dd9e7fb5f779f9f9e7adc11bf71873f0846a1c6b4333f5a4b683cee1711b8d8\"\n      },\n      \"src/transform/butterfly_entry.rs\": {\n        \"bytes\": 188,\n        \"sha256\": \"7e2879820a3bbf885fc929531bff9fefbb02570b92f8b16ef41cd6387a7d9fb5\"\n      },\n      \"src/transform/fixed.rs\": {\n        \"bytes\": 4003,\n        \"sha256\": \"1e6431606d8c804f05ed75654d92170a3628ffe8bdf6bd71296c049a2f1b4305\"\n      },\n      \"src/transform/fixed_entry.rs\": {\n        \"bytes\": 176,\n        \"sha256\": \"de8d736a6034d81f79622670fc6d9dc63939afd6b6a25f51ada949b45e358341\"\n      },\n      \"src/vlc.rs\": {\n        \"bytes\": 17975,\n        \"sha256\": \"a2811bbc1182c9e4f695afe39559327a400ec4da50156aa98886df5ceea3dfe7\"\n      },\n      \"src/vlc/frozen.rs\": {\n        \"bytes\": 11291,\n        \"sha256\": \"415e79c6e7ef2e77bed03baa0537ee896759c890f54884fb5c9796544fc10948\"\n      },\n      \"src/vlc/tests.rs\": {\n        \"bytes\": 3594,\n        \"sha256\": \"43b5c192a410b1c78cdc9fe65421792005cfd1b454073922a1626723ca25c541\"\n      },\n      \"tests/ac_modes.rs\": {\n        \"bytes\": 3097,\n        \"sha256\": \"28155c53461dba028e689c984679c799a2beb24484889d60dfda6d03f57626a1\"\n      },\n      \"tests/bidirectional.rs\": {\n        \"bytes\": 10445,\n        \"sha256\": \"21bcf4e230da09d8ff929e76565bf9b5b5911f5ad752a24420669cf566c0a106\"\n      },\n      \"tests/chroma.rs\": {\n        \"bytes\": 7815,\n        \"sha256\": \"a1fdaa9cce7327aa7e3a3b51fe0d98a9a2eb7a21dbb6ec884de8fa27c04bd135\"\n      },\n      \"tests/common/mod.rs\": {\n        \"bytes\": 787,\n        \"sha256\": \"7711d87e0d9956ca94d6724849a6cdcf9c0128d51f447dcfcd0bf82af91696c8\"\n      },\n      \"tests/decode.rs\": {\n        \"bytes\": 17740,\n        \"sha256\": \"6ab924bb70f4cf91387bb608ae67eea680396c2358754a15e413e9e8233bd5fd\"\n      },\n      \"tests/dual_prime.rs\": {\n        \"bytes\": 7149,\n        \"sha256\": \"338ebb4a96a819527bd324852f7ef8fe4ef4a14122c5ffbf19e0068f72817888\"\n      },\n      \"tests/interlaced.rs\": {\n        \"bytes\": 11961,\n        \"sha256\": \"f31a28425066a86e209e3f02e059ca336f85a34f9a1d370cfcf4851e63bf2bd0\"\n      },\n      \"tests/interlaced_prediction.rs\": {\n        \"bytes\": 8503,\n        \"sha256\": \"3163072055032d85dd00a2ae98de345419df13d28a184dc7a273082710bd4386\"\n      },\n      \"tests/long_b_intervals.rs\": {\n        \"bytes\": 10932,\n        \"sha256\": \"54c072453feca33dc77e11ef9b093d208235d52f5b80a55860d15ac043b9bb19\"\n      },\n      \"tests/owned_input.rs\": {\n        \"bytes\": 3611,\n        \"sha256\": \"61fe3d8c1dc99a9b5e5159ca897bdfffd41d1cda4870339cae6a393e8005a454\"\n      },\n      \"tests/packets.rs\": {\n        \"bytes\": 12301,\n        \"sha256\": \"d4c33352b39d0878a4d08d89eb8de48065055c78e1abe2995a18856845493d2a\"\n      },\n      \"tests/predictive.rs\": {\n        \"bytes\": 13626,\n        \"sha256\": \"17bd5847b21f6e7c8e8c9a6809bf60d1eae2a1135bc1a1936c5088a9c03c5be7\"\n      },\n      \"tests/preroll.rs\": {\n        \"bytes\": 6431,\n        \"sha256\": \"2354115a74b34b292a56d92b81445f8ff309aa0efe5d3fb0eec0619add99585d\"\n      },\n      \"tests/slice_parallel.rs\": {\n        \"bytes\": 10109,\n        \"sha256\": \"9254dd333dacd30f5398eaf29d82c94879f8a816a32486b11d16ae8beead5759\"\n      },\n      \"tools/adapt-rayon-worker.py\": {\n        \"bytes\": 1846,\n        \"sha256\": \"d0985fdeab7a3c9f188159607bf54d1e4fc5bb1c457b0c8e688e1184ca6ad96d\"\n      },\n      \"tools/build-wasm-threads.sh\": {\n        \"bytes\": 1794,\n        \"sha256\": \"f118287283a9584247fa3c248527c933c64c004fa9526c9cf3dd700f09d72f8d\"\n      },\n      \"tools/build-wasm.sh\": {\n        \"bytes\": 478,\n        \"sha256\": \"f33fc6108aaf40165e02d86696468bb324969edd961efc465c9158b1e63313e6\"\n      },\n      \"tools/butterfly-idct-probe.rs\": {\n        \"bytes\": 2998,\n        \"sha256\": \"3b43ea64c5857a5a922d3aa01006060cf52210bf83fdc0e4cab831a4aecee4e9\"\n      },\n      \"tools/fixed-idct-probe.rs\": {\n        \"bytes\": 1045,\n        \"sha256\": \"95d49a09f034d0f0ebe2f66339961e96306ecaf39c6263d670c2431f5154c1de\"\n      },\n      \"tools/thread-probe/src/lib.rs\": {\n        \"bytes\": 1091,\n        \"sha256\": \"0d91bb5d79b42e1674a2702ae39698a7979a97548dc7d208ddadefe0dd296367\"\n      }\n    }\n  },\n  \"build\": {\n    \"directory\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four\",\n    \"target\": \"scalar\",\n    \"rustc\": \"rustc 1.98.1 (48a229cea 2026-09-01)\\nbinary: rustc\\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\\ncommit-date: 2026-09-01\\nhost: aarch64-apple-darwin\\nrelease: 1.98.1\\nLLVM version: 22.1.8\",\n    \"options\": \"No added Rust flags; tools/build-wasm.sh\",\n    \"manifest\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/build.json\",\n      \"bytes\": 123242,\n      \"sha256\": \"5af6a03eb6093883fd0d72b39b4163d2d19fe49f99e6eef425584d318036d46e\"\n    },\n    \"sharedBuildLog\": null\n  },\n  \"files\": {\n    \"pkg/mpeg2_wasm.d.ts\": {\n      \"bytes\": 8712,\n      \"sha256\": \"7d3949290bd58e7da30dbe27ecc42ceff2726d7a29426e3c8a691d18f7837cdd\"\n    },\n    \"pkg/mpeg2_wasm_bg.wasm.d.ts\": {\n      \"bytes\": 4240,\n      \"sha256\": \"2579697264a424efa2679ad051fe03352c81877b1ea356fc8be718b07a116032\"\n    },\n    \"pkg/mpeg2_wasm.js\": {\n      \"bytes\": 22772,\n      \"sha256\": \"f39fd77f03ade8555978a9a133fabec05e00a210f971c1be867a7c1af271fd92\"\n    },\n    \"pkg/mpeg2_wasm_bg.wasm\": {\n      \"bytes\": 144159,\n      \"sha256\": \"42e40217c4246aea6e6aaf69f3ce44f5c8806b11a72924fa46a1983574b8dd0f\"\n    }\n  },\n  \"qualification\": {\n    \"raw-corpus.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/raw-corpus.json\",\n      \"bytes\": 58660,\n      \"sha256\": \"54e8af152f0a382f512ad5a16c1196f0d478f4e8e49bb4d1363dbc302a47a7d4\"\n    },\n    \"raw-seven.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/raw-seven.json\",\n      \"bytes\": 4910,\n      \"sha256\": \"20960d5a94349cceb0be87f20c895d441face0718d5f0c79bf88c0aecf3d0086\"\n    },\n    \"raw-errors.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/raw-errors.json\",\n      \"bytes\": 45776,\n      \"sha256\": \"ee9f88ff6ce02bc56a6a5599db7fb464ad398ee84a7478ae276d0cef4c0dd6a3\"\n    },\n    \"candidate-cross-mode.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/candidate-cross-mode.json\",\n      \"bytes\": 268,\n      \"sha256\": \"866b15c2ecef5eb1835ec8d2cc084dc738d641e70e52531ec4cbe265a7b9263e\"\n    },\n    \"corpus/native-exact.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/corpus/native-exact.json\",\n      \"bytes\": 33599,\n      \"sha256\": \"379307ed17e6d80198011139cc1f969b4dbd0fab7a931113a5814964a5f05b16\"\n    },\n    \"scheduler-four/seven-pair.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/seven-pair.json\",\n      \"bytes\": 3229949,\n      \"sha256\": \"36bcfa1c68659ff24f7497605e36e0036f4551c27872d45fee9e4e85b39a139a\"\n    },\n    \"scheduler-four/confirm.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/confirm.json\",\n      \"bytes\": 4976561,\n      \"sha256\": \"e6c0db5678e0953c7fa4ae61f0749f9008753ed9799dc105662fdcb0c1486c4d\"\n    },\n    \"scheduler-four/cold.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/cold.json\",\n      \"bytes\": 1004218,\n      \"sha256\": \"83ff822d3db1972b20af799ff131a8d2ab179111b31c2301f6e16c6cb9dfe1fe\"\n    },\n    \"scheduler-four/startup-swapped.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/startup-swapped.json\",\n      \"bytes\": 1250742,\n      \"sha256\": \"0cce80be08eedd4a945cf797032c527c625955b68a6bb2c4d27fa2b3f3e7f3c6\"\n    },\n    \"scheduler-four/lifecycle/summary.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/lifecycle/summary.json\",\n      \"bytes\": 25830,\n      \"sha256\": \"719d38532ea03a689582dbfa54c3dbc90373cf2fe651dc4d6834ac49d0559e02\"\n    },\n    \"native-final-seven-complete/result.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/native-final-seven-complete/result.json\",\n      \"bytes\": 4597853,\n      \"sha256\": \"cbac87c6d51770bb434887908d1a46a9d90525a7f685f068b191accfd356ebcf\"\n    }\n  },\n  \"originalImmutableInput\": {\n    \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/original-vendor/scalar\",\n    \"provenance\": {\n      \"bytes\": 2944,\n      \"sha256\": \"403a370fb5b9b44387381b3d8e33725ca54a9c557ab6508ba7d06d05658daf34\"\n    }\n  },\n  \"limits\": \"Finite retained corpus and host qualification; no IEEE 1180 certification, numerical migration, browser-general or paced-playback claim.\"\n}\n",
       "packing": {
         "removed": [
           {
             "name": "name",
-            "sectionBytes": 17666,
-            "payloadBytes": 17662,
-            "sha256": "2df3426dbe74c07f018cd5bc5672bbbf3a6e8f4f96ef7da3df1bb9d734de65bd"
+            "sectionBytes": 17619,
+            "payloadBytes": 17615,
+            "sha256": "1fa4e916e3012b59cd19a9fc22c873520ba8c4437f545bf7e352c87e081db517"
           },
           {
             "name": "producers",
@@ -51,35 +51,35 @@
           }
         ],
         "standardSections": {
-          "bytes": 126299,
-          "originalSha256": "368e01cd5cbff7d1988f955e4775c69debe8f36ffd9e0037d22b9c183d2e6517",
-          "derivedSha256": "368e01cd5cbff7d1988f955e4775c69debe8f36ffd9e0037d22b9c183d2e6517",
+          "bytes": 126267,
+          "originalSha256": "fb303168e8783e89da4e5646b3941876c7d8859881684089eef72b797287c868",
+          "derivedSha256": "fb303168e8783e89da4e5646b3941876c7d8859881684089eef72b797287c868",
           "equal": true
         }
       }
     },
     "shared": {
-      "path": "/Users/lideen/Code/arvid/code/mpeg2-rs/vendor/wasm/shared",
+      "path": "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/vendor/wasm/shared",
       "wasm": {
-        "bytes": 332988,
-        "sha256": "32270a44364331fe90b2d22aeb590471c767a0bf4bd5c2e4e6346561e6ef7281"
+        "bytes": 332945,
+        "sha256": "1d7bf862ed70513b34b0a0bcd49158d71da75b73d9608c76181f6b14c21f3fcf"
       },
       "derivedWasm": {
-        "bytes": 244600,
-        "sha256": "362a9776dabca4ffd182e628d9848d67e30e1a707a9098bfcbde18d6e25e2bf0"
+        "bytes": 244566,
+        "sha256": "c8701090fb13d5b3345cfd3f9a4900f837a4ce9a32335c0c99e514bd4a224986"
       },
       "glue": {
         "bytes": 27298,
         "sha256": "430f5d39b7f6e0a5abb1648c27a62ae06161a73f4a73d6ee428bad5f9655e40b"
       },
-      "originalProvenance": "{\n  \"permission\": \"Private local integration only. UNLICENSED mpeg2-rs code; no public distribution authorized. Dependency licenses do not license the combined package.\",\n  \"sourceCommit\": \"3ccd64065dd45e6675b0a3602d1804315935b515\",\n  \"sourceBaseCommit\": \"1fafe8f611afab696ce8b90d2d54b46f4c252789\",\n  \"sourceState\": \"All 565 final snapshot source identities match the reviewed commit. The artifacts predate that commit; the two identified post-build tooling changes do not change compiled inputs. Original dirty-build records are preserved; no post-commit rebuild is claimed.\",\n  \"numericalVersion\": \"h262-butterfly-q14-q5-v1\",\n  \"inputBundle\": \"mpeg2-butterfly-idct-20260927/integration-ready-final\",\n  \"numericalManifest\": \"provenance/numerical/numerical-migration.json\",\n  \"numericalManifestSha256\": \"6ea6cb87b90ba047924ca524c2d429ece1466c72d1d3a2c43a4662d25957a3dc\",\n  \"sourcePatchSha256\": \"15736878317bef392bcea7b7c34450217295dcada61b6fb9747a2cf3d6d09080\",\n  \"sourceHashes\": \"provenance/numerical/numerical-migration.json#/source/files\",\n  \"buildRecords\": [\"provenance/numerical/verification/suite-build.json\"],\n  \"postBuildToolingChanges\": [\"tools/package-mpeg2-web.py\", \"tools/record-wasm-idct-regressions.mjs\"],\n  \"mapping\": \"Shared js/ and pkg/ from the qualified handoff. scalar/js/threaded.mjs, scalar/js/threaded-worker.mjs and scalar/js/threaded.d.ts remain adjacent to shared/js/index.mjs. Relative imports and APIs unchanged. No duplicate scalar WASM. The numerical manifest lists all upstream artifact hashes.\",\n  \"wasm\": { \"path\": \"pkg/mpeg2_wasm_bg.wasm\", \"bytes\": 332988, \"sha256\": \"32270a44364331fe90b2d22aeb590471c767a0bf4bd5c2e4e6346561e6ef7281\" },\n  \"compatibility\": \"Generated glue, declarations, facade, coordinator and adapted Rayon helper are byte-identical to the previous consumer runtime. Only the WASM binary changed. Direct, serial-worker, pooling, sizing, CSP rejection and no-fallback contracts are unchanged.\",\n  \"helperAdaptation\": \"helper-adaptation.json retains original/patched hashes and the Apache-2.0 adaptation identity; identical to provenance/numerical/verification/shared-helper-adaptation.json.\",\n  \"lockedDependencies\": \"Unchanged complete license/checksum metadata in provenance/previous/shared-provenance.json. Original license texts remain under licenses/ and NOTICE.txt remains unchanged.\",\n  \"previousProvenance\": \"provenance/previous/shared-provenance.json\",\n  \"historicalInputManifest\": \"INPUT-MANIFEST.json describes the previous f64 build, not the current numerical version.\",\n  \"limits\": \"Numerical regression records are not independent accuracy oracles. No IEEE 1180 or full H.262 conformance claim. Observed predictive drift is not an unseen-stream bound.\"\n}\n",
+      "originalProvenance": "{\n  \"schema\": 1,\n  \"description\": \"Qualified same-worktree rebuild. Only four-worker slice batching changes. Native f64 and WASM h262-butterfly-q14-q5-v1 arithmetic are unchanged.\",\n  \"source\": {\n    \"baseCommit\": \"52ea2749036a70554a5fca0603a505f8d01c9008\",\n    \"dirty\": true,\n    \"changedRustFiles\": [\n      \"src/decoder/slice_parallel.rs\"\n    ],\n    \"snapshot\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/build.source\",\n    \"files\": {\n      \"Cargo.lock\": {\n        \"bytes\": 1558,\n        \"sha256\": \"88d2abb2b8b13966d58a31a86c0cd6cbcd88b3668bed2836a17a6e67e29f6dd9\"\n      },\n      \"Cargo.toml\": {\n        \"bytes\": 400,\n        \"sha256\": \"46fa4429edbb852653748e3e928acac2ebd3b10b4af1c7a78c87fe35a3a2417e\"\n      },\n      \"crates/wasm/Cargo.lock\": {\n        \"bytes\": 6844,\n        \"sha256\": \"8a0b7af14bf2c0541425b8421410b2a85ff32f336b730901c2946fba6ce1049d\"\n      },\n      \"crates/wasm/Cargo.toml\": {\n        \"bytes\": 605,\n        \"sha256\": \"8c908b59e78f94bfdc9a8e53e77b1a7e2ebc6b5cabd38449db17c80c89ee84be\"\n      },\n      \"crates/wasm/src/lib.rs\": {\n        \"bytes\": 15931,\n        \"sha256\": \"5668cfdcd8f12b5f27432beff397b9dbe5474869f70786be3265bf5687ca6b87\"\n      },\n      \"crates/wasm/src/threading.rs\": {\n        \"bytes\": 647,\n        \"sha256\": \"eab546abc1c2ae693eefe99e7f12c02b7d3f355860b6596127aa7353dceded05\"\n      },\n      \"examples/benchmark_packets.rs\": {\n        \"bytes\": 4217,\n        \"sha256\": \"8db47c39b59fecb86856873b91a051559dd47deea85542045206535f11686b11\"\n      },\n      \"examples/decode.rs\": {\n        \"bytes\": 1524,\n        \"sha256\": \"55d82981c07e8c0d549b54e9b8600092755b95629fff0203a7d5838c566ee575\"\n      },\n      \"examples/drain.rs\": {\n        \"bytes\": 1614,\n        \"sha256\": \"bacc1bdfa124c004869c7b462cd48c1af2bb122dfbb707b629368495c44fb48a\"\n      },\n      \"src/bits.rs\": {\n        \"bytes\": 3055,\n        \"sha256\": \"e4c0c4d988c8834f0cd870739d1c18f417fd3c671aa21f43c1516a9c76f214d6\"\n      },\n      \"src/bits/tests.rs\": {\n        \"bytes\": 2540,\n        \"sha256\": \"93102510a6b55a943021c7e2f0831e0a1eac64be27dab6d89be344c444d51984\"\n      },\n      \"src/decoder.rs\": {\n        \"bytes\": 61181,\n        \"sha256\": \"515a13a82282876f190fd3d3d89a59ee32852c1e4494d5232226b06252f419e5\"\n      },\n      \"src/decoder/slice_parallel.rs\": {\n        \"bytes\": 3702,\n        \"sha256\": \"6d61d1720d5daeb152b77ff002e6d3c31fe78c59d1fb8cec73a95edb8524d641\"\n      },\n      \"src/lib.rs\": {\n        \"bytes\": 7222,\n        \"sha256\": \"d632f0af5e8e06a80970a400b59fec3272fd054f48b696fe315f88eb1b2d5898\"\n      },\n      \"src/motion.rs\": {\n        \"bytes\": 9494,\n        \"sha256\": \"e7e5b81dcc8b8d96f3358d8a45f34d58ca1336da6c618e8ccb0cf89218ae4ae3\"\n      },\n      \"src/reconstruction.rs\": {\n        \"bytes\": 5622,\n        \"sha256\": \"4e7db42a5c4724ee091dd9a8853637658fbf35975c346418606f7e74ed63a800\"\n      },\n      \"src/transform.rs\": {\n        \"bytes\": 11038,\n        \"sha256\": \"ceb2092f416d9662c1c8f2c8ec1b905fb4857b790967df952382b29f25f40835\"\n      },\n      \"src/transform/butterfly.rs\": {\n        \"bytes\": 4079,\n        \"sha256\": \"4dd9e7fb5f779f9f9e7adc11bf71873f0846a1c6b4333f5a4b683cee1711b8d8\"\n      },\n      \"src/transform/butterfly_entry.rs\": {\n        \"bytes\": 188,\n        \"sha256\": \"7e2879820a3bbf885fc929531bff9fefbb02570b92f8b16ef41cd6387a7d9fb5\"\n      },\n      \"src/transform/fixed.rs\": {\n        \"bytes\": 4003,\n        \"sha256\": \"1e6431606d8c804f05ed75654d92170a3628ffe8bdf6bd71296c049a2f1b4305\"\n      },\n      \"src/transform/fixed_entry.rs\": {\n        \"bytes\": 176,\n        \"sha256\": \"de8d736a6034d81f79622670fc6d9dc63939afd6b6a25f51ada949b45e358341\"\n      },\n      \"src/vlc.rs\": {\n        \"bytes\": 17975,\n        \"sha256\": \"a2811bbc1182c9e4f695afe39559327a400ec4da50156aa98886df5ceea3dfe7\"\n      },\n      \"src/vlc/frozen.rs\": {\n        \"bytes\": 11291,\n        \"sha256\": \"415e79c6e7ef2e77bed03baa0537ee896759c890f54884fb5c9796544fc10948\"\n      },\n      \"src/vlc/tests.rs\": {\n        \"bytes\": 3594,\n        \"sha256\": \"43b5c192a410b1c78cdc9fe65421792005cfd1b454073922a1626723ca25c541\"\n      },\n      \"tests/ac_modes.rs\": {\n        \"bytes\": 3097,\n        \"sha256\": \"28155c53461dba028e689c984679c799a2beb24484889d60dfda6d03f57626a1\"\n      },\n      \"tests/bidirectional.rs\": {\n        \"bytes\": 10445,\n        \"sha256\": \"21bcf4e230da09d8ff929e76565bf9b5b5911f5ad752a24420669cf566c0a106\"\n      },\n      \"tests/chroma.rs\": {\n        \"bytes\": 7815,\n        \"sha256\": \"a1fdaa9cce7327aa7e3a3b51fe0d98a9a2eb7a21dbb6ec884de8fa27c04bd135\"\n      },\n      \"tests/common/mod.rs\": {\n        \"bytes\": 787,\n        \"sha256\": \"7711d87e0d9956ca94d6724849a6cdcf9c0128d51f447dcfcd0bf82af91696c8\"\n      },\n      \"tests/decode.rs\": {\n        \"bytes\": 17740,\n        \"sha256\": \"6ab924bb70f4cf91387bb608ae67eea680396c2358754a15e413e9e8233bd5fd\"\n      },\n      \"tests/dual_prime.rs\": {\n        \"bytes\": 7149,\n        \"sha256\": \"338ebb4a96a819527bd324852f7ef8fe4ef4a14122c5ffbf19e0068f72817888\"\n      },\n      \"tests/interlaced.rs\": {\n        \"bytes\": 11961,\n        \"sha256\": \"f31a28425066a86e209e3f02e059ca336f85a34f9a1d370cfcf4851e63bf2bd0\"\n      },\n      \"tests/interlaced_prediction.rs\": {\n        \"bytes\": 8503,\n        \"sha256\": \"3163072055032d85dd00a2ae98de345419df13d28a184dc7a273082710bd4386\"\n      },\n      \"tests/long_b_intervals.rs\": {\n        \"bytes\": 10932,\n        \"sha256\": \"54c072453feca33dc77e11ef9b093d208235d52f5b80a55860d15ac043b9bb19\"\n      },\n      \"tests/owned_input.rs\": {\n        \"bytes\": 3611,\n        \"sha256\": \"61fe3d8c1dc99a9b5e5159ca897bdfffd41d1cda4870339cae6a393e8005a454\"\n      },\n      \"tests/packets.rs\": {\n        \"bytes\": 12301,\n        \"sha256\": \"d4c33352b39d0878a4d08d89eb8de48065055c78e1abe2995a18856845493d2a\"\n      },\n      \"tests/predictive.rs\": {\n        \"bytes\": 13626,\n        \"sha256\": \"17bd5847b21f6e7c8e8c9a6809bf60d1eae2a1135bc1a1936c5088a9c03c5be7\"\n      },\n      \"tests/preroll.rs\": {\n        \"bytes\": 6431,\n        \"sha256\": \"2354115a74b34b292a56d92b81445f8ff309aa0efe5d3fb0eec0619add99585d\"\n      },\n      \"tests/slice_parallel.rs\": {\n        \"bytes\": 10109,\n        \"sha256\": \"9254dd333dacd30f5398eaf29d82c94879f8a816a32486b11d16ae8beead5759\"\n      },\n      \"tools/adapt-rayon-worker.py\": {\n        \"bytes\": 1846,\n        \"sha256\": \"d0985fdeab7a3c9f188159607bf54d1e4fc5bb1c457b0c8e688e1184ca6ad96d\"\n      },\n      \"tools/build-wasm-threads.sh\": {\n        \"bytes\": 1794,\n        \"sha256\": \"f118287283a9584247fa3c248527c933c64c004fa9526c9cf3dd700f09d72f8d\"\n      },\n      \"tools/build-wasm.sh\": {\n        \"bytes\": 478,\n        \"sha256\": \"f33fc6108aaf40165e02d86696468bb324969edd961efc465c9158b1e63313e6\"\n      },\n      \"tools/butterfly-idct-probe.rs\": {\n        \"bytes\": 2998,\n        \"sha256\": \"3b43ea64c5857a5a922d3aa01006060cf52210bf83fdc0e4cab831a4aecee4e9\"\n      },\n      \"tools/fixed-idct-probe.rs\": {\n        \"bytes\": 1045,\n        \"sha256\": \"95d49a09f034d0f0ebe2f66339961e96306ecaf39c6263d670c2431f5154c1de\"\n      },\n      \"tools/thread-probe/src/lib.rs\": {\n        \"bytes\": 1091,\n        \"sha256\": \"0d91bb5d79b42e1674a2702ae39698a7979a97548dc7d208ddadefe0dd296367\"\n      }\n    }\n  },\n  \"build\": {\n    \"directory\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four\",\n    \"target\": \"shared\",\n    \"rustc\": \"rustc 1.100.0-nightly (5ceaf6608 2026-09-25)\\nbinary: rustc\\ncommit-hash: 5ceaf6608eb354c2f5bbb3b8d974caa367dac81c\\ncommit-date: 2026-09-25\\nhost: aarch64-apple-darwin\\nrelease: 1.100.0-nightly\\nLLVM version: 23.1.1\\n\",\n    \"options\": \"RUSTFLAGS=-C target-feature=+atomics,+bulk-memory,-simd128 -C link-arg=--shared-memory -C link-arg=--max-memory=268435456 -C link-arg=--import-memory -C link-arg=--export=__wasm_init_tls -C link-arg=--export=__tls_size -C link-arg=--export=__tls_align -C link-arg=--export=__tls_base\\n\",\n    \"manifest\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/build.json\",\n      \"bytes\": 123242,\n      \"sha256\": \"5af6a03eb6093883fd0d72b39b4163d2d19fe49f99e6eef425584d318036d46e\"\n    },\n    \"sharedBuildLog\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/shared/build.log\",\n      \"bytes\": 585775,\n      \"sha256\": \"2ecd1048501faea89c12e32ee6988e4e190eda322c1acf49dbaa03d0a655cd1c\"\n    }\n  },\n  \"files\": {\n    \"pkg/mpeg2_wasm.d.ts\": {\n      \"bytes\": 10038,\n      \"sha256\": \"9b0d0070b26bcc74f69f9eb92fe13d0ece9feecc79fab9f257650e4aad84e448\"\n    },\n    \"pkg/mpeg2_wasm_bg.wasm.d.ts\": {\n      \"bytes\": 4837,\n      \"sha256\": \"de20c75050d10613f05e1b6c96d0f0b1a0f983d9c0282360d0af586ca93b9ef5\"\n    },\n    \"pkg/mpeg2_wasm.js\": {\n      \"bytes\": 27298,\n      \"sha256\": \"430f5d39b7f6e0a5abb1648c27a62ae06161a73f4a73d6ee428bad5f9655e40b\"\n    },\n    \"pkg/mpeg2_wasm_bg.wasm\": {\n      \"bytes\": 332945,\n      \"sha256\": \"1d7bf862ed70513b34b0a0bcd49158d71da75b73d9608c76181f6b14c21f3fcf\"\n    },\n    \"pkg/snippets/wasm-bindgen-rayon-38edf6e439f6d70d/src/workerHelpers.no-bundler.js\": {\n      \"bytes\": 3180,\n      \"sha256\": \"e335cb4321a3a05f21951f81cd2890d9da8161c182466ef006ebfe9c430c1f48\"\n    }\n  },\n  \"qualification\": {\n    \"raw-corpus.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/raw-corpus.json\",\n      \"bytes\": 58660,\n      \"sha256\": \"54e8af152f0a382f512ad5a16c1196f0d478f4e8e49bb4d1363dbc302a47a7d4\"\n    },\n    \"raw-seven.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/raw-seven.json\",\n      \"bytes\": 4910,\n      \"sha256\": \"20960d5a94349cceb0be87f20c895d441face0718d5f0c79bf88c0aecf3d0086\"\n    },\n    \"raw-errors.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/raw-errors.json\",\n      \"bytes\": 45776,\n      \"sha256\": \"ee9f88ff6ce02bc56a6a5599db7fb464ad398ee84a7478ae276d0cef4c0dd6a3\"\n    },\n    \"candidate-cross-mode.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/candidate-cross-mode.json\",\n      \"bytes\": 268,\n      \"sha256\": \"866b15c2ecef5eb1835ec8d2cc084dc738d641e70e52531ec4cbe265a7b9263e\"\n    },\n    \"corpus/native-exact.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/corpus/native-exact.json\",\n      \"bytes\": 33599,\n      \"sha256\": \"379307ed17e6d80198011139cc1f969b4dbd0fab7a931113a5814964a5f05b16\"\n    },\n    \"scheduler-four/seven-pair.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/seven-pair.json\",\n      \"bytes\": 3229949,\n      \"sha256\": \"36bcfa1c68659ff24f7497605e36e0036f4551c27872d45fee9e4e85b39a139a\"\n    },\n    \"scheduler-four/confirm.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/confirm.json\",\n      \"bytes\": 4976561,\n      \"sha256\": \"e6c0db5678e0953c7fa4ae61f0749f9008753ed9799dc105662fdcb0c1486c4d\"\n    },\n    \"scheduler-four/cold.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/cold.json\",\n      \"bytes\": 1004218,\n      \"sha256\": \"83ff822d3db1972b20af799ff131a8d2ab179111b31c2301f6e16c6cb9dfe1fe\"\n    },\n    \"scheduler-four/startup-swapped.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/startup-swapped.json\",\n      \"bytes\": 1250742,\n      \"sha256\": \"0cce80be08eedd4a945cf797032c527c625955b68a6bb2c4d27fa2b3f3e7f3c6\"\n    },\n    \"scheduler-four/lifecycle/summary.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/scheduler-four/lifecycle/summary.json\",\n      \"bytes\": 25830,\n      \"sha256\": \"719d38532ea03a689582dbfa54c3dbc90373cf2fe651dc4d6834ac49d0559e02\"\n    },\n    \"native-final-seven-complete/result.json\": {\n      \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/native-final-seven-complete/result.json\",\n      \"bytes\": 4597853,\n      \"sha256\": \"cbac87c6d51770bb434887908d1a46a9d90525a7f685f068b191accfd356ebcf\"\n    }\n  },\n  \"originalImmutableInput\": {\n    \"path\": \"/private/var/folders/43/dc8yqm5n2hg_6p2kz_5xm6h00000gn/T/opencode/mpeg2-hot-paths-20260928/original-vendor/shared\",\n    \"provenance\": {\n      \"bytes\": 2720,\n      \"sha256\": \"68f70bdf972afda29b769e47e6ef6a4823f8578e56453f702db4ec61a5440642\"\n    }\n  },\n  \"limits\": \"Finite retained corpus and host qualification; no IEEE 1180 certification, numerical migration, browser-general or paced-playback claim.\"\n}\n",
       "packing": {
         "removed": [
           {
             "name": "name",
-            "sectionBytes": 88281,
-            "payloadBytes": 88277,
-            "sha256": "f7a78bf55150378508fbf45051c9113281392adaef482c79a50b1c2d36dec71b"
+            "sectionBytes": 88272,
+            "payloadBytes": 88268,
+            "sha256": "b06e0d42bb118bfe9a5541939c7632e348ef1c681255570e04042ab865999c0f"
           },
           {
             "name": "producers",
@@ -96,332 +96,332 @@
           }
         ],
         "standardSections": {
-          "bytes": 244432,
-          "originalSha256": "7f99fc7bb7f5bbddbfaa8715f2285bbfa87ccbf1b0b183e123f62afac8cddba3",
-          "derivedSha256": "7f99fc7bb7f5bbddbfaa8715f2285bbfa87ccbf1b0b183e123f62afac8cddba3",
+          "bytes": 244398,
+          "originalSha256": "a6689f8327e6b1562fcbfbd7600d277486767aa155338c0848b0ec54c39e551c",
+          "derivedSha256": "a6689f8327e6b1562fcbfbd7600d277486767aa155338c0848b0ec54c39e551c",
           "equal": true
         }
       }
     }
   },
   "sourceFiles": {
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/js/index.mjs": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/crates/wasm/js/index.mjs": {
       "bytes": 4975,
       "sha256": "7fc979b850e5c0b5dd9aec5557da7e8303279a4de98caa330faa33df42192da5"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/js/threaded-worker.mjs": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/crates/wasm/js/threaded-worker.mjs": {
       "bytes": 3511,
       "sha256": "4af7beeca2f9f1736d545cfebf496f9386eabee33a19dfa3bcfae1809b33bba7"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/js/frames.mjs": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/crates/wasm/js/frames.mjs": {
       "bytes": 1222,
       "sha256": "00050fb0b4d164de73916e29d01da6e351d366e21f722e54a98152cd5cc744fa"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/js/threaded.mjs": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/crates/wasm/js/threaded.mjs": {
       "bytes": 8338,
       "sha256": "e22789846c15d69f28a4b3b79c756da3b3a57713d11b5c53ff9e88f19859c3f4"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/build.mjs": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/crates/wasm/build.mjs": {
       "bytes": 14480,
-      "sha256": "563449bcadae846833c70ab7c08b3c30b35a194ed5e05166ad13fe62735b9c05"
+      "sha256": "624384b180b3799fd663c87ed7330641e95b846cf733fb0fcda7d1c7e72ee9cd"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/crates/wasm/packing.mjs": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/crates/wasm/packing.mjs": {
       "bytes": 3988,
       "sha256": "d6fed570acb3e571457198aaa2b2dc3d80b9e6f6d3155591db8129b60c9cdd16"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/package.json": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/package.json": {
       "bytes": 656,
       "sha256": "d60fedccfae1eca4feb7fdfde38f3d328f4a6f46a354c97d61cbb5aa810d2d38"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/package-lock.json": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/package-lock.json": {
       "bytes": 14964,
       "sha256": "bf2b6c6257e28ec7390fd2ecce3090d830938627addcbe21416b3b16b77d0a82"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/tsconfig.json": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/tsconfig.json": {
       "bytes": 424,
       "sha256": "95714a9231d34e5efcc79bd8ed62bdba81cf9324d85eeea519d544da551d2587"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/vendor/wasm/IMPORT.json": {
-      "bytes": 32017,
-      "sha256": "ac8e5a1b7dbcb609dc557d5de151afc74319420764bc9f915480cef7cf638e5e"
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/vendor/wasm/IMPORT.json": {
+      "bytes": 35777,
+      "sha256": "249b8f9bb7002a38df12aa8c04fc59e2b1a9c6a0aacd179052a5a3ca85f9c3e9"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/src/bindings.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/src/bindings.d.ts": {
       "bytes": 1043,
       "sha256": "1a2e6e082f43732e14c97093a1a56aa0d11e72c89a19874cda97b1b461109e57"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/src/decoder.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/src/decoder.ts": {
       "bytes": 8972,
       "sha256": "68d88b6f5a6250a6efccb39d4cc00672a610a4a81edc7b4c8ba8be83576a22f8"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/src/frame.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/src/frame.ts": {
       "bytes": 2839,
       "sha256": "d28bb35b23aa26bcdb83b89a048a1e76f6048e4ba00db8267c4ad9d4c3fe23f0"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/src/index.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/src/index.ts": {
       "bytes": 194,
       "sha256": "aa2f4ca6cf2e57c9b65c868f7fada1da2af21b98eefb6f8222de48cb6aa4838f"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/src/internal.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/src/internal.ts": {
       "bytes": 1640,
       "sha256": "161ccf0af41db8aac795236d6bdc7f4220bbb476823a85544c888feaa7cbe4b7"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/src/types.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/src/types.ts": {
       "bytes": 1112,
       "sha256": "b123be9d2836b31a04405f0f97ce4b7128cfe13dfd2a4c4407258321eab7a435"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/vendor/wasm/scalar/pkg/mpeg2_wasm.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/vendor/wasm/scalar/pkg/mpeg2_wasm.d.ts": {
       "bytes": 8712,
       "sha256": "7d3949290bd58e7da30dbe27ecc42ceff2726d7a29426e3c8a691d18f7837cdd"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/typescript.js": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/typescript.js": {
       "bytes": 9112572,
       "sha256": "3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/bin/tsc": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/bin/tsc": {
       "bytes": 45,
       "sha256": "8d5fa5bd883fec0979fc2004f1fe1d99aef40570155d550eadc0b03b55513bf0"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/tsc.js": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/tsc.js": {
       "bytes": 267,
       "sha256": "2cffde0b8c6760dfb0b5b0382bbb7e00ba6a8b2d981b9205b256a700a481d983"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/_tsc.js": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/_tsc.js": {
       "bytes": 6213092,
       "sha256": "e8f349eabd48486bdb2bf9dc1a00c89d58297270c54b745838879e2859194419"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es5.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es5.d.ts": {
       "bytes": 218439,
       "sha256": "c430d44666289dae81f30fa7b2edebf186ecc91a2d4c71266ea6ae76388792e1"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2015.d.ts": {
       "bytes": 1241,
       "sha256": "45b7ab580deca34ae9729e97c13cfd999df04416a79116c3bfb483804f85ded4"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2016.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2016.d.ts": {
       "bytes": 965,
       "sha256": "3facaf05f0c5fc569c5649dd359892c98a85557e3e0c847964caeb67076f4d75"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2017.d.ts": {
       "bytes": 1162,
       "sha256": "e44bb8bbac7f10ecc786703fe0a6a4b952189f908707980ba8f3c8975a760962"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2018.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2018.d.ts": {
       "bytes": 1088,
       "sha256": "5e1c4c362065a6b95ff952c0eab010f04dcd2c3494e813b493ecfd4fcb9fc0d8"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2019.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2019.d.ts": {
       "bytes": 1071,
       "sha256": "68d73b4a11549f9c0b7d352d10e91e5dca8faa3322bfb77b661839c42b1ddec7"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2020.d.ts": {
       "bytes": 1201,
       "sha256": "5efce4fc3c29ea84e8928f97adec086e3dc876365e0982cc8479a07954a3efd4"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2021.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2021.d.ts": {
       "bytes": 1036,
       "sha256": "feecb1be483ed332fad555aff858affd90a48ab19ba7272ee084704eb7167569"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2022.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2022.d.ts": {
       "bytes": 1108,
       "sha256": "ee7bad0c15b58988daa84371e0b89d313b762ab83cb5b31b8a2d1162e8eb41c2"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.dom.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.dom.d.ts": {
       "bytes": 1874901,
       "sha256": "080941d9f9ff9307f7e27a83bcd888b7c8270716c39af943532438932ec1d0b9"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.core.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2015.core.d.ts": {
       "bytes": 22866,
       "sha256": "c57796738e7f83dbc4b8e65132f11a377649c00dd3eee333f672b8f0a6bea671"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.collection.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2015.collection.d.ts": {
       "bytes": 5229,
       "sha256": "dc2df20b1bcdc8c2d34af4926e2c3ab15ffe1160a63e58b7e09833f616efff44"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.generator.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2015.generator.d.ts": {
       "bytes": 2557,
       "sha256": "515d0b7b9bea2e31ea4ec968e9edd2c39d3eebf4a2d5cbd04e88639819ae3b71"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.iterable.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2015.iterable.d.ts": {
       "bytes": 18200,
       "sha256": "0559b1f683ac7505ae451f9a96ce4c3c92bdc71411651ca6ddb0e88baaaad6a3"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.promise.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2015.promise.d.ts": {
       "bytes": 3200,
       "sha256": "0dc1e7ceda9b8b9b455c3a2d67b0412feab00bd2f66656cd8850e8831b08b537"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.proxy.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2015.proxy.d.ts": {
       "bytes": 5251,
       "sha256": "ce691fb9e5c64efb9547083e4a34091bcbe5bdb41027e310ebba8f7d96a98671"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.reflect.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2015.reflect.d.ts": {
       "bytes": 6493,
       "sha256": "8d697a2a929a5fcb38b7a65594020fcef05ec1630804a33748829c5ff53640d0"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.symbol.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2015.symbol.d.ts": {
       "bytes": 1649,
       "sha256": "4ff2a353abf8a80ee399af572debb8faab2d33ad38c4b4474cff7f26e7653b8d"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2015.symbol.wellknown.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2015.symbol.wellknown.d.ts": {
       "bytes": 11010,
       "sha256": "fb0f136d372979348d59b3f5020b4cdb81b5504192b1cacff5d1fbba29378aa1"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2016.array.include.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2016.array.include.d.ts": {
       "bytes": 5204,
       "sha256": "d15bea3d62cbbdb9797079416b8ac375ae99162a7fba5de2c6c505446486ac0a"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2016.intl.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2016.intl.d.ts": {
       "bytes": 1484,
       "sha256": "68d18b664c9d32a7336a70235958b8997ebc1c3b8505f4f1ae2b7e7753b87618"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.arraybuffer.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2017.arraybuffer.d.ts": {
       "bytes": 915,
       "sha256": "eb3d66c8327153d8fa7dd03f9c58d351107fe824c79e9b56b462935176cdf12a"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.date.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2017.date.d.ts": {
       "bytes": 1916,
       "sha256": "38f0219c9e23c915ef9790ab1d680440d95419ad264816fa15009a8851e79119"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.object.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2017.object.d.ts": {
       "bytes": 2473,
       "sha256": "69ab18c3b76cd9b1be3d188eaf8bba06112ebbe2f47f6c322b5105a6fbc45a2e"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.sharedmemory.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2017.sharedmemory.d.ts": {
       "bytes": 7209,
       "sha256": "a680117f487a4d2f30ea46f1b4b7f58bef1480456e18ba53ee85c2746eeca012"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.string.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2017.string.d.ts": {
       "bytes": 2378,
       "sha256": "2f11ff796926e0832f9ae148008138ad583bd181899ab7dd768a2666700b1893"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.intl.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2017.intl.d.ts": {
       "bytes": 1449,
       "sha256": "4de680d5bb41c17f7f68e0419412ca23c98d5749dcaaea1896172f06435891fc"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2017.typedarrays.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2017.typedarrays.d.ts": {
       "bytes": 1542,
       "sha256": "954296b30da6d508a104a3a0b5d96b76495c709785c1d11610908e63481ee667"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2018.asyncgenerator.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2018.asyncgenerator.d.ts": {
       "bytes": 2692,
       "sha256": "ac9538681b19688c8eae65811b329d3744af679e0bdfa5d842d0e32524c73e1c"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2018.asynciterable.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2018.asynciterable.d.ts": {
       "bytes": 2257,
       "sha256": "0a969edff4bd52585473d24995c5ef223f6652d6ef46193309b3921d65dd4376"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2018.intl.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2018.intl.d.ts": {
       "bytes": 3021,
       "sha256": "9e9fbd7030c440b33d021da145d3232984c8bb7916f277e8ffd3dc2e3eae2bdb"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2018.promise.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2018.promise.d.ts": {
       "bytes": 1353,
       "sha256": "811ec78f7fefcabbda4bfa93b3eb67d9ae166ef95f9bff989d964061cbf81a0c"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2018.regexp.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2018.regexp.d.ts": {
       "bytes": 1232,
       "sha256": "717937616a17072082152a2ef351cb51f98802fb4b2fdabd32399843875974ca"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2019.array.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2019.array.d.ts": {
       "bytes": 3163,
       "sha256": "d7e7d9b7b50e5f22c915b525acc5a49a7a6584cf8f62d0569e557c5cfc4b2ac2"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2019.object.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2019.object.d.ts": {
       "bytes": 1473,
       "sha256": "71c37f4c9543f31dfced6c7840e068c5a5aacb7b89111a4364b1d5276b852557"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2019.string.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2019.string.d.ts": {
       "bytes": 1528,
       "sha256": "576711e016cf4f1804676043e6a0a5414252560eb57de9faceee34d79798c850"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2019.symbol.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2019.symbol.d.ts": {
       "bytes": 1006,
       "sha256": "89c1b1281ba7b8a96efc676b11b264de7a8374c5ea1e6617f11880a13fc56dc6"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2019.intl.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2019.intl.d.ts": {
       "bytes": 958,
       "sha256": "74f7fa2d027d5b33eb0471c8e82a6c87216223181ec31247c357a3e8e2fddc5b"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.bigint.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2020.bigint.d.ts": {
       "bytes": 38185,
       "sha256": "d6d7ae4d1f1f3772e2a3cde568ed08991a8ae34a080ff1151af28b7f798e22ca"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.date.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2020.date.d.ts": {
       "bytes": 2956,
       "sha256": "063600664504610fe3e99b717a1223f8b1900087fab0b4cad1496a114744f8df"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.promise.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2020.promise.d.ts": {
       "bytes": 1803,
       "sha256": "934019d7e3c81950f9a8426d093458b65d5aff2c7c1511233c0fd5b941e608ab"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.sharedmemory.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2020.sharedmemory.d.ts": {
       "bytes": 5128,
       "sha256": "52ada8e0b6e0482b728070b7639ee42e83a9b1c22d205992756fe020fd9f4a47"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.string.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2020.string.d.ts": {
       "bytes": 2556,
       "sha256": "3bdefe1bfd4d6dee0e26f928f93ccc128f1b64d5d501ff4a8cf3c6371200e5e6"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.symbol.wellknown.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2020.symbol.wellknown.d.ts": {
       "bytes": 1606,
       "sha256": "59fb2c069260b4ba00b5643b907ef5d5341b167e7d1dbf58dfd895658bda2867"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.intl.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2020.intl.d.ts": {
       "bytes": 22438,
       "sha256": "639e512c0dfc3fad96a84caad71b8834d66329a1f28dc95e3946c9b58176c73a"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2020.number.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2020.number.d.ts": {
       "bytes": 1587,
       "sha256": "368af93f74c9c932edd84c58883e736c9e3d53cec1fe24c0b0ff451f529ceab1"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2021.promise.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2021.promise.d.ts": {
       "bytes": 2262,
       "sha256": "af3dd424cf267428f30ccfc376f47a2c0114546b55c44d8c0f1d57d841e28d74"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2021.string.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2021.string.d.ts": {
       "bytes": 1592,
       "sha256": "995c005ab91a498455ea8dfb63aa9f83fa2ea793c3d8aa344be4a1678d06d399"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2021.weakref.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2021.weakref.d.ts": {
       "bytes": 3171,
       "sha256": "959d36cddf5e7d572a65045b876f2956c973a586da58e5d26cde519184fd9b8a"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2021.intl.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2021.intl.d.ts": {
       "bytes": 8245,
       "sha256": "965f36eae237dd74e6cca203a43e9ca801ce38824ead814728a2807b1910117d"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2022.array.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2022.array.d.ts": {
       "bytes": 4676,
       "sha256": "3925a6c820dcb1a06506c90b1577db1fdbf7705d65b62b99dce4be75c637e26b"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2022.error.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2022.error.d.ts": {
       "bytes": 2379,
       "sha256": "0a3d63ef2b853447ec4f749d3f368ce642264246e02911fcb1590d8c161b8005"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2022.intl.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2022.intl.d.ts": {
       "bytes": 7692,
       "sha256": "8cdf8847677ac7d20486e54dd3fcf09eda95812ac8ace44b4418da1bbbab6eb8"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2022.object.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2022.object.d.ts": {
       "bytes": 1085,
       "sha256": "8444af78980e3b20b49324f4a16ba35024fef3ee069a0eb67616ea6ca821c47a"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2022.string.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2022.string.d.ts": {
       "bytes": 1155,
       "sha256": "3287d9d085fbd618c3971944b65b4be57859f5415f495b33a6adc994edd2f004"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.es2022.regexp.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.es2022.regexp.d.ts": {
       "bytes": 1331,
       "sha256": "b4b67b1a91182421f5df999988c690f14d813b9850b40acd06ed44691f6727ad"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.esnext.disposable.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.esnext.disposable.d.ts": {
       "bytes": 6806,
       "sha256": "51ad4c928303041605b4d7ae32e0c1ee387d43a24cd6f1ebf4a2699e1076d4fa"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.decorators.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.decorators.d.ts": {
       "bytes": 13192,
       "sha256": "8e7f8264d0fb4c5339605a15daadb037bf238c10b654bb3eee14208f860a32ea"
     },
-    "/Users/lideen/Code/arvid/code/mpeg2-rs/node_modules/typescript/lib/lib.decorators.legacy.d.ts": {
+    "/Users/lideen/Code/arvid/code/.worktrees/mpeg2-hot-paths/node_modules/typescript/lib/lib.decorators.legacy.d.ts": {
       "bytes": 1326,
       "sha256": "782dec38049b92d4e85c1585fbea5474a219c6984a35b004963b00beb1aab538"
     }
@@ -436,7 +436,7 @@
     "diagnostics": "Function names and producer metadata are omitted from embedded WASM. WASM stack traces may show indices instead of names. Original symbolled inputs and their provenance remain at binaryInputs paths.",
     "scalarPayload": {
       "encoding": "base64",
-      "characters": 168612,
+      "characters": 168568,
       "occurrencesInOuterBundle": 1,
       "workerConstruction": "Replace one private scalar-worker placeholder at concurrency-1 initialization only; runtime instances remain separate."
     },
@@ -481,12 +481,12 @@
   },
   "outputs": {
     "mpeg2-decoder.mjs": {
-      "bytes": 591931,
-      "sha256": "f367bc1fd8944ad4845bbf44bf26fe382065945e5319579d98ff1468fc2b9ee5"
+      "bytes": 591839,
+      "sha256": "8f7b6e99f5df415fd2b8e7a8e60e7b788a7a66975d40c3bea3066f8a98a6e7cb"
     },
     "mpeg2-decoder.iife.js": {
-      "bytes": 595396,
-      "sha256": "6e728c290f8add6814bc7200c036cb66a9c9f289250e6c74ddebb2e83f08bdba"
+      "bytes": 595304,
+      "sha256": "b321d1dba406b8f1dcef7fbf10428bfe750fda1274bff45307b245c14d168acf"
     },
     "mpeg2-decoder.d.mts": {
       "bytes": 34,

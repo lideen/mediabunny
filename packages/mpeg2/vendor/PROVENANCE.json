@@ -1,29 +1,13 @@
 {
-  "sourceRepository": "mpeg2-rs, user-supplied local repository",
-  "sourceCommit": "3ccd64065dd45e6675b0a3602d1804315935b515",
-  "sourceBaseCommit": "1fafe8f611afab696ce8b90d2d54b46f4c252789",
-  "sourceState": "All 565 final snapshot source identities match the reviewed commit. The artifacts predate that commit; the two identified post-build tooling changes do not change compiled inputs. Original dirty-build records are preserved; no post-commit rebuild is claimed.",
+  "schema": 2,
+  "sourceRepository": "git@github.com:lideen/mpeg2-rs.git",
+  "sourceCommit": "577e07742e54f08aa29dd9606bd8c04357b8981d",
+  "sourceState": "Supplied hot-path artifact. Original dirty-build source snapshots and identities are preserved in decoder/PROVENANCE.json; this import does not claim a clean-commit rebuild.",
+  "decoderModuleSha256": "8f7b6e99f5df415fd2b8e7a8e60e7b788a7a66975d40c3bea3066f8a98a6e7cb",
+  "artifactProvenance": "decoder/PROVENANCE.json",
+  "previousProvenance": "PREVIOUS_PROVENANCE.json",
   "numericalVersion": "h262-butterfly-q14-q5-v1",
-  "permission": "User-authorized private local integration only. UNLICENSED MPEG-2 project. No npm publication or public/upstream distribution authorized. Dependency licenses do not license the combined package.",
-  "inputBundle": "mpeg2-butterfly-idct-20260927/integration-ready-final",
-  "numericalManifest": "threads/provenance/numerical/numerical-migration.json",
-  "numericalManifestSha256": "6ea6cb87b90ba047924ca524c2d429ece1466c72d1d3a2c43a4662d25957a3dc",
-  "sourcePatchSha256": "15736878317bef392bcea7b7c34450217295dcada61b6fb9747a2cf3d6d09080",
-  "sourceHashes": "threads/provenance/numerical/numerical-migration.json#/source/files",
-  "buildRecords": [
-    "threads/provenance/numerical/verification/scalar-build.json",
-    "threads/provenance/numerical/verification/suite-build.json"
-  ],
-  "postBuildToolingChanges": ["tools/package-mpeg2-web.py", "tools/record-wasm-idct-regressions.mjs"],
-  "verification": "All supplied artifact, evidence and source hashes verified. Compiled inputs match the original build. Final source.patch contains no ANSI and passes git apply --check against the canonical base. Original build and qualification records remain unchanged.",
-  "files": {
-    "js/index.mjs": { "source": "scalar/js/index.mjs", "bytes": 4975, "sha256": "7fc979b850e5c0b5dd9aec5557da7e8303279a4de98caa330faa33df42192da5" },
-    "pkg/mpeg2_wasm.js": { "source": "scalar/pkg/mpeg2_wasm.js", "bytes": 22772, "sha256": "f39fd77f03ade8555978a9a133fabec05e00a210f971c1be867a7c1af271fd92" },
-    "pkg/mpeg2_wasm.d.ts": { "source": "scalar/pkg/mpeg2_wasm.d.ts", "bytes": 8712, "sha256": "7d3949290bd58e7da30dbe27ecc42ceff2726d7a29426e3c8a691d18f7837cdd" },
-    "pkg/mpeg2_wasm_bg.wasm": { "source": "scalar/pkg/mpeg2_wasm_bg.wasm", "bytes": 144238, "sha256": "c06ed93c42aa17dfe45bcad2e55b6d14fca5e0c07b5bca1cc469b52999407b9b" }
-  },
-  "localAdditions": ["js/index.d.mts remains the adapter-authored declaration for the used facade API."],
-  "previousProvenance": "threads/provenance/previous/scalar-provenance.json",
-  "dependencies": "Unchanged from threads/provenance/previous/scalar-provenance.json. Complete locked dependency metadata and licenses are retained in the optional threads tree.",
-  "limits": "Numerical regression records are not independent accuracy oracles. Native f64 is unchanged. No IEEE 1180 or full H.262 conformance claim. Observed predictive drift is not an unseen-stream bound."
+  "permission": "Private authorized integration only. No publication or license change.",
+  "verification": "All 64 producer output lengths and SHA-256 hashes verified before copying the complete artifact. Embedded scalar and shared WASM hashes independently verified against producer provenance. Consumer npm builds do not compile Rust.",
+  "limits": "Import identity is not production readiness or numerical conformance. Paced qualification must identify the exact consumer and decoder artifacts tested. Historical vendor runtime trees are audit material only."
 }

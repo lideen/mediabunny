@@ -18,7 +18,7 @@
 			"@mediabunny/server": ["./packages/server/src/index.ts"],
 		},
 	},
-	"include": ["vitest.config.ts", "./test/**/*", "./examples/media-player/media-player.ts", "./examples/media-player/smooth-playback.ts", "./examples/media-player/metadata-lookahead.ts"],
+	"include": ["vitest.config.ts", "./test/**/*", "./scripts/mpeg2-artifact.ts", "./examples/media-player/media-player.ts", "./examples/media-player/smooth-playback.ts", "./examples/media-player/metadata-lookahead.ts"],
 	"exclude": ["./test/public/**/*"],
 	"references": [
 		{ "path": "./src" },

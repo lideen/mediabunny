@@ -3,6 +3,7 @@ import process from 'node:process';
 import { cpSync, readFileSync, readdirSync } from 'node:fs';
 import PluginExternalGlobal from 'esbuild-plugin-external-global';
 import { inlineWorkerPlugin } from './esbuild/inlined-workers.js';
+import { verifyMpeg2Artifact } from './mpeg2-artifact.js';
 
 /** Creates UMD and ESM variants, each unminified and minified. */
 const createVariants = async (
@@ -296,14 +297,20 @@ const htj2kVariants = await createVariants(
 	},
 );
 
+const mpeg2Import = JSON.parse(readFileSync('packages/mpeg2/vendor/PROVENANCE.json', 'utf8')) as {
+	decoderModuleSha256: string;
+};
+if (!/^[a-f0-9]{64}$/.test(mpeg2Import.decoderModuleSha256)) throw new Error('Missing approved MPEG-2 import pin');
+const mpeg2Artifact = verifyMpeg2Artifact('packages/mpeg2/vendor/decoder', mpeg2Import.decoderModuleSha256);
 const mpeg2Notice = `/* Private local integration. NOT FOR PUBLIC DISTRIBUTION.
  * MPEG-2 Rust/WASM and generated vendor files have no selected project license.
  * MPL-2.0 applies only to the Mediabunny adapter source. See packages/mpeg2/vendor/decoder/PROVENANCE.json.
  * Default WASM numerical version: h262-butterfly-q14-q5-v1. Native f64 is unchanged.
- * Original scalar WASM SHA-256: c06ed93c42aa17dfe45bcad2e55b6d14fca5e0c07b5bca1cc469b52999407b9b
- * Original shared WASM SHA-256: 32270a44364331fe90b2d22aeb590471c767a0bf4bd5c2e4e6346561e6ef7281
- * Deployed scalar WASM SHA-256: 78c810d649f34fb574f5d1dd8aae1407dda6c3e960a4102e835553bc7ab6da54
- * Deployed shared WASM SHA-256: 362a9776dabca4ffd182e628d9848d67e30e1a707a9098bfcbde18d6e25e2bf0
+ * Decoder module SHA-256: ${mpeg2Artifact.identity.sha256}
+ * Original scalar WASM SHA-256: ${mpeg2Artifact.provenance.binaryInputs.scalar.wasm.sha256}
+ * Original shared WASM SHA-256: ${mpeg2Artifact.provenance.binaryInputs.shared.wasm.sha256}
+ * Deployed scalar WASM SHA-256: ${mpeg2Artifact.provenance.binaryInputs.scalar.derivedWasm.sha256}
+ * Deployed shared WASM SHA-256: ${mpeg2Artifact.provenance.binaryInputs.shared.derivedWasm.sha256}
  * Deployed WASM omits name/producers metadata; standard sections and target_features are unchanged.
  */`;
 
