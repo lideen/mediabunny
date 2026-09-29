@@ -6,6 +6,12 @@ The v1 target is HD, 8-bit 4:2:0/4:2:2 frame pictures through the existing opt-i
 
 Functional evidence is not production readiness. IEEE 1180/H.262 A2 remains UNVERIFIED. Existing numerical regression hashes do not establish accuracy. The final local replay below includes 120-second paced and player runs, not production memory, compositor presentation, acoustic A/V sync or realistic in-flight abort-latency acceptance.
 
+## Independent engineering acceptance
+
+On 2026-09-29, the project adopted independent engineering acceptance because the IEEE 1180 text could not be obtained. The required procedure combines the available H.261 Annex A IDCT campaign, independent mathematical checks, numerical and coverage verdicts, predictive-history comparisons and checks against the actual source-bound scalar/shared WASM artifacts. All remain mandatory with their existing numerical thresholds. Predictive native-f64 histories are required characterization, not an independent accuracy oracle, and introduce no drift-error limit. IEEE 1180/H.262 A2 remains UNVERIFIED and informational, not a mandatory release gate. This policy makes no IEEE 1180 or H.262 conformance claim.
+
+Routine CI acceptance is separate from product readiness. Consumer `passed` still means functional assertions passed, and `scope.realTimeAcceptance` remains false. Product-specific performance, memory, rendering, acoustic A/V sync, supported-version and distribution assessments still require their own evidence and decisions; this policy does not mark them PASS.
+
 ## Rerun the exact consumer
 
 Use the repository's Node/npm environment, FFmpeg/ffprobe and Chrome with a matching ChromeDriver. Process-group cleanup requires a POSIX host, such as macOS or Linux. `CHROME_PATH` and `CHROMEDRIVER_PATH` can select explicit local executables. The recorded host used Node 24.16.0, FFmpeg 7.1.1 and Google Chrome 154.0.8037.58 on Apple M3 Pro. Neither Safari nor Firefox was run. Use isolated browser sessions only.
@@ -81,5 +87,7 @@ Local engineering and consumer-functional gates passed, including independent pa
 The actual player twice reached EOF after 120 uninterrupted seconds, each with 3,000 playback draws plus preview and 3,000 scheduled PCM chunks. Observed summed browser RSS peaked at 1,740,944 KiB and may double-count shared pages. Main-realm heap grew; this is not leak-free or reclamation proof.
 
 SWAT's 29 draws reflect playback starting at the first coded PTS, 80 ms, skipping earlier B-picture PTS 0/40 ms. They are not evidence of scheduler drops or independent decodability of those leading pictures. LXF reached EOF using finite 32 KiB requests and HTTP 206. This is bounded playback evidence, not full-format numerical qualification. No frame-step UI was added.
+
+The following status records the policy at the time of this 2026-09-29 replay, before approval of [independent engineering acceptance](#independent-engineering-acceptance). Its A2 requirement is historical; the recorded exit code and other results are unchanged.
 
 Production readiness remains blocked. IEEE 1180/H.262 A2 needs authoritative-text review or a normative replacement; `--require-a2` still exits 2. Hosted Linux CI, private-checkout credentials and an immutable consumer ref remain unconfigured/unpushed. Acoustic A/V sync, compositor drops and whole-process memory have no acceptance pass. The support target remains narrow Chrome HD v1.
