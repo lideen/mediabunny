@@ -280,7 +280,7 @@ describe('given a single-file Doremi-layout OPAtom AVC stream', () => {
 				expect(writtenBytes).toBeLessThan(100000);
 				const key = (await sink.getKeyPacket(10 / 24))!;
 				expect([key.sequenceNumber, key.timestamp, key.type]).toEqual([0, 0, 'key']);
-				expect(key.data).toEqual(fixture.payloads[0]);
+				expect(Buffer.compare(key.data, fixture.payloads[0]!)).toBe(0);
 				const before = [ranges.length, writtenBytes];
 				expect((await sink.getKeyPacket(10 / 24))!.sequenceNumber).toBe(0);
 				expect(await sink.getNextKeyPacket(key)).toBeNull();
