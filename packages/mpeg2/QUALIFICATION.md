@@ -4,7 +4,7 @@
 
 The v1 target is HD, 8-bit 4:2:0/4:2:2 frame pictures through the existing opt-in MXF subset. Interlaced output is woven at frame rate. `VideoSample.scan` retains top/bottom field order; canvas conversion does not preserve scan metadata or deinterlace. Separate field pictures, repeated-field cadence, 4:4:4, scalable coding, Sony D-10 and 4K are outside v1. LXF retains its separate narrower input contract.
 
-Functional evidence is not production readiness. IEEE 1180 A2 remains UNVERIFIED. Existing numerical regression hashes do not establish accuracy. Longer paced playback, production memory limits, compositor presentation, acoustic A/V sync and realistic in-flight abort latency remain separate gates.
+Functional evidence is not production readiness. IEEE 1180/H.262 A2 remains UNVERIFIED. Existing numerical regression hashes do not establish accuracy. The final local replay below includes 120-second paced and player runs, not production memory, compositor presentation, acoustic A/V sync or realistic in-flight abort-latency acceptance.
 
 ## Rerun the exact consumer
 
@@ -66,6 +66,20 @@ Evidence is local under `opencode/mediabunny-mpeg2-readiness-20260929`; no media
 
 The actual built player completed 30 seconds with 750 playback draw calls plus the paused preview, 750 scheduled PCM chunks totaling 30 seconds, no reported error and final-frame RGB mean error 1.42. Backward selection to 15 seconds matched its reference at mean error 1.38; resume/pause and replacement with bottom-first 1080i completed without a reported error. There is no acoustic-sync or compositor-drop result. Main-realm heap observations alone do not establish a memory bound.
 
-A retained 7.2 MiB SWAT MXF selection also reached its last frame, RGB mean error 0.31. Its 29 observed draws including preview require further analysis before claiming all 30 source pictures were presented. A retained 12 MiB Live2Vod LXF URL attempt was explicitly rejected because it lacked a finite `UrlSource` range policy; it is not a passing LXF playback result. Retry through local-file input or `?minimumRequestSize=32768` with HTTP 206. Full customer originals were not loaded. These bounded checks do not qualify the multi-gigabyte source movies.
+A retained 7.2 MiB SWAT MXF selection also reached its last frame, RGB mean error 0.31. The final replay below explains its 29 draws. The earlier 12 MiB LXF URL attempt failed without a finite `UrlSource` range policy; that failure remains retained alongside the successful retry. Full customer originals were not loaded. These bounded checks do not qualify the multi-gigabyte source movies.
 
-Final source-build candidate replay and quiet-window paced/player/memory qualification are still required. Retain failures and do not join results from different artifact hashes.
+## Final source-build replay, 2026-09-29
+
+Local evidence is under `opencode/mpeg2-readiness-integrated-20260929`. See `REPORT.md`, `summary.json` and `parent-*-gate.json` for commands, identities, failures and limitations. Qualified source commits precede this documentation-only update:
+
+- Decoder: `36aa6fd041278d6cab1a5de7198861ef72c5ee95`.
+- Consumer: `a8bf6e7d7114bbc0d8a3994a68c7ef526b94d384`.
+- Fresh candidate MJS SHA-256: `c7fb9839c44e8a4a7cc7adc911c8b4f6f0b381905c4ddc447af78522eec0a1a1`.
+
+Local engineering and consumer-functional gates passed, including independent parent gate reruns. The 132 Node, five serial-worker and two pool regression tests use approved artifacts, not fresh-candidate proof. Explicit candidate runs passed isolated and nonisolated paced matrices with 3,000 progressive and 50 pictures per field order. Maximum lateness was 109.015 ms isolated and 69.900 ms serial, above the 40 ms period, not a zero-lateness pass.
+
+The actual player twice reached EOF after 120 uninterrupted seconds, each with 3,000 playback draws plus preview and 3,000 scheduled PCM chunks. Observed summed browser RSS peaked at 1,740,944 KiB and may double-count shared pages. Main-realm heap grew; this is not leak-free or reclamation proof.
+
+SWAT's 29 draws reflect playback starting at the first coded PTS, 80 ms, skipping earlier B-picture PTS 0/40 ms. They are not evidence of scheduler drops or independent decodability of those leading pictures. LXF reached EOF using finite 32 KiB requests and HTTP 206. This is bounded playback evidence, not full-format numerical qualification. No frame-step UI was added.
+
+Production readiness remains blocked. IEEE 1180/H.262 A2 needs authoritative-text review or a normative replacement; `--require-a2` still exits 2. Hosted Linux CI, private-checkout credentials and an immutable consumer ref remain unconfigured/unpushed. Acoustic A/V sync, compositor drops and whole-process memory have no acceptance pass. The support target remains narrow Chrome HD v1.
