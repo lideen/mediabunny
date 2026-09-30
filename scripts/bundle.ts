@@ -1,7 +1,9 @@
 import * as esbuild from 'esbuild';
 import process from 'node:process';
+import { cpSync, readFileSync } from 'node:fs';
 import PluginExternalGlobal from 'esbuild-plugin-external-global';
 import { inlineWorkerPlugin } from './esbuild/inlined-workers.js';
+import { verifyMpeg2Artifact } from './mpeg2-artifact.js';
 
 /** Creates UMD and ESM variants, each unminified and minified. */
 const createVariants = async (
@@ -272,6 +274,48 @@ const proresVariants = await createVariants(
 	},
 );
 
+const mpeg2Import = JSON.parse(readFileSync('packages/mpeg2/vendor/PROVENANCE.json', 'utf8')) as {
+	decoderModuleSha256: string;
+	numericalVersion: string;
+};
+if (!/^[a-f0-9]{64}$/.test(mpeg2Import.decoderModuleSha256)) {
+	throw new Error('Missing approved MPEG-2 import pin');
+}
+const mpeg2Artifact = verifyMpeg2Artifact('packages/mpeg2/vendor/decoder', mpeg2Import.decoderModuleSha256);
+const mpeg2Notice = `/* Private local integration. NOT FOR PUBLIC DISTRIBUTION.
+ * MPEG-2 Rust/WASM and generated vendor files have no selected project license.
+ * MPL-2.0 applies only to the Mediabunny adapter source. See packages/mpeg2/vendor/decoder/PROVENANCE.json.
+ * Default WASM numerical version: ${mpeg2Import.numericalVersion}.
+ * Decoder module SHA-256: ${mpeg2Artifact.identity.sha256}
+ * Original scalar WASM SHA-256: ${mpeg2Artifact.provenance.binaryInputs.scalar.wasm.sha256}
+ * Original shared WASM SHA-256: ${mpeg2Artifact.provenance.binaryInputs.shared.wasm.sha256}
+ * Deployed scalar WASM SHA-256: ${mpeg2Artifact.provenance.binaryInputs.scalar.derivedWasm.sha256}
+ * Deployed shared WASM SHA-256: ${mpeg2Artifact.provenance.binaryInputs.shared.derivedWasm.sha256}
+ * Deployed WASM omits name/producers metadata; standard sections and target_features are unchanged.
+ */`;
+
+const mpeg2Variants = await createVariants(
+	'packages/mpeg2/src/index.ts',
+	'MediabunnyMpeg2',
+	'packages/mpeg2/dist/bundles/mediabunny-mpeg2',
+	'js',
+	{
+		banner: { js: mpeg2Notice },
+		legalComments: 'inline',
+		plugins: [PluginExternalGlobal.externalGlobalPlugin({ mediabunny: 'Mediabunny' })],
+	},
+	{
+		external: ['mediabunny'],
+		platform: 'neutral',
+		banner: { js: mpeg2Notice },
+		legalComments: 'inline',
+	},
+);
+
+for (const name of ['PROVENANCE.json', 'NOTICE.txt', 'licenses']) {
+	cpSync(`packages/mpeg2/vendor/decoder/${name}`, `packages/mpeg2/dist/decoder/${name}`, { recursive: true });
+}
+
 const serverVariants = await createVariants(
 	'packages/server/src/index.ts',
 	'MediabunnyServer',
@@ -297,6 +341,7 @@ const contexts = [
 	...aacEncoderVariants,
 	...flacEncoderVariants,
 	...proresVariants,
+	...mpeg2Variants,
 	...serverVariants,
 ];
 

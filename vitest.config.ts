@@ -16,6 +16,8 @@ export default defineConfig({
 				path.resolve(__dirname, './packages/mp3-encoder/dist/bundles/mediabunny-mp3-encoder.mjs'),
 			'@mediabunny/prores':
 				path.resolve(__dirname, './packages/prores/dist/bundles/mediabunny-prores.mjs'),
+			'@mediabunny/mpeg2':
+				path.resolve(__dirname, './packages/mpeg2/dist/bundles/mediabunny-mpeg2.mjs'),
 			'@mediabunny/server':
 				path.resolve(__dirname, './packages/server/src/index.ts'),
 		},

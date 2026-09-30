@@ -573,7 +573,13 @@ const toValidatedPredicate = <T extends InputTrack>(
 		: undefined;
 };
 
+export type VideoDecodeStartPlan = {
+	startPacket: EncodedPacket | null;
+	headerOnlyPreroll: readonly number[];
+};
+
 export interface InputVideoTrackBacking extends InputTrackBacking {
+	getDecodeStartPlan?(timestamp: number, options: PacketRetrievalOptions): Promise<VideoDecodeStartPlan>;
 	getType(): 'video';
 	getCodec(): MaybePromise<VideoCodec | null>;
 	getCodedWidth(): MaybePromise<number>;
@@ -864,7 +870,7 @@ export class InputVideoTrack extends InputTrack {
 				return true;
 			}
 
-			if (typeof VideoDecoder === 'undefined') {
+			if (codec === 'mpeg2' || typeof VideoDecoder === 'undefined') {
 				return false;
 			}
 

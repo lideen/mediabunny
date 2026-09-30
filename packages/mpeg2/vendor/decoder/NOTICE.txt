@@ -1,0 +1,31 @@
+Self-contained JS packaging of frozen MPEG-2 WASM binaries. Private and UNLICENSED.
+This project has no distribution license. Publishing remains disabled.
+
+The WASM inverse transform derives from BRiDCT v0.2.0-dev.7-r1,
+commit 976626104fcea83a123326fbb4a03b86c254e287.
+Copyright (c) 2026, BRiDCT contributors. Licensed under BSD-3-Clause.
+The full license is in src/transform/BRIDCT_LICENSE.txt in source distributions
+and licenses/BRIDCT_LICENSE.txt in packaged distributions.
+The adapted implementation is in src/transform/bridct.rs.
+
+Dependency licenses apply to their respective code, not this project as a whole.
+
+PROVENANCE.json identifies current packaging inputs and the additional Blob-graph adaptation.
+The following notice is unchanged from the input tree; paths in it refer to that tree.
+Its license files are also retained in this package under licenses/.
+
+Private MPEG-2 slice-thread runtime. UNLICENSED; no public distribution authorized.
+
+The mpeg2-rs decoder and facade have no selected public distribution license.
+Dependency licenses do not grant a license to that code or to this combined package.
+
+This directory preserves generated wasm-bindgen bindings. The Apache-2.0
+wasm-bindgen-rayon worker helper has been modified to forward asynchronous child
+initialization rejection to the Worker's error event. Its Google copyright header
+is retained. helper-adaptation.json records the original and patched hashes and
+the upstream adaptation script identity. This is not an unmodified upstream helper.
+Rayon 1.11.0 is MIT OR Apache-2.0; wasm-bindgen-rayon 1.3.0 is Apache-2.0.
+PROVENANCE.json identifies all packages in the supplied Cargo lockfile and their
+license metadata. licenses/ retains their actual license files, including
+third-party notices. This inventory includes build-time dependencies and is not
+a claim that all those packages execute in the browser.

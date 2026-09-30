@@ -16,7 +16,7 @@ import {
 import { Demuxer } from '../demuxer';
 import { InputDisposedError } from '../input';
 import {
-	InputAudioTrackBacking, InputTrackBacking, InputVideoTrackBacking,
+	InputAudioTrackBacking, InputTrackBacking, InputVideoTrackBacking, VideoDecodeStartPlan,
 } from '../input-track';
 import { PacketRetrievalOptions } from '../media-sink';
 import { DEFAULT_TRACK_DISPOSITION, MetadataTags } from '../metadata';
@@ -30,12 +30,14 @@ import {
 } from './mxf-metadata';
 import { FILL_KEYS, INDEX_KEYS, MxfIndex, MxfKlv as Klv, PARTITION_PREFIX } from './mxf-index';
 import { checkAes3ChannelStatus, parseSt331Header, St331Header, unpackSt331 } from './mxf-aes3';
+import { MPEG2_HEADER_LIMIT, parseMpeg2Headers } from '../mpeg2';
 
 const PRIMER = '060e2b34020501010d01020101050100';
 const SET_PREFIX = '060e2b34025301010d0101010101';
 const ESSENCE_PREFIX = '060e2b34010201010d010301';
 // SMPTE RDD 44 frame-wrapped ProRes mapping.
 const PRORES_CONTAINER = '060e2b340401010d0d010301021c0100';
+const MPEG2_CONTAINER = '060e2b34040101020d01030102046001';
 const AVC_CONTAINER = '060e2b340401010a0d01030102106001';
 const HEVC_CONTAINER = '060e2b340401010d0d01030102206001';
 const HEVC_SUB_DESCRIPTOR = '060e2b34025301010d01010101018101';
@@ -91,6 +93,12 @@ type PacketLocation = {
 	requiresParameters?: boolean;
 	byteLength?: number;
 	st331?: St331Header;
+	pictureType?: number;
+	key?: number;
+	decodeOrdinal?: number;
+	gopStart?: number;
+	dependencyAnchor?: number;
+	indexFlags?: number;
 };
 type TrackInfo = {
 	id: number;
@@ -107,6 +115,8 @@ type TrackInfo = {
 	sampleCount: number;
 	legacyAvc: boolean;
 	avci?: boolean;
+	mpeg2: boolean;
+	mpeg2OpenGop?: boolean;
 	opAtom: boolean;
 };
 
@@ -378,6 +388,7 @@ export class MxfDemuxer extends Demuxer {
 				editUnitCount: duration,
 				descriptor: linked[0]!, packets: [], sampleCount: 0,
 				legacyAvc: false,
+				mpeg2: false,
 				opAtom: this.opAtom,
 			};
 			if (hex(property(info.descriptor, P.container)) === HEVC_CONTAINER
@@ -474,6 +485,14 @@ export class MxfDemuxer extends Demuxer {
 		return result;
 	}
 
+	async mpeg2IpGopEnd(key: number, info: TrackInfo) {
+		await this.readMetadata();
+		this.checkDisposed();
+		const result = await this.index!.mpeg2IpGopEnd(key, info);
+		this.checkDisposed();
+		return result;
+	}
+
 	async resolveDecode(decode: number, info: TrackInfo) {
 		await this.readMetadata();
 		this.checkDisposed();
@@ -508,7 +527,7 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 
 	constructor(public demuxer: MxfDemuxer, public info: TrackInfo) {}
 	abstract getType(): 'video' | 'audio';
-	abstract getCodec(): 'prores' | 'avc' | 'hevc' | AudioCodec | null;
+	abstract getCodec(): 'prores' | 'avc' | 'hevc' | 'mpeg2' | AudioCodec | null;
 	abstract getDecoderConfig(): Promise<VideoDecoderConfig | AudioDecoderConfig | null>;
 	abstract append(klv: Klv): MaybePromise<void>;
 	abstract indexedLocation(klv: Klv, index: number): MaybePromise<PacketLocation>;
@@ -517,7 +536,11 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 	}
 
 	protected requiresIndex() {
-		return this.getCodec() === 'avc' || this.getCodec() === 'hevc';
+		return this.getCodec() === 'avc' || this.getCodec() === 'hevc' || this.info.mpeg2;
+	}
+
+	protected async validateIndexedPacket(location: PacketLocation) {
+		return location;
 	}
 
 	protected hasTemporalIndex() {
@@ -629,11 +652,20 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 						const delay = this.info.hevcSubDescriptor?.properties.get(P.hevcDecodingDelay);
 						requireMxf(!delay || uint(delay, 1) !== 0 || timing.presentation === index,
 							'HEVC zero decoding delay contradicts temporal reordering');
+						location.pictureType = timing.pictureType;
+						location.key = timing.key;
+						location.decodeOrdinal = index;
+						if ('gopStart' in timing) {
+							location.gopStart = timing.gopStart;
+							location.dependencyAnchor = timing.dependencyAnchor;
+							location.indexFlags = timing.indexFlags;
+						}
 					}
+					const validated = await this.validateIndexedPacket(location);
 					if (index === this.info.editUnitCount - 1) {
 						this.indexedEnd = true;
 					}
-					return location;
+					return validated;
 				});
 				// Bound sparse random-access state independently of the sequential scan's exact packet list.
 				if (this.indexedPackets.size >= 256) {
@@ -654,9 +686,10 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 		if (location) {
 			return location;
 		}
+		const codec = this.info.mpeg2 ? 'MPEG-2' : 'AVC/HEVC';
 		requireMxf(!this.requiresIndex(), this.info.avci
 			? 'AVC-Intra requires a supported index; scanning cannot recover random access'
-			: 'AVC/HEVC requires a supported temporal index; scanning cannot recover timing');
+			: `${codec} requires a supported temporal index; scanning cannot recover timing`);
 		await this.demuxer.scanUntil(() => this.info.packets.length > index);
 		return this.info.packets[index] ?? null;
 	}
@@ -834,6 +867,9 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 	private nalParameters: string | null = null;
 	private hevcLengthSize: number | null = null;
 	private headerPromise: Promise<VideoColorSpaceInit> | null = null;
+	private mpeg2Restarts = new Set<number>();
+	private firstMpeg2Sequence: ReturnType<typeof parseMpeg2Headers> | null = null;
+	getDecodeStartPlan?: InputVideoTrackBacking['getDecodeStartPlan'];
 	constructor(demuxer: MxfDemuxer, info: TrackInfo) {
 		super(demuxer, info);
 		const d = info.descriptor;
@@ -847,9 +883,12 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 		this.nalCodec = container === HEVC_CONTAINER
 			? 'hevc'
 			: container === AVC_CONTAINER || info.legacyAvc ? 'avc' : null;
+		info.mpeg2 = container === MPEG2_CONTAINER;
 		requireMxf(this.nalCodec === 'avc'
 			? [0x28, 0x51].includes(d.kind)
-			: d.kind === 0x28 && (this.nalCodec === 'hevc' || container === PRORES_CONTAINER),
+			: info.mpeg2
+				? d.kind === 0x51
+				: d.kind === 0x28 && (this.nalCodec === 'hevc' || container === PRORES_CONTAINER),
 		'unsupported picture descriptor or frame wrapping');
 		const profile = Number.parseInt(coding.slice(28, 30), 16);
 		const avci = this.avciFormat = this.nalCodec === 'avc' ? AVCI_FORMATS[coding.slice(16)] : undefined;
@@ -866,23 +905,55 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 			requireMxf(this.nalCodec !== 'hevc' || !info.opAtom, 'HEVC OPAtom is not supported');
 			requireMxf(!avci || !info.opAtom, 'AVC-Intra OPAtom is not supported');
 			this.codec = this.nalCodec;
+		} else if (info.mpeg2) {
+			const level = uint(property(d, P.profileAndLevel), 1);
+			info.mpeg2OpenGop = coding === '060e2b34040101030401020201040300' && level === 0x82;
+			requireMxf((coding === '060e2b34040101030401020201030300' && level === 0x44)
+				|| (coding === '060e2b34040101030401020201050300' && level === 0x46) || info.mpeg2OpenGop,
+			'MPEG-2 requires Main Profile / High or High-1440 Level picture coding');
+			requireMxf(uint(property(d, P.componentDepth), 4) === 8
+				&& uint(property(d, P.horizontalSubsampling), 4) === 2
+				&& uint(property(d, P.verticalSubsampling), 4) === (info.mpeg2OpenGop ? 1 : 2),
+			'MPEG-2 requires 8-bit 4:2:0');
+			requireMxf(uint(property(d, P.closedGop), 1) <= 1, 'invalid MPEG-2 closed GOP metadata');
+			requireMxf(info.indexSid !== 0, 'MPEG-2 requires a temporal index');
+			this.codec = 'mpeg2';
 		} else {
 			requireMxf(coding.startsWith('060e2b340401010d040102020306') && coding.endsWith('00')
 				&& profile >= 1 && profile <= 6, 'unsupported ProRes profile');
 			this.codec = PROFILES[profile - 1]!;
 		}
-		requireMxf(uint(property(d, P.layout), 1) === 0, 'interlaced or segmented-frame picture');
+		const fieldLayout = info.mpeg2OpenGop && uint(property(d, P.layout), 1) === 1;
+		requireMxf(fieldLayout || uint(property(d, P.layout), 1) === 0, 'interlaced or segmented-frame picture');
 		const rate = rational(property(d, P.sampleRate));
 		requireMxf(equalRationals(rate, info.rate), 'picture rate mismatch');
 		const number = info.trackNumber;
 		requireMxf((number >>> 24) === 0x15
-			&& ((number >>> 8) & 255) === (this.nalCodec ? 0x05 : 0x17),
+			&& ((number >>> 8) & 255) === (this.nalCodec || info.mpeg2 ? 0x05 : 0x17),
 		'unsupported picture essence key');
 		this.width = uint(property(d, P.width), 4);
 		this.height = uint(property(d, P.height), 4);
 		requireMxf(this.width > 0 && this.height > 0, 'empty picture');
 		let sampledWidth = this.width;
 		let sampledHeight = this.height;
+		if (info.mpeg2) {
+			const width = d.properties.get(P.displayWidth);
+			const height = d.properties.get(P.displayHeight);
+			const visibleWidth = width ? uint(width, 4) : this.width;
+			const visibleHeight = height ? uint(height, 4) : this.height;
+			requireMxf(visibleWidth > 0 && visibleHeight > 0
+				&& (this.width === visibleWidth || this.width === Math.ceil(visibleWidth / 16) * 16)
+				&& (this.height === visibleHeight || this.height === Math.ceil(visibleHeight / 16) * 16),
+			'MPEG-2 stored dimensions must match visible dimensions or macroblock padding');
+			this.width = visibleWidth;
+			this.height = visibleHeight;
+			for (const [key, expected] of [[P.sampledWidth, visibleWidth], [P.sampledHeight, visibleHeight],
+				[P.sampledX, 0], [P.sampledY, 0]] as const) {
+				const value = d.properties.get(key);
+				requireMxf(!value || uint(value, 4) === expected,
+					'MPEG-2 sampled rectangle must match visible picture');
+			}
+		}
 		if (this.nalCodec) {
 			const sampledWidthProperty = d.properties.get(P.sampledWidth);
 			const sampledHeightProperty = d.properties.get(P.sampledHeight);
@@ -908,6 +979,9 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 			const value = d.properties.get(key);
 			requireMxf(!value || uint(value, 4) === expected, 'cropped picture is not supported');
 		}
+		if (fieldLayout) {
+			this.height *= 2;
+		}
 		const aspect = rational(property(d, P.aspect));
 		this.squareWidth = this.height * aspect.numerator / aspect.denominator;
 		if (avci) {
@@ -931,6 +1005,9 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 				this.width = avci.width;
 			}
 		}
+		if (info.mpeg2OpenGop) {
+			this.getDecodeStartPlan = this.mpeg2DecodeStartPlan.bind(this);
+		}
 	}
 
 	getType() {
@@ -938,7 +1015,9 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 	}
 
 	getCodec() {
-		return this.nalCodec ?? 'prores' as const;
+		return this.info.mpeg2
+			? 'mpeg2' as const
+			: this.nalCodec ?? 'prores' as const;
 	}
 
 	override getHasOnlyKeyPackets() {
@@ -995,8 +1074,159 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 			isKey: this.info.avci ? true : undefined };
 	}
 
+	private async mpeg2Header(packet: PacketLocation) {
+		const bytes = await this.demuxer.bytes(packet.offset, Math.min(packet.size, MPEG2_HEADER_LIMIT));
+		const header = parseMpeg2Headers(bytes);
+		requireMxf(header.pictureType === packet.pictureType, 'MPEG-2 index picture flags disagree with essence');
+		requireMxf(header.sequence === packet.isKey, 'MPEG-2 key requires in-band sequence/GOP headers and I picture');
+		const { numerator, denominator } = this.info.rate;
+		let origin = packet.key!;
+		if (this.info.mpeg2OpenGop) {
+			const gop = await this.mpeg2GopHeader(packet.gopStart!);
+			const timing = await this.demuxer.resolveDecode(packet.gopStart!, this.info);
+			origin = timing.presentation - gop.temporalReference;
+			const leading = header.pictureType === 3
+				&& Math.round(packet.timestamp * numerator / denominator) < timing.presentation;
+			const expectedFlags = packet.isKey
+				? (gop.closedGop ? 0xc0 : 0x40)
+				: header.pictureType === 2 ? 0x22 : leading && gop.closedGop ? 0x13 : 0x33;
+			requireMxf(packet.indexFlags === expectedFlags, 'MPEG-2 GOP flags disagree with headers');
+			requireMxf(leading && !gop.closedGop
+				? packet.dependencyAnchor! < packet.gopStart!
+				: packet.dependencyAnchor === packet.gopStart, 'MPEG-2 unsafe dependency anchor');
+		} else {
+			requireMxf(!header.extendedHeaders, 'unsupported MPEG-2 header extension in progressive Main profile');
+			requireMxf(header.progressive && !header.topFieldFirst && header.framePredFrameDct && header.chroma420Type
+				&& (!header.sequence || header.progressiveSequence),
+			'MPEG-2 requires progressive pictures');
+		}
+		requireMxf(header.temporalReference === Math.round(packet.timestamp * numerator / denominator) - origin,
+			'MPEG-2 temporal reference disagrees with index');
+		if (header.sequence) {
+			await this.validateMpeg2Sequence(header, packet.gopStart ?? packet.key!);
+		}
+		return header;
+	}
+
+	private async validateMpeg2Sequence(header: ReturnType<typeof parseMpeg2Headers>, gopStart: number) {
+		const { numerator, denominator } = this.info.rate;
+		if (this.info.mpeg2OpenGop) {
+			requireMxf(header.progressiveSequence === (uint(property(this.info.descriptor, P.layout), 1) === 0),
+				'MPEG-2 sequence scan structure disagrees with descriptor');
+		}
+		requireMxf(header.profileAndLevel === uint(property(this.info.descriptor, P.profileAndLevel), 1),
+			'MPEG-2 sequence profile/level disagrees with descriptor');
+		requireMxf(header.width === this.width && header.height === this.height
+			&& Math.abs(header.frameRate - numerator / denominator) < 1e-9,
+		'MPEG-2 sequence geometry or rate disagrees with descriptor');
+		const squareWidth = header.aspect === 1
+			? this.width
+			: this.height * [0, 0, 4 / 3, 16 / 9, 2.21][header.aspect]!;
+		requireMxf(Math.abs(squareWidth - this.squareWidth) < 1e-9,
+			'MPEG-2 sequence aspect disagrees with descriptor');
+		if (gopStart !== 0) {
+			const first = await this.mpeg2GopHeader(0);
+			requireMxf(JSON.stringify(header.colorSpace) === JSON.stringify(first.colorSpace),
+				'MPEG-2 sequence color configuration changed');
+		}
+	}
+
+	private async mpeg2GopHeader(index: number) {
+		if (index === 0 && this.firstMpeg2Sequence) {
+			return this.firstMpeg2Sequence;
+		}
+		const klv = await this.demuxer.indexedPacket(index, this.info, true);
+		requireMxf(klv, 'missing MPEG-2 GOP header');
+		const header = parseMpeg2Headers(await this.demuxer.bytes(klv.offset,
+			Math.min(klv.size, MPEG2_HEADER_LIMIT)));
+		requireMxf(header.sequence && header.pictureType === 1, 'MPEG-2 restart requires sequence and I headers');
+		await this.validateMpeg2Sequence(header, index);
+		if (index === 0) {
+			this.firstMpeg2Sequence = header;
+		}
+		return header;
+	}
+
+	private async mpeg2DecodeStartPlan(
+		timestamp: number, options: PacketRetrievalOptions,
+	): Promise<VideoDecodeStartPlan> {
+		const target = await this.getPacket(Math.max(timestamp, 0),
+			{ ...options, metadataOnly: true });
+		if (!target) {
+			return { startPacket: null, headerOnlyPreroll: [] };
+		}
+		const timing = await this.demuxer.resolveDecode(target.sequenceNumber, this.info);
+		requireMxf('dependencyAnchor' in timing, 'missing MPEG-2 dependency information');
+		const start = timing.dependencyAnchor;
+		requireMxf(start !== undefined, 'missing MPEG-2 dependency anchor');
+		requireMxf(target.sequenceNumber - start < 256, 'MPEG-2 decode start exceeds bounded dependency search');
+		const header = await this.mpeg2GopHeader(start);
+		const headerOnlyPreroll: number[] = [];
+		if (!header.closedGop) {
+			requireMxf(header.temporalReference < 256, 'MPEG-2 preroll exceeds bounded dependency search');
+			for (let i = 0; i < header.temporalReference; i++) {
+				const ordinal = start + 1 + i;
+				const packet = await this.packet(ordinal, { ...options, metadataOnly: true });
+				requireMxf(packet && packet.timestamp < target.timestamp,
+					'MPEG-2 preroll would discard a requested picture');
+				const klv = await this.demuxer.indexedPacket(ordinal, this.info, true);
+				requireMxf(klv, 'missing MPEG-2 leading B picture');
+				const leading = parseMpeg2Headers(await this.demuxer.bytes(klv.offset,
+					Math.min(klv.size, MPEG2_HEADER_LIMIT)));
+				requireMxf(!leading.sequence && leading.pictureType === 3 && leading.temporalReference === i,
+					'MPEG-2 preroll is not a consecutive initial leading B interval');
+				headerOnlyPreroll.push(ordinal);
+			}
+		}
+		const startPacket = await this.packet(start, options);
+		return { startPacket, headerOnlyPreroll };
+	}
+
+	private async mpeg2Restart(key: number) {
+		if (this.mpeg2Restarts.has(key)) {
+			return;
+		}
+		const readHeader = async (index: number) => {
+			const klv = await this.demuxer.indexedPacket(index, this.info, true);
+			requireMxf(klv, 'missing MPEG-2 restart interval picture');
+			return this.mpeg2Header({ ...this.indexedLocation(klv, index), key,
+				isKey: index === key, pictureType: index === key ? 1 : 2 });
+		};
+		const header = await readHeader(key);
+		if (!header.closedGop || uint(property(this.info.descriptor, P.closedGop), 1) === 0) {
+			const end = await this.demuxer.mpeg2IpGopEnd(key, this.info);
+			for (let i = key + 1; i < end; i++) {
+				await readHeader(i);
+			}
+		}
+		if (this.mpeg2Restarts.size >= 64) {
+			this.mpeg2Restarts.delete(this.mpeg2Restarts.values().next().value!);
+		}
+		this.mpeg2Restarts.add(key);
+	}
+
+	protected override async validateIndexedPacket(location: PacketLocation) {
+		if (this.info.mpeg2) {
+			await this.mpeg2Header(location);
+			if (!this.info.mpeg2OpenGop) {
+				await this.mpeg2Restart(location.key!);
+			}
+		}
+		return location;
+	}
+
 	protected override async readPacket(packet: PacketLocation, index: number) {
 		const data = await super.readPacket(packet, index);
+		if (this.info.mpeg2) {
+			const header = parseMpeg2Headers(data);
+			for (let i = header.sliceOffset; i + 4 <= data.length; i++) {
+				if (data[i] === 0 && data[i + 1] === 0 && data[i + 2] === 1) {
+					const code = data[i + 3]!;
+					requireMxf((code >= 1 && code <= 0xaf) || (code === 0xb7 && i + 4 === data.length),
+						'MPEG-2 requires one complete frame-wrapped picture');
+				}
+			}
+		}
 		if (this.nalCodec === 'avc' && !packet.isKey) {
 			if (this.info.legacyAvc && packet.requiresParameters) {
 				const record = extractAvcDecoderConfigurationRecord(data);
@@ -1039,6 +1269,13 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 	}
 
 	getColorSpace(): Promise<VideoColorSpaceInit> {
+		if (this.info.mpeg2) {
+			return this.headerPromise ??= (async () => {
+				const first = await this.location(0);
+				requireMxf(first?.isKey, 'MPEG-2 must start with a closed GOP key');
+				return (await this.mpeg2Header(first)).colorSpace;
+			})();
+		}
 		if (this.nalCodec) {
 			return this.getDecoderConfig().then(config => config.colorSpace!);
 		}

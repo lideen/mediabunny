@@ -25,7 +25,8 @@ type Partition = MxfPartition & { offset: number; packEnd: number; end: number; 
 	index: Region; end: number;
 }>; bodyStart?: Promise<number>; segments?: Promise<Segment[]>; };
 type IndexedTrack = { bodySid: number; indexSid: number; trackNumber: number;
-	rate: ReturnType<typeof rational>; editUnitCount: number; legacyAvc: boolean; opAtom: boolean; avci?: boolean; };
+	rate: ReturnType<typeof rational>; editUnitCount: number; legacyAvc: boolean; opAtom: boolean; mpeg2: boolean;
+	avci?: boolean; mpeg2OpenGop?: boolean; };
 type Segment = {
 	start: number; duration: number; rate: ReturnType<typeof rational>; byteCount: number;
 	bodySid: number; indexSid: number; slices: number; positions: number;
@@ -67,6 +68,7 @@ export class MxfIndex {
 	}
 
 	private async temporalEntries(start: number, end: number, track: IndexedTrack) {
+		const codec = track.mpeg2 ? 'MPEG-2' : 'AVC/HEVC';
 		const entries = new Map<number, Uint8Array>();
 		for (const p of await this.getDirectory()) {
 			if (!p.indexSize || p.indexSid !== track.indexSid) {
@@ -77,11 +79,13 @@ export class MxfIndex {
 					continue;
 				}
 				requireMxf(equalRationals(s.rate, track.rate) && !s.positions && !s.byteCount
-					&& s.deltas.some(delta => delta.position === 255)
-					&& s.start + s.duration <= track.editUnitCount, 'unsupported AVC/HEVC temporal index');
+					&& s.deltas.some(delta => delta.position === 255 || (track.mpeg2 && delta.position === 0))
+					&& s.start + s.duration <= track.editUnitCount, `unsupported ${codec} temporal index`);
 				for (let i = Math.max(start, s.start); i < Math.min(end, s.start + s.duration); i++) {
 					const entry = await this.entry(s, i);
-					requireMxf(!(entry[2]! & 0x08), 'AVC/HEVC temporal offset overflow is unsupported');
+					requireMxf(s.deltas.some(delta => delta.position === 255) || entry[0] === 0,
+						'MPEG-2 non-reordered index has a temporal offset');
+					requireMxf(!(entry[2]! & 0x08), `${codec} temporal offset overflow is unsupported`);
 					const previous = entries.get(i);
 					requireMxf(!previous || hex(previous) === hex(entry), 'conflicting repeated index entries');
 					entries.set(i, entry);
@@ -89,16 +93,33 @@ export class MxfIndex {
 			}
 		}
 		for (let i = start; i < end; i++) {
-			requireMxf(entries.has(i), 'missing AVC/HEVC temporal index entry');
+			requireMxf(entries.has(i), `missing ${codec} temporal index entry`);
 		}
 		return entries;
+	}
+
+	async mpeg2IpGopEnd(key: number, track: IndexedTrack) {
+		// Signed key distances admit at most 128 pictures. Include the next entry to prove the boundary.
+		const end = Math.min(track.editUnitCount, key + 129);
+		const entries = await this.temporalEntries(key, end, track);
+		for (let i = key; i < end; i++) {
+			const entry = entries.get(i)!;
+			if (i > key && entry[2] === 0xc0 && entry[0] === 0 && entry[1] === 0) {
+				return i;
+			}
+			requireMxf(i - key < 128 && entry[0] === 0 && (entry[1]! << 24 >> 24) === key - i
+				&& entry[2] === (i === key ? 0xc0 : 0x22),
+			'MPEG-2 open-flag restart requires a bounded unreordered I/P-only GOP');
+		}
+		requireMxf(end === track.editUnitCount, 'MPEG-2 I/P GOP boundary exceeds bounded lookahead');
+		return end;
 	}
 
 	async resolvePresentation(presentation: number, track: IndexedTrack) {
 		const entry = (await this.temporalEntries(presentation, presentation + 1, track)).get(presentation)!;
 		const decode = presentation + (entry[0]! << 24 >> 24);
 		requireMxf(decode >= 0 && decode < track.editUnitCount,
-			'AVC/HEVC temporal offset outside track');
+			`${track.mpeg2 ? 'MPEG-2' : 'AVC/HEVC'} temporal offset outside track`);
 		return decode;
 	}
 
@@ -107,8 +128,47 @@ export class MxfIndex {
 		const entries = await this.temporalEntries(Math.max(0, decode - 127),
 			Math.min(track.editUnitCount, decode + 129), track);
 		const matches = [...entries].filter(([p, entry]) => p + (entry[0]! << 24 >> 24) === decode);
-		requireMxf(matches.length === 1, 'AVC/HEVC temporal index must have a unique inverse');
+		requireMxf(matches.length === 1,
+			`${track.mpeg2 ? 'MPEG-2' : 'AVC/HEVC'} temporal index must have a unique inverse`);
 		const entry = entries.get(decode)!;
+		if (track.mpeg2OpenGop) {
+			const previous = new Map([...entries].filter(([ordinal]) => ordinal <= decode));
+			const starts = [...previous].filter(([, value]) => value[2] === 0xc0 || value[2] === 0x40);
+			const gopStart = starts.at(-1)?.[0];
+			requireMxf(gopStart !== undefined, 'MPEG-2 GOP start exceeds bounded dependency search');
+			const dependencyAnchor = decode + (entry[1]! << 24 >> 24);
+			const dependency = previous.get(dependencyAnchor);
+			requireMxf(dependency && [0xc0, 0x40].includes(dependency[2]!) && dependency[1] === 0,
+				'MPEG-2 dependency anchor is not an indexed I picture');
+			const pictureType = [0xc0, 0x40].includes(entry[2]!)
+				? 1
+				: entry[2] === 0x22
+					? 2
+					: [0x13, 0x33].includes(entry[2]!) ? 3 : 0;
+			requireMxf(pictureType && (pictureType === 1
+				? dependencyAnchor === decode
+				: dependencyAnchor <= gopStart), 'unsupported MPEG-2 dependency flags');
+			requireMxf(dependencyAnchor === gopStart || dependencyAnchor === starts.at(-2)?.[0],
+				'MPEG-2 dependency skips an intervening GOP');
+			return { presentation: matches[0]![0], key: gopStart, isKey: pictureType === 1, pictureType,
+				gopStart, dependencyAnchor, indexFlags: entry[2]! };
+		}
+		if (track.mpeg2) {
+			const key = decode + (entry[1]! << 24 >> 24);
+			requireMxf(key >= 0 && key <= decode, 'MPEG-2 key frame offset outside closed GOP');
+			const keyEntry = (await this.temporalEntries(key, key + 1, track)).get(key)!;
+			requireMxf(keyEntry[2] === 0xc0 && keyEntry[1] === 0 && keyEntry[0] === 0,
+				'MPEG-2 requires an unreordered sequence-header random access point');
+			requireMxf(![...entries].some(([i, value]) => i > key && i <= decode && value[2] === 0xc0),
+				'MPEG-2 key frame offset skips an intervening key');
+			const pictureType = entry[2] === 0xc0 ? 1 : entry[2] === 0x22 ? 2 : entry[2] === 0x33 ? 3 : 0;
+			requireMxf(pictureType && (decode === key) === (pictureType === 1), 'unsupported MPEG-2 picture flags');
+			const presentation = matches[0]![0];
+			requireMxf(presentation >= key
+				&& ![...entries].some(([i, value]) => i > decode && i <= presentation && value[2] === 0xc0),
+			'MPEG-2 temporal reordering crosses a closed GOP boundary');
+			return { presentation, key, isKey: decode === key, pictureType };
+		}
 		if (track.legacyAvc) {
 			// These producers store positive GOP distances, contrary to ST 381-3. Validate the
 			// observed layout, but never use its recovery pictures as decoder restart keys.
@@ -419,7 +479,9 @@ export class MxfIndex {
 		requireMxf(streamEnd === null || (Number.isSafeInteger(streamEnd) && streamEnd > streamOffset),
 			'nonmonotonic index stream offsets');
 		for (const delta of s.deltas) {
-			if (delta.position !== (temporal ? 255 : 0)) {
+			if (delta.position !== (temporal ? 255 : 0)
+				&& !(temporal && track.mpeg2 && delta.position === 0 && entry?.[0] === 0
+					&& !s.deltas.some(element => element.position === 255))) {
 				continue;
 			}
 			const slice = delta.slice

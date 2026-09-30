@@ -40,8 +40,20 @@ export abstract class CustomVideoDecoder {
 	abstract init(): MaybePromise<void>;
 	/** Decodes the provided encoded packet. */
 	abstract decode(packet: EncodedPacket): MaybePromise<void>;
+	/**
+	 * Consumes an unrequested preroll packet's headers without reconstructing or emitting its picture.
+	 * Preserves persistent codec state. Does not imply entropy validation. Unsupported decoders must omit this method.
+	 */
+	decodePreroll?(packet: EncodedPacket): MaybePromise<void>;
 	/** Decodes all remaining packets and then resolves. */
 	abstract flush(): MaybePromise<void>;
+	/**
+	 * Optional immediate cancellation of pending work. Called synchronously on abort or disposal, never on normal
+	 * flush. Must be idempotent, must not throw, and must cause pending operations to settle without emitting samples.
+	 * Queued operations must not restart canceled resources. The core calls close() after serialized work settles.
+	 * Implementations without this hook retain serialized close ordering.
+	 */
+	cancel?(): void;
 	/** Called when the decoder is no longer needed and its resources can be freed. */
 	abstract close(): MaybePromise<void>;
 }

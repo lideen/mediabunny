@@ -33,6 +33,7 @@ import { MetadataTags } from './metadata';
 import { AC3_SAMPLE_RATES, EAC3_REDUCED_SAMPLE_RATES } from '../shared/ac3-misc';
 import { Bitstream } from '../shared/bitstream';
 import { VERSIONED_NAME } from './version';
+import { Mpeg2HeaderError, parseMpeg2Headers } from './mpeg2';
 
 // References for AVC/HEVC code:
 // ISO 14496-15
@@ -2649,6 +2650,21 @@ export const determineVideoPacketType = (
 
 			return null;
 		};
+
+		case 'mpeg2': {
+			try {
+				const header = parseMpeg2Headers(packetData);
+				if (header.pictureType !== 1) {
+					return 'delta';
+				}
+				return header.sequence && header.closedGop && header.temporalReference === 0 ? 'key' : null;
+			} catch (error) {
+				if (error instanceof Mpeg2HeaderError) {
+					return null;
+				}
+				throw error;
+			}
+		}
 
 		case 'prores': {
 			return 'key';

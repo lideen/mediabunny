@@ -1,0 +1,9 @@
+# Authored MPEG-2 4:2:2 fixtures
+
+No source-movie bytes or decoder code are included. The authored media was retained from the fork's MPEG-2 work. This does not grant distribution permission for the external generator project.
+
+`test/node/generate-mxf-mpeg2-open.py` takes the supplied read-only `mpeg2-rs` checkout and a new output directory. The source checkout used here was `1a9e585a52dcce079ca2543abe59aef50551f59a`. Its mathematical bit writers generate three 12-picture GOPs at 64×48. The first closed GOP begins with an I picture at temporal reference 2 followed by backward-predicted leading Bs at 0 and 1. Later GOPs are open. Only the first leading B of the second GOP updates the non-intra matrix. Omitting that header changes later selected pixels.
+
+FFmpeg remuxes the authored elementary stream into `open422.mxf` without re-encoding. `open422.json` contains independent FFprobe packet hashes/timing and FFmpeg FAANI decoded frame hashes in presentation order. The script also creates `interlaced422.mxf` from an FFmpeg-generated gray source to exercise field-based descriptor geometry and top-first woven frame output. Its independent packet/frame manifest is `interlaced422.json`.
+
+The demux tests compare packet bytes and timestamps against independent manifests and test dependency-anchor selection and header-only preroll delivery. Decoder tests additionally check every open-GOP picture and cold selections against the numerical-version regression hashes in `../wasm-bridct-v1.json`. Those hashes are not independent accuracy oracles. The gray interlaced fixture checks woven I422 pixels against its independent FAANI hashes, including field-order metadata and clone ownership after disposal. This finite gray fixture is not a deinterlacing or general interlaced-picture conformance test.

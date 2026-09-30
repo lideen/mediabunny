@@ -41,6 +41,7 @@ Mediabunny ships with built-in decoders and encoders for all audio PCM codecs, m
 - `'vp9'` - VP9
 - `'av1'` - AOMedia Video 1 (AV1)
 - `'prores'` - Apple ProRes [^prores]
+- `'mpeg2'` - MPEG-2 video in MXF, decoded with the optional [MPEG-2 extension](./extensions/mpeg2.md); no encoder or output-container support
 
 ### Audio codecs
 

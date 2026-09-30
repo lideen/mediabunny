@@ -1,0 +1,14 @@
+{
+  "schema": 2,
+  "sourceRepository": "git@github.com:lideen/mpeg2-wasm.git",
+  "sourceCommit": "9a19284b8944ad43aa3a632e6198016f5c312d0f",
+  "sourceState": "Clean packaging checkout. The producer build packages pinned WASM, not a Rust rebuild. WASM was compiled from revision ed40e8a14bdd1ce0f80f839c940042b7dfe40a55 with uncommitted changes; the revision alone does not identify its source.",
+  "wasmSourceSnapshotSha256": "e0c101161fb9dc2a0a524f589a9c2319e1e45bdf6a92eb6a62392f50cf1c1ec4",
+  "packagingSourceSha256": "8bc2c2c2fd3ce87b90b579ed4a156ac1cf09ee053a47cff0d5b3a863675381b5",
+  "decoderModuleSha256": "fe44f50903ead53bd9890ef8e66c7d8379a75d0ba7bd66ecec9beb2d74eac80f",
+  "artifactProvenance": "decoder/PROVENANCE.json",
+  "numericalVersion": "bridct-f32-simd128-dc-v1",
+  "permission": "No license change. Package private/UNLICENSED metadata and all supplied notices are preserved.",
+  "verification": "All 61 producer output lengths and SHA-256 hashes verified before copying the complete 62-file artifact, including immutable producer provenance and 55 license texts. Embedded scalar and shared WASM hashes independently verified against producer provenance. Consumer npm builds do not compile Rust.",
+  "limits": "Producer qualification is locally-qualified-not-product-release. Its recorded numerical engineering gate was not rerun for this import. Consumer regression hashes are not independent accuracy oracles. IEEE 1180/H.262 A.2 and production real-time acceptance remain unverified; external qualification reports are not included."
+}

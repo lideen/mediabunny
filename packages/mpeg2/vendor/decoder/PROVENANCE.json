@@ -1,0 +1,455 @@
+{
+  "schema": 2,
+  "built": "2026-10-01T09:56:21.263Z",
+  "esbuild": {
+    "version": "0.28.2",
+    "license": "MIT",
+    "role": "build-only dependency"
+  },
+  "typescript": {
+    "version": "5.9.3",
+    "license": "Apache-2.0",
+    "role": "type checking and declaration generation only"
+  },
+  "apiExtractor": {
+    "version": "7.58.9",
+    "license": "MIT",
+    "role": "build-only public declaration rollup"
+  },
+  "description": "Self-contained packaging. Only name/producers custom sections are removed; standard-section bytes are unchanged. Current working-tree JS is identified separately.",
+  "qualification": {
+    "status": "locally-qualified-not-product-release",
+    "recordLocation": "External qualification artifacts; names are relative to that artifact set, not repository paths.",
+    "record": {
+      "name": "qualification-summary.json",
+      "bytes": 127338,
+      "sha256": "9eb354d18b83ba35c8db54bdbdfe3d1301fb16330cd93fb6ec7d5d27d2f96d2a"
+    },
+    "gates": {
+      "numerics": {
+        "status": "engineering-passed",
+        "name": "numerics/engineering-gate.json",
+        "bytes": 750,
+        "sha256": "b8f21a882b236de47c8bb9f6b90d17f0bfa62ce4f6504bbcf311bbf87c92696e"
+      },
+      "fuzz": {
+        "status": "passed",
+        "name": "fuzz/gate.json",
+        "bytes": 753,
+        "sha256": "13f2dc6c2eac54cb2c6e5f8858d393eca9b38ab014440bd43abbdb32fcc52215"
+      },
+      "consumer": {
+        "status": "passed",
+        "name": "consumer-gate.json",
+        "bytes": 770,
+        "sha256": "c67b397c62edfbe575f769d6391be481c3272bc15691bfc8f1b7e5f01103ac92"
+      }
+    },
+    "limits": "IEEE 1180/H.262 A.2 remains UNVERIFIED. No release or production real-time acceptance is claimed."
+  },
+  "sourcePathPolicy": {
+    "status": "Controlled --remap-path-prefix in addition to the flags above: repository=/src, build=/build, cargo=/cargo, toolchain=/toolchain. Operational FROM paths remain in external build evidence."
+  },
+  "vendorManifest": {
+    "path": "vendor/wasm/IMPORT.json",
+    "bytes": 4819,
+    "sha256": "ea9719a73d99c85d21fff2128278ef8e1cfb6e88e920eb759f2b2751bb9f367d"
+  },
+  "binaryInputs": {
+    "scalar": {
+      "path": "vendor/wasm/scalar",
+      "wasm": {
+        "bytes": 152220,
+        "sha256": "6a5ff58737d0296139420cb6ad6eaeabfbe22b62232e6d1fd00be3aa9109d04f"
+      },
+      "derivedWasm": {
+        "bytes": 134032,
+        "sha256": "3de4761e9dcbc589e120ecdf88ad2a1904ace14d343407ed3b0dc3edfc5288f1"
+      },
+      "glue": {
+        "bytes": 22772,
+        "sha256": "f39fd77f03ade8555978a9a133fabec05e00a210f971c1be867a7c1af271fd92"
+      },
+      "packing": {
+        "removed": [
+          {
+            "name": "name",
+            "sectionBytes": 18074,
+            "payloadBytes": 18070,
+            "sha256": "2f78c04c6ac57cd128bd6facd8d42c8c3a161c6de9fcd832de0ba2e61cb8cdf0"
+          },
+          {
+            "name": "producers",
+            "sectionBytes": 114,
+            "payloadBytes": 112,
+            "sha256": "a9bae61c3496c11865c58512e0a68dcf30406d11e4c5e92fb6702de9b96ee72b"
+          }
+        ],
+        "retainedCustom": [
+          {
+            "name": "target_features",
+            "sectionBytes": 160,
+            "sha256": "830a008ae6e68ab7df843a3f0818ff5fc18de3bdd017386c6df7d814d13ab5b8"
+          }
+        ],
+        "standardSections": {
+          "bytes": 133864,
+          "originalSha256": "311f4c9514cac666daa4889faa306dc2ee29af86bcc4f9d26e28bf1c7e922f91",
+          "derivedSha256": "311f4c9514cac666daa4889faa306dc2ee29af86bcc4f9d26e28bf1c7e922f91",
+          "equal": true
+        }
+      }
+    },
+    "shared": {
+      "path": "vendor/wasm/shared",
+      "wasm": {
+        "bytes": 332296,
+        "sha256": "c21515cc2e40cfa74cbae3cbd84f7ee31388e8d81b7fb66bf983d54c3f4e9e3a"
+      },
+      "derivedWasm": {
+        "bytes": 242392,
+        "sha256": "9635272323c91391ab70ff755b4e0da8b7b917dc22695b945688e57647fe634d"
+      },
+      "glue": {
+        "bytes": 27298,
+        "sha256": "430f5d39b7f6e0a5abb1648c27a62ae06161a73f4a73d6ee428bad5f9655e40b"
+      },
+      "packing": {
+        "removed": [
+          {
+            "name": "name",
+            "sectionBytes": 89797,
+            "payloadBytes": 89793,
+            "sha256": "e400681f3038dcb79271344cb9806d724327da8fad021f3be7707a8720acfb17"
+          },
+          {
+            "name": "producers",
+            "sectionBytes": 107,
+            "payloadBytes": 105,
+            "sha256": "af06dca76a290045a6b8615f5211fe23a4ea8959d4beaf5ebe8172d4616de86f"
+          }
+        ],
+        "retainedCustom": [
+          {
+            "name": "target_features",
+            "sectionBytes": 169,
+            "sha256": "9cc544793e4a50dc85d2919dbfaeee021c8ccc096a4f0429c07c2e7d4c279499"
+          }
+        ],
+        "standardSections": {
+          "bytes": 242215,
+          "originalSha256": "4e449ef1a696d177912db1550e69a5f0a67b7483bbf21f0f0bb6da137b491043",
+          "derivedSha256": "4e449ef1a696d177912db1550e69a5f0a67b7483bbf21f0f0bb6da137b491043",
+          "equal": true
+        }
+      }
+    }
+  },
+  "packagingSource": {
+    "encoding": "JSON.stringify of repository-relative file identities in lexical order",
+    "bytes": 12079,
+    "sha256": "8bc2c2c2fd3ce87b90b579ed4a156ac1cf09ee053a47cff0d5b3a863675381b5"
+  },
+  "packaging": {
+    "graph": [
+      "coordinator",
+      "scalar-runtime",
+      "rayon-helper",
+      "shared-runtime"
+    ],
+    "diagnostics": "Function names and producer metadata are omitted from embedded WASM. WASM stack traces may show indices instead of names. binaryInputs paths are logical repository IDs, not read locations.",
+    "scalarPayload": {
+      "encoding": "base64",
+      "characters": 178712,
+      "occurrencesInOuterBundle": 1,
+      "workerConstruction": "Replace one private scalar-worker placeholder at concurrency-1 initialization only; runtime instances remain separate."
+    },
+    "helper": {
+      "license": "Apache-2.0",
+      "priorAdaptation": {
+        "record": {
+          "bytes": 586,
+          "sha256": "b5b8f4873b1b7f898dbdba5de6ca721e04e0e4fc71fbe53bc5f6c59d7ced5efa"
+        },
+        "dependency": "wasm-bindgen-rayon",
+        "version": "1.3.0",
+        "license": "Apache-2.0",
+        "path": "snippets/wasm-bindgen-rayon-38edf6e439f6d70d/src/workerHelpers.no-bundler.js",
+        "originalSha256": "9801503f464f848c6c7405462fca9a5c721556904c5fee5ee0afcb0887ea1b7f",
+        "patchedSha256": "e335cb4321a3a05f21951f81cd2890d9da8161c182466ef006ebfe9c430c1f48",
+        "adaptationScriptSha256": "d0985fdeab7a3c9f188159607bf54d1e4fc5bb1c457b0c8e688e1184ca6ad96d"
+      },
+      "input": {
+        "bytes": 3180,
+        "sha256": "e335cb4321a3a05f21951f81cd2890d9da8161c182466ef006ebfe9c430c1f48"
+      },
+      "output": {
+        "bytes": 1928,
+        "sha256": "ffdfb8f9d9794bf1fc30840c7d7de1f8ca6a80046139c967dca9a406eca1f684"
+      },
+      "changes": "Direct self-spawn from the factory-owned helper Blob URL; preserve child rejection forwarding; use the generated object-form initializer."
+    },
+    "glue": {
+      "scalar": {
+        "adapted": {
+          "bytes": 22757,
+          "sha256": "d0bc9a2f4c96e576ab88e8267d9bf432aedaca89da538b5365711cc2d9fc2a8d"
+        },
+        "change": "Remove default external WASM URL discovery; initialization always supplies embedded bytes or the child module/memory."
+      },
+      "shared": {
+        "adapted": {
+          "bytes": 27283,
+          "sha256": "2e28da8445018798c8323fe9f588ea3fd3d6fdaca368c1704029c3c47b8e8e01"
+        },
+        "change": "Remove default external WASM URL discovery; initialization always supplies embedded bytes or the child module/memory."
+      }
+    }
+  },
+  "outputs": {
+    "mpeg2-decoder.mjs": {
+      "bytes": 607047,
+      "sha256": "fe44f50903ead53bd9890ef8e66c7d8379a75d0ba7bd66ecec9beb2d74eac80f"
+    },
+    "mpeg2-decoder.iife.js": {
+      "bytes": 610747,
+      "sha256": "4a4a2b50f449af7834ff6217fcb2f0eb19c6c66d64fbb877add3ce2b31cac96d"
+    },
+    "types/index.d.ts": {
+      "bytes": 38,
+      "sha256": "8b49e9be24ecc295fd1fe87e231759c194140bd9a95e32258657459df2a3917e"
+    },
+    "package.json": {
+      "bytes": 608,
+      "sha256": "4e8927c210507f2312d3aa987263b4a44969be4e0e03d54345891993210a31ea"
+    },
+    "NOTICE.txt": {
+      "bytes": 1885,
+      "sha256": "61125e51b4254896240fc556bf77d784980e3b511aebeae0bf7012d654744a97"
+    },
+    "licenses/bumpalo-3.20.3/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/bumpalo-3.20.3/LICENSE-MIT": {
+      "bytes": 1059,
+      "sha256": "65f94e99ddaf4f5d1782a6dae23f35d4293a9a01444a13135a6887017d353cee"
+    },
+    "licenses/cfg-if-1.0.5/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/cfg-if-1.0.5/LICENSE-MIT": {
+      "bytes": 1057,
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    },
+    "licenses/crossbeam-channel-0.5.17/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/crossbeam-channel-0.5.17/LICENSE-MIT": {
+      "bytes": 1099,
+      "sha256": "5734ed989dfca1f625b40281ee9f4530f91b2411ec01cb748223e7eb87e201ab"
+    },
+    "licenses/crossbeam-channel-0.5.17/LICENSE-THIRD-PARTY": {
+      "bytes": 33447,
+      "sha256": "b16db96b93b1d7cf7bea533f572091ec6bca3234fbe0a83038be772ff391a44c"
+    },
+    "licenses/crossbeam-deque-0.8.8/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/crossbeam-deque-0.8.8/LICENSE-MIT": {
+      "bytes": 1099,
+      "sha256": "5734ed989dfca1f625b40281ee9f4530f91b2411ec01cb748223e7eb87e201ab"
+    },
+    "licenses/crossbeam-epoch-0.9.21/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/crossbeam-epoch-0.9.21/LICENSE-MIT": {
+      "bytes": 1099,
+      "sha256": "5734ed989dfca1f625b40281ee9f4530f91b2411ec01cb748223e7eb87e201ab"
+    },
+    "licenses/crossbeam-utils-0.8.23/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/crossbeam-utils-0.8.23/LICENSE-MIT": {
+      "bytes": 1099,
+      "sha256": "5734ed989dfca1f625b40281ee9f4530f91b2411ec01cb748223e7eb87e201ab"
+    },
+    "licenses/either-1.18.0/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/either-1.18.0/LICENSE-MIT": {
+      "bytes": 1043,
+      "sha256": "7576269ea71f767b99297934c0b2367532690f8c4badc695edf8e04ab6a1e545"
+    },
+    "licenses/futures-core-0.3.34/LICENSE-APACHE": {
+      "bytes": 10874,
+      "sha256": "275c491d6d1160553c32fd6127061d7f9606c3ea25abfad6ca3f6ed088785427"
+    },
+    "licenses/futures-core-0.3.34/LICENSE-MIT": {
+      "bytes": 1094,
+      "sha256": "6652c868f35dfe5e8ef636810a4e576b9d663f3a17fb0f5613ad73583e1b88fd"
+    },
+    "licenses/futures-task-0.3.34/LICENSE-APACHE": {
+      "bytes": 10874,
+      "sha256": "275c491d6d1160553c32fd6127061d7f9606c3ea25abfad6ca3f6ed088785427"
+    },
+    "licenses/futures-task-0.3.34/LICENSE-MIT": {
+      "bytes": 1094,
+      "sha256": "6652c868f35dfe5e8ef636810a4e576b9d663f3a17fb0f5613ad73583e1b88fd"
+    },
+    "licenses/futures-util-0.3.34/LICENSE-APACHE": {
+      "bytes": 10874,
+      "sha256": "275c491d6d1160553c32fd6127061d7f9606c3ea25abfad6ca3f6ed088785427"
+    },
+    "licenses/futures-util-0.3.34/LICENSE-MIT": {
+      "bytes": 1094,
+      "sha256": "6652c868f35dfe5e8ef636810a4e576b9d663f3a17fb0f5613ad73583e1b88fd"
+    },
+    "licenses/js-sys-0.3.106/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/js-sys-0.3.106/LICENSE-MIT": {
+      "bytes": 1057,
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    },
+    "licenses/once_cell-1.21.4/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/once_cell-1.21.4/LICENSE-MIT": {
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "licenses/pin-project-lite-0.2.17/LICENSE-APACHE": {
+      "bytes": 10174,
+      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+    },
+    "licenses/pin-project-lite-0.2.17/LICENSE-MIT": {
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "licenses/proc-macro2-1.0.107/LICENSE-APACHE": {
+      "bytes": 9723,
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+    },
+    "licenses/proc-macro2-1.0.107/LICENSE-MIT": {
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "licenses/quote-1.0.47/LICENSE-APACHE": {
+      "bytes": 9723,
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+    },
+    "licenses/quote-1.0.47/LICENSE-MIT": {
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "licenses/rayon-1.11.0/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/rayon-1.11.0/LICENSE-MIT": {
+      "bytes": 1071,
+      "sha256": "0621878e61f0d0fda054bcbe02df75192c28bde1ecc8289cbd86aeba2dd72720"
+    },
+    "licenses/rayon-core-1.13.0/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/rayon-core-1.13.0/LICENSE-MIT": {
+      "bytes": 1071,
+      "sha256": "0621878e61f0d0fda054bcbe02df75192c28bde1ecc8289cbd86aeba2dd72720"
+    },
+    "licenses/rustversion-1.0.23/LICENSE-APACHE": {
+      "bytes": 9723,
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+    },
+    "licenses/rustversion-1.0.23/LICENSE-MIT": {
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "licenses/slab-0.4.12/LICENSE": {
+      "bytes": 1055,
+      "sha256": "8ce0830173fdac609dfb4ea603fdc002c2f4af0dc9b1a005653f5da9cf534b18"
+    },
+    "licenses/syn-3.0.6/LICENSE-APACHE": {
+      "bytes": 9723,
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+    },
+    "licenses/syn-3.0.6/LICENSE-MIT": {
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "licenses/unicode-ident-1.0.26/LICENSE-APACHE": {
+      "bytes": 9723,
+      "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+    },
+    "licenses/unicode-ident-1.0.26/LICENSE-MIT": {
+      "bytes": 1023,
+      "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+    },
+    "licenses/unicode-ident-1.0.26/LICENSE-UNICODE": {
+      "bytes": 1995,
+      "sha256": "f7db81051789b729fea528a63ec4c938fdcb93d9d61d97dc8cc2e9df6d47f2a1"
+    },
+    "licenses/wasm-bindgen-0.2.129/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/wasm-bindgen-0.2.129/LICENSE-MIT": {
+      "bytes": 1057,
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    },
+    "licenses/wasm-bindgen-macro-0.2.129/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/wasm-bindgen-macro-0.2.129/LICENSE-MIT": {
+      "bytes": 1057,
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    },
+    "licenses/wasm-bindgen-macro-support-0.2.129/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/wasm-bindgen-macro-support-0.2.129/LICENSE-MIT": {
+      "bytes": 1057,
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    },
+    "licenses/wasm-bindgen-rayon-1.3.0/LICENSE": {
+      "bytes": 11560,
+      "sha256": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5"
+    },
+    "licenses/wasm-bindgen-shared-0.2.129/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/wasm-bindgen-shared-0.2.129/LICENSE-MIT": {
+      "bytes": 1057,
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    },
+    "licenses/web-sys-0.3.106/LICENSE-APACHE": {
+      "bytes": 10847,
+      "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+    },
+    "licenses/web-sys-0.3.106/LICENSE-MIT": {
+      "bytes": 1057,
+      "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+    },
+    "licenses/BRIDCT_LICENSE.txt": {
+      "bytes": 1527,
+      "sha256": "45287b3b2da8f7cc29c514cd628a1e0ab5df70657186b43535655a178409fa79"
+    },
+    "mpeg2-decoder.d.mts": {
+      "bytes": 14851,
+      "sha256": "74281006df4315d99ae9e26db13ee02f6902e306bc95011e7a0a51aad0bbfe66"
+    }
+  }
+}

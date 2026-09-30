@@ -4,6 +4,7 @@
 		"moduleResolution": "nodenext",
 		"module": "NodeNext",
 		"composite": true,
+		"types": ["node", "vite/client"],
 		"noEmit": false,
 		"paths": {
 			//"mediabunny": ["./src/index.ts"], So that the direct source imports are preferred
@@ -12,10 +13,11 @@
 			"@mediabunny/flac-encoder": ["./packages/flac-encoder/src/index.ts"],
 			"@mediabunny/mp3-encoder": ["./packages/mp3-encoder/src/index.ts"],
 			"@mediabunny/prores": ["./packages/prores/src/index.ts"],
+			"@mediabunny/mpeg2": ["./packages/mpeg2/src/index.ts"],
 			"@mediabunny/server": ["./packages/server/src/index.ts"],
 		},
 	},
-	"include": ["vitest.config.ts", "./test/**/*"],
+	"include": ["vitest.config.ts", "./test/**/*", "./scripts/mpeg2-artifact.ts"],
 	"exclude": ["./test/public/**/*"],
 	"references": [
 		{ "path": "./src" },
@@ -24,6 +26,7 @@
 		{ "path": "./packages/flac-encoder" },
 		{ "path": "./packages/mp3-encoder" },
 		{ "path": "./packages/prores" },
+		{ "path": "./packages/mpeg2" },
 		{ "path": "./packages/server" },
 	]
 }

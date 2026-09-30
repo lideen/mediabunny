@@ -1,0 +1,21 @@
+{
+  "name": "@mediabunny/mpeg2",
+  "type": "module",
+  "version": "1.61.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "description": "Private MPEG-2 decoder extension backed by the standalone TypeScript Decoder.",
+  "main": "./dist/bundles/mediabunny-mpeg2.mjs",
+  "module": "./dist/bundles/mediabunny-mpeg2.mjs",
+  "types": "./dist/modules/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/modules/src/index.d.ts",
+      "import": "./dist/bundles/mediabunny-mpeg2.mjs",
+      "require": "./dist/bundles/mediabunny-mpeg2.mjs"
+    }
+  },
+  "files": ["README.md", "dist"],
+  "sideEffects": false,
+  "peerDependencies": { "mediabunny": "^1.61.0" }
+}

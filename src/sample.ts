@@ -205,11 +205,20 @@ const VIDEO_SAMPLE_PIXEL_FORMATS_SET = new Set(VIDEO_SAMPLE_PIXEL_FORMATS);
 export type VideoSamplePixelFormat = typeof VIDEO_SAMPLE_PIXEL_FORMATS[number];
 
 /**
- * Metadata used for VideoSample initialization.
+ * Scan structure and temporal field order of woven pictures. Unknown does not imply progressive.
+ * @group Samples
+ * @public
+ */
+export type VideoSampleScan = 'unknown' | 'progressive' | 'interlaced-top-first' | 'interlaced-bottom-first';
+
+/**
+ * Initialization options for a video sample.
  * @group Samples
  * @public
  */
 export type VideoSampleInit = {
+	/** Scan structure of the stored picture. Defaults to unknown; does not request deinterlacing. */
+	scan?: VideoSampleScan;
 	/**
 	 * The internal pixel format in which the frame is stored.
 	 * [See pixel formats](https://www.w3.org/TR/webcodecs/#pixel-format)
@@ -297,6 +306,8 @@ export class VideoSample implements Disposable {
 	readonly colorSpace!: VideoSampleColorSpace;
 	/** The encode options to use when this sample is passed to an encoder. */
 	readonly encodeOptions!: DeepReadonly<VideoEncoderEncodeOptions>;
+	/** Scan structure. Canvas and VideoFrame conversion do not deinterlace or retain this metadata. */
+	readonly scan!: VideoSampleScan;
 
 	/** The width of the frame in pixels. */
 	get codedWidth() {
@@ -368,6 +379,10 @@ export class VideoSample implements Disposable {
 		data: VideoFrame | CanvasImageSource | AllowSharedBufferSource | VideoSampleResource,
 		init?: VideoSampleInit,
 	) {
+		if (init?.scan !== undefined
+			&& !['unknown', 'progressive', 'interlaced-top-first', 'interlaced-bottom-first'].includes(init.scan)) {
+			throw new TypeError('Invalid video sample scan structure.');
+		}
 		if (
 			data instanceof ArrayBuffer
 			|| (typeof SharedArrayBuffer !== 'undefined' && data instanceof SharedArrayBuffer)
@@ -687,6 +702,7 @@ export class VideoSample implements Disposable {
 			);
 		}
 
+		this.scan = init?.scan ?? 'unknown';
 		this.encodeOptions = init?.encodeOptions ?? {};
 
 		this.pixelAspectRatio = simplifyRational({
@@ -694,6 +710,71 @@ export class VideoSample implements Disposable {
 			den: this.squarePixelHeight * this.codedWidth,
 		});
 		finalizationRegistry?.register(this, { type: 'video', data: this._data }, this);
+	}
+
+	/**
+	 * Creates a sample by transferring a complete raw-pixel ArrayBuffer into it instead of copying its bytes.
+	 * On success, `data` and all views of it are detached. Use a dedicated buffer, not shared or borrowed storage.
+	 * Metadata is validated before transfer; validation failures leave the buffer attached. Requires structuredClone
+	 * with ArrayBuffer transfer support. The ordinary constructor continues to copy its input.
+	 * Layout offsets refer to the start of the entire buffer. Passing `view.buffer` transfers all of its storage,
+	 * not just the view's range. Layout entries are snapshotted. Overlapping source planes are permitted if each
+	 * plane is in bounds; unlike copy destinations, reading overlapping source regions does not overwrite pixels.
+	 */
+	static fromTransferredBuffer(
+		data: ArrayBuffer,
+		init: SetRequired<VideoSampleInit, 'format' | 'codedWidth' | 'codedHeight' | 'timestamp'>,
+	) {
+		if (!(data instanceof ArrayBuffer)) {
+			throw new TypeError('data must be an ArrayBuffer.');
+		}
+		if (typeof globalThis.structuredClone !== 'function') {
+			throw new Error('VideoSample.fromTransferredBuffer requires structuredClone with transfer support.');
+		}
+		// Constructing a view rejects detached buffers, including detached zero-length buffers.
+		const sourceByteLength = new Uint8Array(data).byteLength;
+		const options = { ...init, _doNotCopy: true };
+		const { codedWidth, codedHeight } = options;
+		if (!Number.isSafeInteger(codedWidth) || codedWidth <= 0
+			|| !Number.isSafeInteger(codedHeight) || codedHeight <= 0) {
+			throw new TypeError('codedWidth and codedHeight must be positive safe integers.');
+		}
+		const sample = new VideoSample(data, options);
+		try {
+			const rect = sample.visibleRect;
+			if (![rect.left, rect.top, rect.width, rect.height, rect.left + rect.width, rect.top + rect.height]
+				.every(Number.isSafeInteger)
+				|| rect.left < 0 || rect.top < 0 || rect.width <= 0 || rect.height <= 0
+				|| rect.left + rect.width > codedWidth || rect.top + rect.height > codedHeight) {
+				throw new TypeError('visibleRect must be an integer pixel region within the coded dimensions.');
+			}
+			const planes = getPlaneConfigs(options.format);
+			const layout = sample._layout!.map(({ offset, stride }) => ({ offset, stride }));
+			if (layout.length !== planes.length) {
+				throw new TypeError('layout must specify exactly one entry for each source plane.');
+			}
+			for (let i = 0; i < planes.length; i++) {
+				const plane = planes[i]!;
+				const { offset, stride } = layout[i]!;
+				const rowBytes = Math.ceil(codedWidth / plane.widthDivisor) * plane.sampleBytes;
+				const rows = Math.ceil(codedHeight / plane.heightDivisor);
+				const lastRowOffset = stride * (rows - 1);
+				const end = offset + lastRowOffset + rowBytes;
+				if (![offset, stride, rowBytes, rows, lastRowOffset, offset + lastRowOffset, end]
+					.every(Number.isSafeInteger)
+					|| offset < 0 || stride < rowBytes || end > sourceByteLength) {
+					throw new TypeError('Source plane layout exceeds the buffer or has an invalid offset or stride.');
+				}
+			}
+			sample._layout = layout;
+			sample._data = new Uint8Array(globalThis.structuredClone(data, { transfer: [data] }));
+			finalizationRegistry?.unregister(sample);
+			finalizationRegistry?.register(sample, { type: 'video', data: sample._data }, sample);
+			return sample;
+		} catch (error) {
+			sample.close();
+			throw error;
+		}
 	}
 
 	/** Clones this video sample. */
@@ -706,6 +787,7 @@ export class VideoSample implements Disposable {
 
 		if (this._data instanceof VideoSampleResource) {
 			return new VideoSample(this._data, {
+				scan: this.scan,
 				timestamp: this.timestamp,
 				duration: this.duration,
 				rotation: this.rotation,
@@ -714,6 +796,7 @@ export class VideoSample implements Disposable {
 			});
 		} else if (isVideoFrame(this._data)) {
 			return new VideoSample(this._data.clone(), {
+				scan: this.scan,
 				timestamp: this.timestamp,
 				duration: this.duration,
 				rotation: this.rotation,
@@ -726,6 +809,7 @@ export class VideoSample implements Disposable {
 			return new VideoSample(this._data, {
 				format: this.format!,
 				layout: this._layout,
+				scan: this.scan,
 				codedWidth: this.codedWidth,
 				codedHeight: this.codedHeight,
 				timestamp: this.timestamp,
@@ -745,6 +829,7 @@ export class VideoSample implements Disposable {
 			return new VideoSample(this._data, {
 				format: this.format!,
 				codedWidth: this.codedWidth,
+				scan: this.scan,
 				codedHeight: this.codedHeight,
 				timestamp: this.timestamp,
 				duration: this.duration,

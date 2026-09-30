@@ -24,7 +24,7 @@ import {
 } from './codec-data';
 import { CustomVideoDecoder, customVideoDecoders, CustomAudioDecoder, customAudioDecoders } from './custom-coder';
 import { InputDisposedError } from './input';
-import { InputAudioTrack, InputTrack, InputVideoTrack } from './input-track';
+import { InputAudioTrack, InputTrack, InputVideoTrack, VideoDecodeStartPlan } from './input-track';
 import {
 	AnyIterable,
 	assert,
@@ -425,6 +425,27 @@ export class EncodedPacketSink {
 	}
 }
 
+/**
+ * Options for retrieving decoded samples.
+ * @group Media sinks
+ * @public
+ */
+export type SampleRetrievalOptions = PacketRetrievalOptions & {
+	/**
+	 * Cancels this sample selection and rejects with the signal's reason. Cancels pending decoder work when supported.
+	 * Does not dispose the Input, cancel other selections, or interrupt already-started source reads.
+	 */
+	signal?: AbortSignal;
+};
+
+const validateSampleRetrievalOptions = (options: SampleRetrievalOptions) => {
+	validatePacketRetrievalOptions(options);
+	if (options.signal !== undefined && !(options.signal instanceof AbortSignal)) {
+		throw new TypeError('options.signal, when defined, must be an AbortSignal.');
+	}
+	options.signal?.throwIfAborted();
+};
+
 abstract class DecoderWrapper<
 	MediaSample extends VideoSample | AudioSample,
 > {
@@ -435,8 +456,15 @@ abstract class DecoderWrapper<
 
 	abstract getDecodeQueueSize(): number;
 	abstract decode(packet: EncodedPacket): void;
+	onDequeue?: () => void;
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	decodePreroll(_packet: EncodedPacket): void {
+		throw new Error('Decoder does not support header-only preroll.');
+	}
 	abstract flush(): Promise<void>;
 	abstract close(): void;
+
+	cancel() {}
 }
 
 /**
@@ -459,13 +487,43 @@ export abstract class BaseMediaSampleSink<
 	abstract _createPacketSink(): EncodedPacketSink;
 
 	/** @internal */
+	private async decodeStartPlan(
+		timestamp: number, sink: EncodedPacketSink, options: PacketRetrievalOptions, fallbackToFirst: boolean,
+	): Promise<VideoDecodeStartPlan> {
+		if (this._track instanceof InputVideoTrack && this._track._backing.getDecodeStartPlan) {
+			return this._track._backing.getDecodeStartPlan(timestamp, options);
+		}
+		return {
+			startPacket: await sink.getKeyPacket(timestamp, options)
+				?? (fallbackToFirst ? await sink.getFirstKeyPacket(options) : null),
+			headerOnlyPreroll: [],
+		};
+	}
+
+	/** @internal */
+	private feedPacket(
+		decoder: DecoderWrapper<MediaSample>, packet: EncodedPacket,
+		plan: VideoDecodeStartPlan, minimumTimestamp: number,
+	) {
+		if (plan.headerOnlyPreroll.includes(packet.sequenceNumber)) {
+			if (!(packet.timestamp < minimumTimestamp)) {
+				throw new Error('Decode plan attempts to discard a requested picture.');
+			}
+			decoder.decodePreroll(packet);
+		} else {
+			decoder.decode(packet);
+		}
+	}
+
+	/** @internal */
 	protected mediaSamplesInRange(
 		startTimestamp = -Infinity,
 		endTimestamp = Infinity,
-		options: PacketRetrievalOptions,
+		options: SampleRetrievalOptions,
 	): AsyncGenerator<MediaSample, void, unknown> {
 		validateTimestamp(startTimestamp);
 		validateTimestamp(endTimestamp);
+		validateSampleRetrievalOptions(options);
 
 		const sampleQueue: MediaSample[] = [];
 		let firstSampleQueued = false;
@@ -530,13 +588,20 @@ export abstract class BaseMediaSampleSink<
 				if (!hasOutOfBandError) {
 					outOfBandError = error;
 					hasOutOfBandError = true;
+					decoder?.cancel();
+					onQueueDequeue();
 					onQueueNotEmpty();
 				}
 			});
 
 			const packetSink = this._createPacketSink();
-			const keyPacket = await packetSink.getKeyPacket(startTimestamp, packetRetrievalOptions)
-				?? await packetSink.getFirstKeyPacket(packetRetrievalOptions);
+			decoder.onDequeue = () => onQueueDequeue();
+			if (terminated) {
+				decoder.cancel();
+				return;
+			}
+			const plan = await this.decodeStartPlan(startTimestamp, packetSink, packetRetrievalOptions, true);
+			const keyPacket = plan.startPacket;
 
 			let currentPacket: EncodedPacket | null = keyPacket;
 
@@ -551,7 +616,7 @@ export abstract class BaseMediaSampleSink<
 			const packets = packetSink.packets(keyPacket ?? undefined, endPacket, packetRetrievalOptions);
 			await packets.next(); // Skip the start packet as we already have it
 
-			while (currentPacket && !ended && !this._track.input._disposed) {
+			while (currentPacket && !ended && !hasOutOfBandError && !this._track.input._disposed) {
 				const maxQueueSize = computeMaxQueueSize(sampleQueue.length);
 				if (sampleQueue.length + decoder.getDecodeQueueSize() > maxQueueSize) {
 					({ promise: queueDequeue, resolve: onQueueDequeue } = promiseWithResolvers());
@@ -559,7 +624,7 @@ export abstract class BaseMediaSampleSink<
 					continue;
 				}
 
-				decoder.decode(currentPacket);
+				this.feedPacket(decoder, currentPacket, plan, startTimestamp);
 
 				const packetResult = await packets.next();
 				if (packetResult.done) {
@@ -571,7 +636,7 @@ export abstract class BaseMediaSampleSink<
 
 			await packets.return();
 
-			if (!terminated && !this._track.input._disposed) {
+			if (!terminated && !hasOutOfBandError && !this._track.input._disposed) {
 				await decoder.flush();
 			}
 
@@ -585,6 +650,8 @@ export abstract class BaseMediaSampleSink<
 			if (!hasOutOfBandError) {
 				outOfBandError = error;
 				hasOutOfBandError = true;
+				decoder?.cancel();
+				onQueueDequeue();
 				onQueueNotEmpty();
 			}
 		}).finally(() => {
@@ -592,12 +659,31 @@ export abstract class BaseMediaSampleSink<
 		});
 
 		const track = this._track;
+		const disposeSignal = track.input._disposeController.signal;
+		const removeListeners = () => {
+			options.signal?.removeEventListener('abort', onAbort);
+			disposeSignal.removeEventListener('abort', onAbort);
+		};
 		const closeSamples = () => {
+			removeListeners();
+			decoder?.cancel();
+			onQueueDequeue();
 			lastSample?.close();
 			for (const sample of sampleQueue) {
 				sample.close();
 			}
 		};
+		const onAbort = () => {
+			terminated = true;
+			ended = true;
+			closeSamples();
+			onQueueNotEmpty();
+		};
+		options.signal?.addEventListener('abort', onAbort, { once: true });
+		disposeSignal.addEventListener('abort', onAbort, { once: true });
+		if (options.signal?.aborted || disposeSignal.aborted) {
+			onAbort();
+		}
 
 		return {
 			async next() {
@@ -610,6 +696,9 @@ export abstract class BaseMediaSampleSink<
 						ended = true;
 						closeSamples();
 						throw new InputDisposedError();
+					} else if (options.signal?.aborted) {
+						closeSamples();
+						throw options.signal.reason;
 					} else if (terminated) {
 						return { value: undefined, done: true };
 					} else if (hasOutOfBandError) {
@@ -624,6 +713,7 @@ export abstract class BaseMediaSampleSink<
 					} else if (!decoderIsFlushed) {
 						await queueNotEmpty;
 					} else {
+						removeListeners();
 						return { value: undefined, done: true };
 					}
 				}
@@ -638,6 +728,10 @@ export abstract class BaseMediaSampleSink<
 				return { value: undefined, done: true };
 			},
 			async throw(error) {
+				terminated = true;
+				ended = true;
+				closeSamples();
+				onQueueNotEmpty();
 				throw error;
 			},
 			[Symbol.asyncIterator]() {
@@ -649,9 +743,10 @@ export abstract class BaseMediaSampleSink<
 	/** @internal */
 	protected mediaSamplesAtTimestamps(
 		timestamps: AnyIterable<number>,
-		options: PacketRetrievalOptions,
+		options: SampleRetrievalOptions,
 	): AsyncGenerator<MediaSample | null, void, unknown> {
 		validateAnyIterable(timestamps);
+		validateSampleRetrievalOptions(options);
 		const timestampIterator = toAsyncIterator(timestamps);
 		const timestampsOfInterest: number[] = [];
 
@@ -711,48 +806,65 @@ export abstract class BaseMediaSampleSink<
 				if (!hasOutOfBandError) {
 					outOfBandError = error;
 					hasOutOfBandError = true;
+					decoder?.cancel();
+					onQueueDequeue();
 					onQueueNotEmpty();
 				}
 			});
 
+			if (terminated) {
+				decoder.cancel();
+				return;
+			}
 			const packetSink = this._createPacketSink();
 			let lastPacket: EncodedPacket | null = null;
 			let lastKeyPacket: EncodedPacket | null = null;
+			let lastPlan: VideoDecodeStartPlan = { startPacket: null, headerOnlyPreroll: [] };
+			let selectionMinimum = Infinity;
+			decoder.onDequeue = () => onQueueDequeue();
 
 			// The end sequence number (inclusive) in the next batch of packets that will be decoded. The batch starts
 			// at the last key frame and goes until this sequence number.
 			let maxSequenceNumber = -1;
 
 			const decodePackets = async () => {
+				if (terminated || hasOutOfBandError || this._track.input._disposed) {
+					return;
+				}
 				assert(lastKeyPacket);
 				assert(decoder);
 
 				// Start at the current key packet
 				let currentPacket = lastKeyPacket;
-				decoder.decode(currentPacket);
+				this.feedPacket(decoder, currentPacket, lastPlan, selectionMinimum);
 
 				while (currentPacket.sequenceNumber < maxSequenceNumber) {
 					const maxQueueSize = computeMaxQueueSize(sampleQueue.length);
-					while (sampleQueue.length + decoder.getDecodeQueueSize() > maxQueueSize && !terminated) {
+					while (sampleQueue.length + decoder.getDecodeQueueSize() > maxQueueSize
+						&& !terminated && !hasOutOfBandError) {
 						({ promise: queueDequeue, resolve: onQueueDequeue } = promiseWithResolvers());
 						await queueDequeue;
 					}
 
-					if (terminated) {
+					if (terminated || hasOutOfBandError || this._track.input._disposed) {
 						break;
 					}
 
 					const nextPacket = await packetSink.getNextPacket(currentPacket, retrievalOptions);
 					assert(nextPacket);
 
-					decoder.decode(nextPacket);
+					this.feedPacket(decoder, nextPacket, lastPlan, selectionMinimum);
 					currentPacket = nextPacket;
 				}
 
 				maxSequenceNumber = -1;
+				selectionMinimum = Infinity;
 			};
 
 			const flushDecoder = async () => {
+				if (terminated || hasOutOfBandError || this._track.input._disposed) {
+					return;
+				}
 				assert(decoder);
 				await decoder.flush();
 
@@ -767,14 +879,17 @@ export abstract class BaseMediaSampleSink<
 			for await (const timestamp of timestampIterator) {
 				validateTimestamp(timestamp);
 
-				if (terminated || this._track.input._disposed) {
+				if (terminated || hasOutOfBandError || this._track.input._disposed) {
 					break;
 				}
 
 				const targetPacket = await packetSink.getPacket(timestamp, retrievalOptions);
-				const keyPacket = targetPacket && await packetSink.getKeyPacket(timestamp, retrievalOptions);
+				const plan = targetPacket
+					? await this.decodeStartPlan(timestamp, packetSink, retrievalOptions, false)
+					: { startPacket: null, headerOnlyPreroll: [] };
+				const keyPacket = plan.startPacket;
 
-				if (!keyPacket) {
+				if (!keyPacket || !targetPacket) {
 					if (maxSequenceNumber !== -1) {
 						await decodePackets();
 						await flushDecoder();
@@ -798,13 +913,15 @@ export abstract class BaseMediaSampleSink<
 				}
 
 				timestampsOfInterest.push(targetPacket.timestamp);
+				selectionMinimum = Math.min(selectionMinimum, targetPacket.timestamp);
 				maxSequenceNumber = Math.max(targetPacket.sequenceNumber, maxSequenceNumber);
 
 				lastPacket = targetPacket;
 				lastKeyPacket = keyPacket;
+				lastPlan = plan;
 			}
 
-			if (!terminated && !this._track.input._disposed) {
+			if (!terminated && !hasOutOfBandError && !this._track.input._disposed) {
 				if (maxSequenceNumber !== -1) {
 					// We still need to decode packets
 					await decodePackets();
@@ -819,6 +936,8 @@ export abstract class BaseMediaSampleSink<
 			if (!hasOutOfBandError) {
 				outOfBandError = error;
 				hasOutOfBandError = true;
+				decoder?.cancel();
+				onQueueDequeue();
 				onQueueNotEmpty();
 			}
 		}).finally(() => {
@@ -827,10 +946,28 @@ export abstract class BaseMediaSampleSink<
 
 		const track = this._track;
 		const closeSamples = () => {
+			removeListeners();
+			decoder?.cancel();
+			onQueueDequeue();
 			for (const sample of sampleQueue) {
 				sample?.close();
 			}
 		};
+		const disposeSignal = track.input._disposeController.signal;
+		const removeListeners = () => {
+			options.signal?.removeEventListener('abort', onAbort);
+			disposeSignal.removeEventListener('abort', onAbort);
+		};
+		const onAbort = () => {
+			terminated = true;
+			closeSamples();
+			onQueueNotEmpty();
+		};
+		options.signal?.addEventListener('abort', onAbort, { once: true });
+		disposeSignal.addEventListener('abort', onAbort, { once: true });
+		if (options.signal?.aborted || disposeSignal.aborted) {
+			onAbort();
+		}
 
 		return {
 			async next() {
@@ -843,6 +980,7 @@ export abstract class BaseMediaSampleSink<
 						closeSamples();
 						throw new InputDisposedError();
 					} else if (terminated) {
+						options.signal?.throwIfAborted();
 						return { value: undefined, done: true };
 					} else if (hasOutOfBandError) {
 						terminated = true;
@@ -856,6 +994,7 @@ export abstract class BaseMediaSampleSink<
 					} else if (!decoderIsFlushed) {
 						await queueNotEmpty;
 					} else {
+						removeListeners();
 						return { value: undefined, done: true };
 					}
 				}
@@ -869,6 +1008,9 @@ export abstract class BaseMediaSampleSink<
 				return { value: undefined, done: true };
 			},
 			async throw(error) {
+				terminated = true;
+				closeSamples();
+				onQueueNotEmpty();
 				throw error;
 			},
 			[Symbol.asyncIterator]() {
@@ -886,6 +1028,16 @@ const computeMaxQueueSize = (decodedSampleQueueSize: number) => {
 };
 
 class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
+	closed = false;
+	closeStarted = false;
+
+	override cancel() {
+		if (this.customDecoder?.cancel && !this.closed) {
+			this.closed = true;
+			this.customDecoder.cancel();
+		}
+	}
+
 	decoder: VideoDecoder | null = null;
 
 	customDecoder: CustomVideoDecoder | null = null;
@@ -948,6 +1100,9 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 				.call(() => this.customDecoder!.init())
 				.catch(error => onError(error));
 		} else {
+			if (codec === 'mpeg2') {
+				throw new Error('MPEG-2 requires a registered custom decoder.');
+			}
 			const colorHandler = (frame: VideoFrame) => {
 				if (this.alphaQueue.length > 0) {
 					// Even when no alpha data is present (most of the time), there will be nulls in this queue
@@ -1042,6 +1197,29 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 		}
 	}
 
+	override decodePreroll(packet: EncodedPacket) {
+		if (!this.customDecoder?.decodePreroll) {
+			throw new Error('Decoder does not support header-only preroll.');
+		}
+		this.customDecoderQueueSize++;
+		void this.customDecoderCallSerializer
+			.call(async () => {
+				try {
+					if (!this.closed) {
+						await this.customDecoder!.decodePreroll!(packet);
+					}
+				} catch (error) {
+					// Report the failure without poisoning the serializer that must still close the decoder.
+					this.onError(error);
+				}
+			})
+			.catch(error => this.onError(error))
+			.finally(() => {
+				this.customDecoderQueueSize--;
+				this.onDequeue?.();
+			});
+	}
+
 	decode(packet: EncodedPacket) {
 		if (this.codec === 'hevc' && this.currentPacketIndex > 0 && !this.raslSkipped) {
 			if (this.hasHevcRaslPicture(packet.data)) {
@@ -1054,9 +1232,16 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 		if (this.customDecoder) {
 			this.customDecoderQueueSize++;
 			void this.customDecoderCallSerializer
-				.call(() => this.customDecoder!.decode(packet))
+				.call(() => {
+					if (!this.closed) {
+						return this.customDecoder!.decode(packet);
+					}
+				})
 				.catch(error => this.onError(error))
-				.finally(() => this.customDecoderQueueSize--);
+				.finally(() => {
+					this.customDecoderQueueSize--;
+					this.onDequeue?.();
+				});
 		} else {
 			assert(this.decoder);
 
@@ -1281,6 +1466,10 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 	}
 
 	finalizeAndEmitSample(sample: VideoSample) {
+		if (this.closed) {
+			sample.close();
+			return;
+		}
 		// Round the timestamps to the time resolution
 		sample.setTimestamp(Math.round(sample.timestamp * this.timeResolution) / this.timeResolution);
 		sample.setDuration(Math.round(sample.duration * this.timeResolution) / this.timeResolution);
@@ -1327,7 +1516,11 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 
 	async flush() {
 		if (this.customDecoder) {
-			await this.customDecoderCallSerializer.call(() => this.customDecoder!.flush());
+			await this.customDecoderCallSerializer.call(() => {
+				if (!this.closed) {
+					return this.customDecoder!.flush();
+				}
+			});
 		} else {
 			assert(this.decoder);
 			await Promise.all([
@@ -1362,9 +1555,22 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 	}
 
 	close() {
+		if (this.closeStarted) {
+			return;
+		}
+		this.closeStarted = true;
+		this.cancel();
 		if (this.customDecoder) {
-			void this.customDecoderCallSerializer.call(() => this.customDecoder!.close());
+			// A rejected init/decode poisons the serializer, but resources must still be released.
+			const close = () => {
+				this.closed = true;
+				return this.customDecoder!.close();
+			};
+			void this.customDecoderCallSerializer.currentPromise
+				.then(close, close)
+				.catch(error => this.onError(error));
 		} else {
+			this.closed = true;
 			assert(this.decoder);
 
 			if (this.decoder.state !== 'closed') {
@@ -1799,7 +2005,7 @@ export class VideoSampleSink extends BaseMediaSampleSink<VideoSample> {
 	 * @param timestamp - The timestamp used for retrieval, in seconds.
 	 * @param options - Options used for the underlying packet retrieval.
 	 */
-	async getSample(timestamp: number, options: PacketRetrievalOptions = {}) {
+	async getSample(timestamp: number, options: SampleRetrievalOptions = {}) {
 		validateTimestamp(timestamp);
 
 		for await (const sample of this.mediaSamplesAtTimestamps([timestamp], options)) {
@@ -1816,7 +2022,7 @@ export class VideoSampleSink extends BaseMediaSampleSink<VideoSample> {
 	 * @param endTimestamp - The timestamp in seconds at which to stop yielding samples (exclusive).
 	 * @param options - Options used for the underlying packet retrieval.
 	 */
-	samples(startTimestamp?: number, endTimestamp?: number, options: PacketRetrievalOptions = {}) {
+	samples(startTimestamp?: number, endTimestamp?: number, options: SampleRetrievalOptions = {}) {
 		return this.mediaSamplesInRange(startTimestamp, endTimestamp, options);
 	}
 
@@ -1832,7 +2038,7 @@ export class VideoSampleSink extends BaseMediaSampleSink<VideoSample> {
 	 * @param timestamps - An iterable or async iterable of timestamps in seconds.
 	 * @param options - Options used for the underlying packet retrieval.
 	 */
-	samplesAtTimestamps(timestamps: AnyIterable<number>, options: PacketRetrievalOptions = {}) {
+	samplesAtTimestamps(timestamps: AnyIterable<number>, options: SampleRetrievalOptions = {}) {
 		return this.mediaSamplesAtTimestamps(timestamps, options);
 	}
 }
@@ -2107,7 +2313,7 @@ export class CanvasSink {
 	 * @param timestamp - The timestamp used for retrieval, in seconds.
 	 * @param options - Options used for the underlying packet retrieval.
 	 */
-	async getCanvas(timestamp: number, options?: PacketRetrievalOptions) {
+	async getCanvas(timestamp: number, options?: SampleRetrievalOptions) {
 		validateTimestamp(timestamp);
 		await this._ensureInit();
 
@@ -2123,7 +2329,7 @@ export class CanvasSink {
 	 * @param endTimestamp - The timestamp in seconds at which to stop yielding canvases (exclusive).
 	 * @param options - Options used for the underlying packet retrieval.
 	 */
-	async* canvases(startTimestamp?: number, endTimestamp?: number, options?: PacketRetrievalOptions) {
+	async* canvases(startTimestamp?: number, endTimestamp?: number, options?: SampleRetrievalOptions) {
 		await this._ensureInit();
 		yield* mapAsyncGenerator(
 			this._videoSampleSink.samples(startTimestamp, endTimestamp, options),
@@ -2143,7 +2349,7 @@ export class CanvasSink {
 	 * @param timestamps - An iterable or async iterable of timestamps in seconds.
 	 * @param options - Options used for the underlying packet retrieval.
 	 */
-	async* canvasesAtTimestamps(timestamps: AnyIterable<number>, options?: PacketRetrievalOptions) {
+	async* canvasesAtTimestamps(timestamps: AnyIterable<number>, options?: SampleRetrievalOptions) {
 		await this._ensureInit();
 		yield* mapAsyncGenerator(
 			this._videoSampleSink.samplesAtTimestamps(timestamps, options),

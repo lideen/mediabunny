@@ -1,0 +1,28 @@
+{
+  "name": "mpeg2-wasm",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "description": "MPEG-2 complete-picture decoding with owned YCbCr frames and optional browser workers.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lideen/mpeg2-wasm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lideen/mpeg2-wasm/issues"
+  },
+  "keywords": [
+    "mpeg2",
+    "decoder",
+    "wasm",
+    "video"
+  ],
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./mpeg2-decoder.d.mts",
+      "import": "./mpeg2-decoder.mjs"
+    }
+  }
+}

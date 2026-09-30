@@ -144,6 +144,10 @@ export const canDecodeVideo = async (
 	};
 	resolvedOptions.description ??= guessDescriptionForVideo(resolvedOptions);
 
+	if (codec === 'mpeg2') {
+		return customVideoDecoders.some(x => x.supports(codec, resolvedOptions));
+	}
+
 	const key = JSON.stringify(resolvedOptions);
 	const memoized = canDecodeVideoMemo.get(key);
 	if (memoized) {

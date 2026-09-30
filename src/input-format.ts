@@ -637,16 +637,20 @@ export class MpegTsInputFormat extends InputFormat {
 }
 
 /**
- * Experimental MXF input for finalized OP1a with progressive frame-wrapped ProRes, AVC or HEVC and packed PCM.
+ * Experimental MXF input for finalized OP1a with frame-wrapped ProRes, AVC, HEVC or MPEG-2 and packed PCM.
+ * ProRes, AVC and HEVC require progressive pictures.
  * AVC supports Main/High 8-bit 4:2:0, High 10 8/10-bit 4:2:0, High 4:2:2 at 8 or 10 bits, and progressive
  * OP1a AVC-Intra50/100 with ordinary CBE indexing and stable SPS/PPS plus IDR slices in every access unit.
  * HEVC supports VideoStream0 Annex B Main/Main10 4:2:0 and Main 4:2:2 10-bit with closed IDR_N_LP GOPs
  * and stable in-band VPS/SPS/PPS.
  * D-10 defined templates expose picture packets with a null video codec and declared 16/24-bit ST 331 PCM
  * at 48 kHz in four or eight channels. The ST 331 F/V/U/C/P fields must be marked unusable.
+ * MPEG-2 supports progressive Main Profile / High or High-1440 Level 4:2:0 and progressive or interlaced
+ * frame-picture 4:2:2 Profile / High Level.
  * Also supports a limited single-file, video-only OPAtom AVC subset.
  * Requires a seekable source with known size and simple, untrimmed source clips.
  * AVC/HEVC require a supported index, including temporal indexing for long GOPs.
+ * MPEG-2 requires a supported temporal index.
  * ProRes/PCM can fall back to KLV scanning.
  * @group Input formats
  * @public
