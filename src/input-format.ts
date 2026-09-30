@@ -27,6 +27,7 @@ import { ID3_V2_HEADER_SIZE, readId3V2Header } from './id3';
 import { readNextMp3FrameHeader } from './mp3/mp3-reader';
 import { OggDemuxer } from './ogg/ogg-demuxer';
 import { WaveDemuxer } from './wave/wave-demuxer';
+import { MxfDemuxer } from './mxf/mxf-demuxer';
 import { MAX_ADTS_FRAME_HEADER_SIZE, MIN_ADTS_FRAME_HEADER_SIZE, readAdtsFrameHeader } from './adts/adts-reader';
 import { AdtsDemuxer } from './adts/adts-demuxer';
 import { readAscii, readBytes, readU32Be, readU64Be } from './reader';
@@ -636,6 +637,47 @@ export class MpegTsInputFormat extends InputFormat {
 }
 
 /**
+ * Experimental MXF input for finalized OP1a with progressive frame-wrapped ProRes, AVC or HEVC and packed PCM.
+ * AVC supports Main/High 8-bit 4:2:0, High 10 8/10-bit 4:2:0, High 4:2:2 at 8 or 10 bits, and progressive
+ * OP1a AVC-Intra50/100 with ordinary CBE indexing and stable SPS/PPS plus IDR slices in every access unit.
+ * HEVC supports VideoStream0 Annex B Main/Main10 4:2:0 and Main 4:2:2 10-bit with closed IDR_N_LP GOPs
+ * and stable in-band VPS/SPS/PPS.
+ * D-10 defined templates expose picture packets with a null video codec and declared 16/24-bit ST 331 PCM
+ * at 48 kHz in four or eight channels. The ST 331 F/V/U/C/P fields must be marked unusable.
+ * Also supports a limited single-file, video-only OPAtom AVC subset.
+ * Requires a seekable source with known size and simple, untrimmed source clips.
+ * AVC/HEVC require a supported index, including temporal indexing for long GOPs.
+ * ProRes/PCM can fall back to KLV scanning.
+ * @group Input formats
+ * @public
+ */
+export class MxfInputFormat extends InputFormat {
+	/** @internal */
+	async _canReadInput(input: Input) {
+		const slice = await input._reader.requestSlice(0, 16);
+		if (!slice) {
+			return false;
+		}
+		const bytes = readBytes(slice, 16);
+		const prefix = [6, 14, 43, 52, 2, 5, 1, 1, 13, 1, 2, 1, 1, 2];
+		return prefix.every((value, i) => bytes[i] === value) && bytes[15] === 0;
+	}
+
+	/** @internal */
+	_createDemuxer(input: Input) {
+		return new MxfDemuxer(input);
+	}
+
+	get name() {
+		return 'MXF';
+	}
+
+	get mimeType() {
+		return 'application/mxf';
+	}
+}
+
+/**
  * Media described using the HTTP Live Streaming (HLS) protocol, with playlists in the M3U8 format.
  *
  * Do not instantiate this class; use the {@link HLS} singleton instead.
@@ -749,12 +791,19 @@ export const MPEG_TS = /* #__PURE__ */ new MpegTsInputFormat();
 export const HLS = /* #__PURE__ */ new HlsInputFormat();
 
 /**
+ * MXF input format singleton.
+ * @group Input formats
+ * @public
+ */
+export const MXF = /* #__PURE__ */ new MxfInputFormat();
+
+/**
  * List of all input format singletons. If you don't need to support all input formats, you should specify the
  * formats individually for better tree shaking.
  * @group Input formats
  * @public
  */
-export const ALL_FORMATS: InputFormat[] = [HLS, MP4, QTFF, MATROSKA, WEBM, WAVE, OGG, FLAC, MP3, ADTS, MPEG_TS];
+export const ALL_FORMATS: InputFormat[] = [HLS, MP4, QTFF, MATROSKA, WEBM, WAVE, OGG, FLAC, MP3, ADTS, MPEG_TS, MXF];
 
 /**
  * List of input formats required for playback of typical HLS manifests. Includes HLS itself as well as the typical

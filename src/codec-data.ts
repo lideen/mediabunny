@@ -57,6 +57,7 @@ export enum HevcNalUnitType {
 	RASL_N = 8,
 	RASL_R = 9,
 	BLA_W_LP = 16,
+	IDR_N_LP = 20,
 	RSV_IRAP_VCL23 = 23,
 	VPS_NUT = 32,
 	SPS_NUT = 33,
@@ -511,14 +512,18 @@ export type AvcSpsInfo = {
 	constraintFlags: number;
 	levelIdc: number;
 	frameMbsOnlyFlag: number;
+	frameCropTopOffset: number;
 	chromaFormatIdc: number;
 	bitDepthLumaMinus8: number;
 	bitDepthChromaMinus8: number;
+	qpprimeYZeroTransformBypassFlag: number;
+	maxNumRefFrames: number;
 	codedWidth: number;
 	codedHeight: number;
 	displayWidth: number;
 	displayHeight: number;
 	pixelAspectRatio: Rational;
+	pixelAspectRatioSpecified: boolean;
 	colourPrimaries: number;
 	transferCharacteristics: number;
 	matrixCoefficients: number;
@@ -575,6 +580,7 @@ export const parseAvcSps = (sps: Uint8Array): AvcSpsInfo | null => {
 		let bitDepthLumaMinus8 = 0;
 		// "When bit_depth_chroma_minus8 is not present, it shall be inferred to be equal to 0."
 		let bitDepthChromaMinus8 = 0;
+		let qpprimeYZeroTransformBypassFlag = 0;
 		// "When separate_colour_plane_flag is not present, it shall be inferred to be equal to 0."
 		let separateColourPlaneFlag = 0;
 
@@ -596,7 +602,7 @@ export const parseAvcSps = (sps: Uint8Array): AvcSpsInfo | null => {
 			}
 			bitDepthLumaMinus8 = readExpGolomb(bitstream);
 			bitDepthChromaMinus8 = readExpGolomb(bitstream);
-			bitstream.skipBits(1); // qpprime_y_zero_transform_bypass_flag
+			qpprimeYZeroTransformBypassFlag = bitstream.readBits(1);
 			const seqScalingMatrixPresentFlag = bitstream.readBits(1);
 			if (seqScalingMatrixPresentFlag) {
 				for (let i = 0; i < (chromaFormatIdc !== 3 ? 8 : 12); i++) {
@@ -632,7 +638,7 @@ export const parseAvcSps = (sps: Uint8Array): AvcSpsInfo | null => {
 			}
 		}
 
-		readExpGolomb(bitstream); // max_num_ref_frames
+		const maxNumRefFrames = readExpGolomb(bitstream);
 		bitstream.skipBits(1); // gaps_in_frame_num_value_allowed_flag
 
 		const picWidthInMbsMinus1 = readExpGolomb(bitstream);
@@ -649,11 +655,12 @@ export const parseAvcSps = (sps: Uint8Array): AvcSpsInfo | null => {
 
 		bitstream.skipBits(1); // direct_8x8_inference_flag
 		const frameCroppingFlag = bitstream.readBits(1);
+		let frameCropTopOffset = 0;
 
 		if (frameCroppingFlag) {
 			const frameCropLeftOffset = readExpGolomb(bitstream);
 			const frameCropRightOffset = readExpGolomb(bitstream);
-			const frameCropTopOffset = readExpGolomb(bitstream);
+			frameCropTopOffset = readExpGolomb(bitstream);
 			const frameCropBottomOffset = readExpGolomb(bitstream);
 
 			let cropUnitX: number;
@@ -683,6 +690,7 @@ export const parseAvcSps = (sps: Uint8Array): AvcSpsInfo | null => {
 		let matrixCoefficients = 2;
 		let fullRangeFlag = 0;
 		let pixelAspectRatio: Rational = { num: 1, den: 1 };
+		let pixelAspectRatioSpecified = false;
 
 		let numReorderFrames: number | null = null;
 		let maxDecFrameBuffering: number | null = null;
@@ -697,6 +705,7 @@ export const parseAvcSps = (sps: Uint8Array): AvcSpsInfo | null => {
 				const aspectRatioIdc = bitstream.readBits(8);
 
 				if (aspectRatioIdc === 255) { // Extended_SAR
+					pixelAspectRatioSpecified = true;
 					pixelAspectRatio = {
 						num: bitstream.readBits(16),
 						den: bitstream.readBits(16),
@@ -704,6 +713,7 @@ export const parseAvcSps = (sps: Uint8Array): AvcSpsInfo | null => {
 				} else {
 					const aspectRatio = AVC_HEVC_ASPECT_RATIO_IDC_TABLE[aspectRatioIdc];
 					if (aspectRatio) {
+						pixelAspectRatioSpecified = true;
 						pixelAspectRatio = aspectRatio;
 					}
 				}
@@ -811,14 +821,18 @@ export const parseAvcSps = (sps: Uint8Array): AvcSpsInfo | null => {
 			constraintFlags,
 			levelIdc,
 			frameMbsOnlyFlag,
+			frameCropTopOffset,
 			chromaFormatIdc,
 			bitDepthLumaMinus8,
 			bitDepthChromaMinus8,
+			qpprimeYZeroTransformBypassFlag,
+			maxNumRefFrames,
 			codedWidth,
 			codedHeight,
 			displayWidth,
 			displayHeight,
 			pixelAspectRatio,
+			pixelAspectRatioSpecified,
 			colourPrimaries,
 			matrixCoefficients,
 			transferCharacteristics,
@@ -932,7 +946,9 @@ export type HevcDecoderConfigurationRecord = {
 export type HevcSpsInfo = {
 	displayWidth: number;
 	displayHeight: number;
+	fieldSeqFlag: number;
 	pixelAspectRatio: Rational;
+	pixelAspectRatioSpecified: boolean;
 	colourPrimaries: number;
 	transferCharacteristics: number;
 	matrixCoefficients: number;
@@ -1041,7 +1057,7 @@ export const parseHevcSps = (sps: Uint8Array): HevcSpsInfo | null => {
 
 		const bitDepthLumaMinus8 = readExpGolomb(bitstream);
 		const bitDepthChromaMinus8 = readExpGolomb(bitstream);
-		readExpGolomb(bitstream); // log2_max_pic_order_cnt_lsb_minus4
+		const log2MaxPicOrderCntLsb = readExpGolomb(bitstream) + 4;
 
 		const spsSubLayerOrderingInfoPresentFlag = bitstream.readBits(1);
 		const startI = spsSubLayerOrderingInfoPresentFlag ? 0 : spsMaxSubLayersMinus1;
@@ -1082,7 +1098,7 @@ export const parseHevcSps = (sps: Uint8Array): HevcSpsInfo | null => {
 		if (bitstream.readBits(1)) { // long_term_ref_pics_present_flag
 			const numLongTermRefPicsSps = readExpGolomb(bitstream);
 			for (let i = 0; i < numLongTermRefPicsSps; i++) {
-				readExpGolomb(bitstream); // lt_ref_pic_poc_lsb_sps[i]
+				bitstream.readBits(log2MaxPicOrderCntLsb); // lt_ref_pic_poc_lsb_sps[i]
 				bitstream.skipBits(1); // used_by_curr_pic_lt_sps_flag[i]
 			}
 		}
@@ -1095,22 +1111,27 @@ export const parseHevcSps = (sps: Uint8Array): HevcSpsInfo | null => {
 		let matrixCoefficients = 2;
 		let fullRangeFlag = 0;
 		let minSpatialSegmentationIdc = 0;
+		let fieldSeqFlag = 0;
 		let pixelAspectRatio: Rational = { num: 1, den: 1 };
+		let pixelAspectRatioSpecified = false;
 
 		if (bitstream.readBits(1)) { // vui_parameters_present_flag
 			const vui = parseHevcVui(bitstream, spsMaxSubLayersMinus1);
 			pixelAspectRatio = vui.pixelAspectRatio;
+			pixelAspectRatioSpecified = vui.pixelAspectRatioSpecified;
 			colourPrimaries = vui.colourPrimaries;
 			transferCharacteristics = vui.transferCharacteristics;
 			matrixCoefficients = vui.matrixCoefficients;
 			fullRangeFlag = vui.fullRangeFlag;
 			minSpatialSegmentationIdc = vui.minSpatialSegmentationIdc;
+			fieldSeqFlag = vui.fieldSeqFlag;
 		}
 
 		return {
 			displayWidth,
 			displayHeight,
 			pixelAspectRatio,
+			pixelAspectRatioSpecified,
 			colourPrimaries,
 			transferCharacteristics,
 			matrixCoefficients,
@@ -1119,6 +1140,7 @@ export const parseHevcSps = (sps: Uint8Array): HevcSpsInfo | null => {
 			spsMaxSubLayersMinus1,
 			spsTemporalIdNestingFlag,
 			generalProfileSpace: general_profile_space,
+			fieldSeqFlag,
 			generalTierFlag: general_tier_flag,
 			generalProfileIdc: general_profile_idc,
 			generalProfileCompatibilityFlags: general_profile_compatibility_flags,
@@ -1396,10 +1418,12 @@ const parseHevcVui = (bitstream: Bitstream, sps_max_sub_layers_minus1: number) =
 	let fullRangeFlag = 0;
 	let minSpatialSegmentationIdc = 0;
 	let pixelAspectRatio: Rational = { num: 1, den: 1 };
+	let pixelAspectRatioSpecified = false;
 
 	if (bitstream.readBits(1)) { // aspect_ratio_info_present_flag
 		const aspect_ratio_idc = bitstream.readBits(8);
 		if (aspect_ratio_idc === 255) {
+			pixelAspectRatioSpecified = true;
 			pixelAspectRatio = {
 				num: bitstream.readBits(16),
 				den: bitstream.readBits(16),
@@ -1407,6 +1431,7 @@ const parseHevcVui = (bitstream: Bitstream, sps_max_sub_layers_minus1: number) =
 		} else {
 			const aspectRatio = AVC_HEVC_ASPECT_RATIO_IDC_TABLE[aspect_ratio_idc];
 			if (aspectRatio) {
+				pixelAspectRatioSpecified = true;
 				pixelAspectRatio = aspectRatio;
 			}
 		}
@@ -1428,7 +1453,7 @@ const parseHevcVui = (bitstream: Bitstream, sps_max_sub_layers_minus1: number) =
 		readExpGolomb(bitstream); // chroma_sample_loc_type_bottom_field
 	}
 	bitstream.readBits(1); // neutral_chroma_indication_flag
-	bitstream.readBits(1); // field_seq_flag
+	const fieldSeqFlag = bitstream.readBits(1);
 	bitstream.readBits(1); // frame_field_info_present_flag
 	if (bitstream.readBits(1)) { // default_display_window_flag
 		readExpGolomb(bitstream); // def_disp_win_left_offset
@@ -1459,11 +1484,13 @@ const parseHevcVui = (bitstream: Bitstream, sps_max_sub_layers_minus1: number) =
 
 	return {
 		pixelAspectRatio,
+		pixelAspectRatioSpecified,
 		colourPrimaries,
 		transferCharacteristics,
 		matrixCoefficients,
 		fullRangeFlag,
 		minSpatialSegmentationIdc,
+		fieldSeqFlag,
 	};
 };
 
