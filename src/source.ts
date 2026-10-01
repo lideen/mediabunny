@@ -83,6 +83,8 @@ export abstract class Source extends EventEmitter<SourceEvents> {
 		end: number,
 		minReadPosition: number,
 		maxReadPosition: number,
+		requireFiniteRange?: boolean,
+		signal?: AbortSignal,
 	): MaybePromise<ReadResult | null>;
 	/** @internal */
 	abstract _dispose(): void;
@@ -372,7 +374,10 @@ export class CustomPathedSource extends PathedSource {
 		end: number,
 		minReadPosition: number,
 		maxReadPosition: number,
+		requireFiniteRange = false,
+		signal?: AbortSignal,
 	): MaybePromise<ReadResult | null> {
+		signal?.throwIfAborted();
 		if (!this._root) {
 			if (!this._rootRequest) {
 				const result = this._resolveRequest({ path: this.rootPath, isRoot: true });
@@ -397,11 +402,13 @@ export class CustomPathedSource extends PathedSource {
 			}
 
 			if (this._rootRequest) {
-				return this._rootRequest.then(ref => ref.source._read(start, end, minReadPosition, maxReadPosition));
+				return abortableRead(this._rootRequest.then(ref => ref.source._read(
+					start, end, minReadPosition, maxReadPosition, requireFiniteRange, signal,
+				)), signal);
 			}
 		}
 
-		return this._root!.source._read(start, end, minReadPosition, maxReadPosition);
+		return this._root!.source._read(start, end, minReadPosition, maxReadPosition, requireFiniteRange, signal);
 	}
 
 	/** @internal */
@@ -586,8 +593,10 @@ export class BlobSource extends Source {
 		end: number,
 		minReadPosition: number,
 		maxReadPosition: number,
+		requireFiniteRange = false,
+		signal?: AbortSignal,
 	): MaybePromise<ReadResult | null> {
-		return this._orchestrator.read(start, end, minReadPosition, maxReadPosition);
+		return this._orchestrator.read(start, end, minReadPosition, maxReadPosition, signal, requireFiniteRange);
 	}
 
 	/** @internal */
@@ -735,6 +744,23 @@ export type UrlSourceOptions = {
 	parallelism?: number;
 
 	/**
+	 * Opts into finite HTTP range requests with forward-only prefetching. Disjoint ranges are not bridged.
+	 * Omit this option to retain the default adaptive prefetching strategy.
+	 *
+	 * Requires valid Content-Range headers on 206 responses. Cross-origin servers must expose that header using
+	 * `Access-Control-Expose-Headers: Content-Range`. Servers returning 200 are still read sequentially.
+	 */
+	rangePolicy?: {
+		/** Forward read-ahead floor in bytes. Must be a positive safe integer; read boundaries and file size apply. */
+		minimumRequestSize: number;
+		/**
+		 * Maximum bytes per HTTP range request. Must be a positive safe integer. Larger reads use multiple requests.
+		 * Also caps the read-ahead floor when smaller than minimumRequestSize. Omit to leave request sizes uncapped.
+		 */
+		maximumRequestSize?: number;
+	};
+
+	/**
 	 * A WHATWG-compatible fetch function. You can use this field to polyfill the `fetch` function, add missing
 	 * features, or use a custom implementation.
 	 */
@@ -752,6 +778,8 @@ export type UrlSourceOptions = {
  * @public
  */
 export class UrlSource extends PathedSource {
+	/** Number of pending reads which prohibit sequential HTTP fallback. @internal */
+	_strictRangeReads = 0;
 	/** @internal */
 	_url: string | URL | Request;
 	/** @internal */
@@ -825,6 +853,18 @@ export class UrlSource extends PathedSource {
 		if (options.handleUnhandledError !== undefined && typeof options.handleUnhandledError !== 'function') {
 			throw new TypeError('options.handleUnhandledError, when provided, must be a function.');
 		}
+		if (options.rangePolicy !== undefined) {
+			if (!options.rangePolicy || typeof options.rangePolicy !== 'object'
+				|| !Number.isSafeInteger(options.rangePolicy.minimumRequestSize)
+				|| options.rangePolicy.minimumRequestSize <= 0) {
+				throw new TypeError('options.rangePolicy.minimumRequestSize must be a positive safe integer.');
+			}
+			if (options.rangePolicy.maximumRequestSize !== undefined
+				&& (!Number.isSafeInteger(options.rangePolicy.maximumRequestSize)
+					|| options.rangePolicy.maximumRequestSize <= 0)) {
+				throw new TypeError('options.rangePolicy.maximumRequestSize must be a positive safe integer.');
+			}
+		}
 
 		const urlString = url instanceof Request
 			? url.url
@@ -880,13 +920,22 @@ export class UrlSource extends PathedSource {
 		// Most files in the real-world have a single sequential access pattern, but having two in parallel can
 		// also happen
 		const DEFAULT_PARALLELISM = 2;
+		const minimumRequestSize = options.rangePolicy
+			? Math.min(options.rangePolicy.minimumRequestSize, options.rangePolicy.maximumRequestSize ?? Infinity)
+			: undefined;
 
 		this._orchestrator = new ReadOrchestrator({
 			maxCacheSize: options.maxCacheSize ?? (64 * 2 ** 20 /* 64 MiB */),
 			maxWorkerCount: options.parallelism ?? DEFAULT_PARALLELISM,
 			runWorker: this._runWorker.bind(this),
 			onIdleWorkerRemoved: worker => this._abortControllers.delete(worker),
-			prefetchProfile: PREFETCH_PROFILES.network,
+			prefetchProfile: minimumRequestSize !== undefined
+				? (start, end) => ({
+						start,
+						end: Math.max(end, Math.min(start + minimumRequestSize, Number.MAX_SAFE_INTEGER)),
+					})
+				: PREFETCH_PROFILES.network,
+			gapTolerance: options.rangePolicy ? 0 : undefined,
 			handleUnhandledError: options.handleUnhandledError,
 		});
 	}
@@ -913,9 +962,25 @@ export class UrlSource extends PathedSource {
 		end: number,
 		minReadPosition: number,
 		maxReadPosition: number,
+		requireFiniteRange = false,
+		signal?: AbortSignal,
 	): MaybePromise<ReadResult | null> {
+		signal?.throwIfAborted();
 		if (this._length !== null && end > this._length) {
 			return null;
+		}
+		if (requireFiniteRange) {
+			if (!this._options.rangePolicy || this._sequentialBacking) {
+				throw new Error('Finite reads require an explicit finite UrlSource rangePolicy and HTTP 206.');
+			}
+			return (async () => {
+				this._strictRangeReads++;
+				try {
+					return await this._read(start, end, minReadPosition, maxReadPosition, false, signal);
+				} finally {
+					this._strictRangeReads--;
+				}
+			})();
 		}
 
 		const offset = this._offset;
@@ -926,6 +991,8 @@ export class UrlSource extends PathedSource {
 					offset + end,
 					Math.max(offset + minReadPosition, offset),
 					offset + Math.min(maxReadPosition, this._length ?? Infinity),
+					signal,
+					this._strictRangeReads > 0,
 				);
 
 		const processResult = (result: ReadResult | null) => {
@@ -948,7 +1015,10 @@ export class UrlSource extends PathedSource {
 	private async _runWorker(worker: ReadWorker) {
 		// The outer loop is for resuming a request if it dies mid-response
 		while (true) {
-			if (worker.aborted) {
+			if (this._options.rangePolicy && worker.hadCanceledReads && !worker.aborted) {
+				this._orchestrator.requeueDisconnectedDemands(worker);
+			}
+			if (worker.aborted || worker.currentPos >= worker.targetPos) {
 				// Workers can still get started after disposal, or get aborted while waiting to resume
 				this._orchestrator.signalWorkerStoppedRunning(worker);
 				return;
@@ -956,6 +1026,11 @@ export class UrlSource extends PathedSource {
 
 			const abortController = new AbortController();
 			this._abortControllers.set(worker, abortController);
+			const requestEnd = this._options.rangePolicy
+				? Math.min(worker.targetPos - 1,
+						worker.currentPos + (this._options.rangePolicy.maximumRequestSize ?? Infinity) - 1)
+				: null;
+			worker.requiresFiniteRange = worker.demands.some(demand => demand.request.requiresFiniteRange);
 
 			const response = await retriedFetch(
 				this._options.fetchFn ?? fetch,
@@ -963,12 +1038,12 @@ export class UrlSource extends PathedSource {
 				mergeRequestInit(this._requestInit, {
 					headers: {
 						// Always sending a range request is a good way to probe if the server supports them
-						Range: `bytes=${worker.currentPos}-`,
+						Range: `bytes=${worker.currentPos}-${requestEnd ?? ''}`,
 					},
 					signal: abortController.signal,
 				}),
 				this._getRetryDelay,
-				() => abortController.signal.aborted,
+				() => abortController.signal.aborted || worker.currentPos >= worker.targetPos,
 			);
 
 			if (!response.ok) {
@@ -979,6 +1054,29 @@ export class UrlSource extends PathedSource {
 			if (response.redirected) {
 				// Modify our own root path so that future subrequests get made relative to the redirected URL
 				this.rootPath = response.url;
+			}
+
+			let responseEnd: number | null = null;
+			if (requestEnd !== null && response.status === 206) {
+				const match = /^bytes (\d+)-(\d+)\/(\d+)$/.exec(response.headers.get('Content-Range') ?? '');
+				const start = Number(match?.[1]);
+				const end = Number(match?.[2]);
+				const total = Number(match?.[3]);
+				if (
+					!match || ![start, end, total].every(Number.isSafeInteger)
+					|| start !== worker.currentPos || end < start || end > requestEnd || end >= total
+					|| response.headers.has('Content-Encoding')
+					|| (this._orchestrator.fileSize !== null && total !== this._orchestrator.fileSize)
+				) {
+					abortController.abort();
+					throw new Error('Bounded range requests require a valid Content-Range header matching the request'
+						+ ' and an unencoded response. Cross-origin servers must expose Content-Range using'
+						+ ' Access-Control-Expose-Headers.');
+				}
+				responseEnd = end + 1;
+				if (this._orchestrator.fileSize === null) {
+					this._orchestrator.supplyFileSize(total);
+				}
 			}
 
 			outer:
@@ -1023,6 +1121,11 @@ export class UrlSource extends PathedSource {
 			}
 
 			if (response.status !== 206) {
+				if (worker.requiresFiniteRange || this._strictRangeReads > 0) {
+					await response.body.cancel();
+					abortController.abort();
+					throw new Error('Strict finite reads require HTTP 206; sequential fallback is forbidden.');
+				}
 				if (this._sequentialBacking) {
 					// Another worker already discovered the missing range request support and initiated the
 					// transition into sequential mode; this response is of no use anymore
@@ -1098,6 +1201,13 @@ export class UrlSource extends PathedSource {
 				const { done, value } = readResult;
 
 				if (done) {
+					if (responseEnd !== null) {
+						if (worker.currentPos !== responseEnd) {
+							throw new Error('Bounded range response ended before its Content-Range was delivered.');
+						}
+						// The worker may have grown beyond this request's snapshot while the response was in flight.
+						break;
+					}
 					if (worker.currentPos >= worker.targetPos) {
 						// All data was delivered, we're good
 						this._orchestrator.onWorkerFinished(worker);
@@ -1116,6 +1226,10 @@ export class UrlSource extends PathedSource {
 					}
 				}
 
+				if (responseEnd !== null && worker.currentPos + value.length > responseEnd) {
+					abortController.abort();
+					throw new Error('Bounded range response exceeded its Content-Range.');
+				}
 				this._dispatchRead(worker.currentPos, worker.currentPos + value.length);
 				this._orchestrator.supplyWorkerData(worker, value);
 			}
@@ -1412,8 +1526,10 @@ export class FilePathSource extends PathedSource {
 		end: number,
 		minReadPosition: number,
 		maxReadPosition: number,
+		requireFiniteRange = false,
+		signal?: AbortSignal,
 	): MaybePromise<ReadResult | null> {
-		return this._customSource._read(start, end, minReadPosition, maxReadPosition);
+		return this._customSource._read(start, end, minReadPosition, maxReadPosition, requireFiniteRange, signal);
 	}
 
 	/** @internal */
@@ -1545,29 +1661,34 @@ export class CustomSource extends Source {
 		end: number,
 		minReadPosition: number,
 		maxReadPosition: number,
+		requireFiniteRange = false,
+		signal?: AbortSignal,
 	): MaybePromise<ReadResult | null> {
+		signal?.throwIfAborted();
 		if (this._orchestrator.fileSize !== null) {
-			return this._orchestrator.read(start, end, minReadPosition, maxReadPosition);
+			return this._orchestrator.read(start, end, minReadPosition, maxReadPosition, signal, requireFiniteRange);
 		}
 
 		const result = this._options.getSize();
 
 		if (isThenable(result)) {
-			return result.then((size) => {
+			return abortableRead(result.then((size) => {
 				if (!Number.isInteger(size) || size < 0) {
 					throw new TypeError('options.getSize must return or resolve to a non-negative integer.');
 				}
 
 				this._orchestrator.fileSize = size;
-				return this._orchestrator.read(start, end, minReadPosition, maxReadPosition);
-			});
+				return this._orchestrator.read(
+					start, end, minReadPosition, maxReadPosition, signal, requireFiniteRange,
+				);
+			}), signal);
 		} else {
 			if (!Number.isInteger(result) || result < 0) {
 				throw new TypeError('options.getSize must return or resolve to a non-negative integer.');
 			}
 
 			this._orchestrator.fileSize = result;
-			return this._orchestrator.read(start, end, minReadPosition, maxReadPosition);
+			return this._orchestrator.read(start, end, minReadPosition, maxReadPosition, signal, requireFiniteRange);
 		}
 	}
 
@@ -1602,15 +1723,23 @@ export class CustomSource extends Source {
 				this._dispatchRead(worker.currentPos, worker.currentPos + data.length);
 				this._orchestrator.supplyWorkerData(worker, data);
 			} else if (data instanceof ReadableStream) {
+				const hasDemand = () => !worker.aborted
+					&& worker.currentPos < Math.min(originalTargetPos, worker.targetPos);
+				if (!hasDemand()) {
+					await data.cancel().catch(() => {});
+					continue;
+				}
 				const reader = data.getReader();
 				this._readers.add(reader);
+				let stopped = false;
 
 				try {
-					while (worker.currentPos < originalTargetPos && !worker.aborted) {
+					while (hasDemand()) {
 						const { done, value } = await reader.read();
+						stopped = !hasDemand();
 
 						if (done) {
-							if (worker.currentPos < originalTargetPos) {
+							if (hasDemand()) {
 								// Yes, we're *that* strict
 								throw new Error(
 									`ReadableStream returned by options.read ended before supplying enough data.`
@@ -1636,9 +1765,16 @@ export class CustomSource extends Source {
 						const data = toUint8Array(value); // Normalize things like Node.js Buffer to Uint8Array
 
 						this._dispatchRead(worker.currentPos, worker.currentPos + data.length);
+						stopped ||= !hasDemand();
 						this._orchestrator.supplyWorkerData(worker, data);
+						if (stopped) {
+							break;
+						}
 					}
 				} finally {
+					if (stopped || worker.currentPos < originalTargetPos) {
+						await reader.cancel().catch(() => {});
+					}
 					this._readers.delete(reader);
 					reader.releaseLock();
 				}
@@ -2032,12 +2168,53 @@ const PREFETCH_PROFILES = {
 	},
 } satisfies Record<string, PrefetchProfile>;
 
+const abortableRead = (read: Promise<ReadResult | null>, signal?: AbortSignal) => {
+	if (!signal) {
+		return read;
+	}
+	const { promise, resolve, reject } = promiseWithResolvers<ReadResult | null>();
+	const abort = () => reject(signal.reason);
+	if (signal.aborted) {
+		abort();
+	} else {
+		signal.addEventListener('abort', abort, { once: true });
+	}
+	void read.then((value) => {
+		signal.removeEventListener('abort', abort);
+		if (signal.aborted) {
+			reject(signal.reason);
+		} else {
+			resolve(value);
+		}
+	}, (error) => {
+		signal.removeEventListener('abort', abort);
+		reject(error);
+	});
+	return promise;
+};
+
 type PendingSlice = {
 	start: number;
 	bytes: Uint8Array;
 	holes: Hole[];
 	resolve: (bytes: Uint8Array | null) => void;
 	reject: (error: unknown) => void;
+};
+
+type ReadRequest = {
+	canceled: boolean;
+	requiresFiniteRange: boolean;
+	pendingSlice: PendingSlice | null;
+	demands: Set<ReadDemand>;
+	cleanup: () => void;
+};
+
+/** One admitted prefetch range; ownership outlives delivery of its inner requested bytes. */
+type ReadDemand = {
+	request: ReadRequest;
+	start: number;
+	end: number;
+	strictTarget: boolean;
 };
 
 type Hole = {
@@ -2062,6 +2239,9 @@ type ReadWorker = {
 	running: boolean;
 	aborted: boolean;
 	pendingSlices: PendingSlice[];
+	demands: ReadDemand[];
+	hadCanceledReads: boolean;
+	requiresFiniteRange: boolean;
 	age: number;
 };
 
@@ -2084,6 +2264,7 @@ class ReadOrchestrator {
 		hole: Hole;
 		strictTarget: boolean;
 		pendingSlices: PendingSlice[];
+		demands: ReadDemand[];
 		age: number;
 	}[] = [];
 
@@ -2092,6 +2273,7 @@ class ReadOrchestrator {
 		runWorker: (worker: ReadWorker) => Promise<void>;
 		prefetchProfile: PrefetchProfile;
 		maxWorkerCount: number;
+		gapTolerance?: number;
 		onIdleWorkerRemoved?: (worker: ReadWorker) => void;
 		handleUnhandledError?: (error: unknown) => unknown;
 	}) {}
@@ -2101,7 +2283,10 @@ class ReadOrchestrator {
 		innerEnd: number,
 		minReadPosition: number,
 		maxReadPosition: number,
+		signal?: AbortSignal,
+		requiresFiniteRange = false,
 	): MaybePromise<ReadResult | null> {
+		signal?.throwIfAborted();
 		assert(!this.disposed);
 
 		const prefetchRange = this.options.prefetchProfile(innerStart, innerEnd, this.workers);
@@ -2219,15 +2404,39 @@ class ReadOrchestrator {
 			resolve,
 			reject,
 		};
+		const request: ReadRequest = {
+			canceled: false, requiresFiniteRange, pendingSlice, demands: new Set(), cleanup: () => {},
+		};
+		const demands = outerHoles.map(hole => ({
+			request, start: hole.start, end: hole.end,
+			strictTarget: hole.end < outerEnd || this.fileSize !== null,
+		}));
+		for (const demand of demands) {
+			request.demands.add(demand);
+		}
+		const abort = () => {
+			request.canceled = true;
+			this.cancelRead(request);
+			reject(signal!.reason);
+		};
+		if (signal) {
+			signal.addEventListener('abort', abort, { once: true });
+			request.cleanup = () => signal.removeEventListener('abort', abort);
+		}
 
 		// Fire off workers to take care of patching the holes
 		outer:
-		for (const outerHole of outerHoles) {
+		for (const demand of demands) {
+			if (request.canceled) {
+				break;
+			}
+			const outerHole = demand;
 			for (const worker of this.workers) {
 				const addedToWorker = this.checkHoleAgainstWorker(
 					worker,
 					outerHole,
 					pendingSlice ? [pendingSlice] : [],
+					[demand],
 				);
 
 				if (addedToWorker) {
@@ -2238,7 +2447,7 @@ class ReadOrchestrator {
 
 			// We need to spawn a new worker
 			const strictTarget = outerHole.end < outerEnd || this.fileSize !== null;
-			const newWorker = this.createWorker(outerHole.start, outerHole.end, strictTarget);
+			const newWorker = this.createWorker(outerHole.start, outerHole.end, strictTarget, [demand]);
 
 			if (newWorker) {
 				if (pendingSlice) {
@@ -2248,62 +2457,21 @@ class ReadOrchestrator {
 				this.runWorker(newWorker);
 			} else {
 				// Max worker count has been reached, let's queue a read for later
-
-				let index = binarySearchLessOrEqual(this.queuedReads, outerHole.start, x => x.hole.start);
-				let entry = index !== -1
-					? this.queuedReads[index]!
-					: null;
-
-				if (entry && outerHole.start <= entry.hole.end) {
-					entry.hole.end = Math.max(entry.hole.end, outerHole.end);
-					entry.strictTarget &&= strictTarget;
-
-					if (pendingSlice) {
-						entry.pendingSlices.push(pendingSlice);
-					}
-				} else {
-					index++;
-					entry = {
-						hole: {
-							// Clone the hole because it might be mutated later
-							start: outerHole.start,
-							end: outerHole.end,
-						},
-						strictTarget,
-						pendingSlices: pendingSlice ? [pendingSlice] : [],
-						age: this.nextAge++,
-					};
-					this.queuedReads.splice(index, 0, entry);
-				}
-
-				// Merge with any subsequent entries that overlap
-				while (index + 1 < this.queuedReads.length) {
-					const nextEntry = this.queuedReads[index + 1]!;
-					if (nextEntry.hole.start > entry.hole.end) {
-						break;
-					}
-
-					entry.hole.end = Math.max(entry.hole.end, nextEntry.hole.end);
-					entry.pendingSlices.push(...nextEntry.pendingSlices);
-					entry.strictTarget &&= nextEntry.strictTarget;
-					entry.age = Math.min(entry.age, nextEntry.age);
-					this.queuedReads.splice(index + 1, 1);
-				}
+				this.queueDemand(demand);
 			}
 		}
 
 		if (!result) {
 			assert(bytes);
 
-			result = promise.then(bytes => bytes && ({
-				bytes,
-				view: toDataView(bytes),
-				offset: innerStart,
-			} satisfies ReadResult));
+			result = promise.then((bytes) => {
+				signal?.throwIfAborted();
+				return bytes && { bytes, view: toDataView(bytes), offset: innerStart } satisfies ReadResult;
+			});
 		} else {
 			// The requested region was satisfied by the cache, but the entire prefetch region was not
 			promise.catch((error) => {
-				if (this.disposed) {
+				if (this.disposed || request.canceled) {
 					return; // Swallow the error
 				}
 
@@ -2319,11 +2487,115 @@ class ReadOrchestrator {
 		return result;
 	}
 
-	checkHoleAgainstWorker(worker: ReadWorker, hole: Hole, pendingSlices: PendingSlice[]) {
+	private queueDemand(demand: ReadDemand, age?: number) {
+		const pendingSlice = demand.request.pendingSlice;
+		let index = binarySearchLessOrEqual(this.queuedReads, demand.start, x => x.hole.start);
+		let entry = index !== -1 ? this.queuedReads[index]! : null;
+
+		if (entry && demand.start <= entry.hole.end) {
+			entry.demands.push(demand);
+			entry.hole.end = Math.max(entry.hole.end, demand.end);
+			entry.strictTarget &&= demand.strictTarget;
+			entry.age = Math.min(entry.age, age ?? entry.age);
+			if (pendingSlice) {
+				entry.pendingSlices.push(pendingSlice);
+			}
+		} else {
+			index++;
+			entry = {
+				hole: { start: demand.start, end: demand.end },
+				strictTarget: demand.strictTarget,
+				pendingSlices: pendingSlice ? [pendingSlice] : [],
+				demands: [demand],
+				age: age ?? this.nextAge++,
+			};
+			this.queuedReads.splice(index, 0, entry);
+		}
+
+		// Merge with any subsequent entries that overlap.
+		while (index + 1 < this.queuedReads.length) {
+			const nextEntry = this.queuedReads[index + 1]!;
+			if (nextEntry.hole.start > entry.hole.end) {
+				break;
+			}
+			entry.hole.end = Math.max(entry.hole.end, nextEntry.hole.end);
+			entry.pendingSlices.push(...nextEntry.pendingSlices);
+			entry.demands.push(...nextEntry.demands);
+			entry.strictTarget &&= nextEntry.strictTarget;
+			entry.age = Math.min(entry.age, nextEntry.age);
+			this.queuedReads.splice(index + 1, 1);
+		}
+	}
+
+	/** Called between bounded HTTP requests, when an in-flight response no longer owns the worker's range. */
+	requeueDisconnectedDemands(worker: ReadWorker) {
+		worker.demands.sort((a, b) => a.start - b.start);
+		let end = worker.currentPos;
+		let contiguousCount = 0;
+		for (const demand of worker.demands) {
+			if (demand.start > end) {
+				break;
+			}
+			end = Math.max(end, demand.end);
+			contiguousCount++;
+		}
+		for (const demand of worker.demands.splice(contiguousCount)) {
+			this.queueDemand(demand, worker.age);
+		}
+		worker.pendingSlices = worker.pendingSlices.filter(slice =>
+			worker.demands.some(demand => demand.request.pendingSlice === slice));
+		worker.targetPos = Math.min(end, this.fileSize ?? Infinity);
+	}
+
+	private retireDemand(demand: ReadDemand) {
+		demand.request.demands.delete(demand);
+		if (demand.request.demands.size === 0) {
+			demand.request.cleanup();
+		}
+	}
+
+	private cancelRead(request: ReadRequest) {
+		for (const worker of this.workers) {
+			if (!worker.demands.some(demand => demand.request === request)) {
+				continue;
+			}
+			worker.hadCanceledReads = true;
+			worker.demands = worker.demands.filter(demand => demand.request !== request);
+			worker.pendingSlices = worker.pendingSlices.filter(slice => slice !== request.pendingSlice);
+			worker.targetPos = worker.demands.reduce((end, demand) => Math.max(end, demand.end), worker.currentPos);
+			worker.targetPos = Math.min(worker.targetPos, this.fileSize ?? Infinity);
+		}
+		const queued: typeof this.queuedReads = [];
+		for (const entry of this.queuedReads) {
+			const remaining = entry.demands.filter(demand => demand.request !== request)
+				.sort((a, b) => a.start - b.start);
+			let group: typeof entry | undefined;
+			for (const demand of remaining) {
+				const slice = demand.request.pendingSlice;
+				if (group && demand.start <= group.hole.end) {
+					group.hole.end = Math.max(group.hole.end, demand.end);
+					group.strictTarget &&= demand.strictTarget;
+					group.demands.push(demand);
+					if (slice && !group.pendingSlices.includes(slice)) {
+						group.pendingSlices.push(slice);
+					}
+				} else {
+					group = { hole: { start: demand.start, end: demand.end }, strictTarget: demand.strictTarget,
+						pendingSlices: slice ? [slice] : [], demands: [demand], age: entry.age };
+					queued.push(group);
+				}
+			}
+		}
+		this.queuedReads = queued;
+		request.demands.clear();
+		request.cleanup();
+	}
+
+	checkHoleAgainstWorker(worker: ReadWorker, hole: Hole, pendingSlices: PendingSlice[], demands: ReadDemand[]) {
 		// A small tolerance in the case that the requested region is *just* after the target position of an
 		// existing worker. In that case, it's probably more efficient to repurpose that worker than to spawn
 		// another one so close to it
-		const gapTolerance = 2 ** 17;
+		const gapTolerance = this.options.gapTolerance ?? 2 ** 17;
 
 		// This check also implies worker.currentPos <= hole.start, a critical condition
 		if (closedIntervalsOverlap(
@@ -2331,6 +2603,12 @@ class ReadOrchestrator {
 			worker.currentPos, worker.targetPos,
 		)) {
 			worker.targetPos = Math.max(worker.targetPos, hole.end); // Update the worker's target position
+			for (const demand of demands) {
+				if (!worker.demands.includes(demand)) {
+					worker.demands.push(demand);
+				}
+				worker.requiresFiniteRange ||= demand.request.requiresFiniteRange;
+			}
 
 			for (let i = 0; i < pendingSlices.length; i++) {
 				const pendingSlice = pendingSlices[i]!;
@@ -2355,7 +2633,8 @@ class ReadOrchestrator {
 
 		for (let i = 0; i < this.queuedReads.length; i++) {
 			const queuedRead = this.queuedReads[i]!;
-			const result = this.checkHoleAgainstWorker(worker, queuedRead.hole, queuedRead.pendingSlices);
+			const result = this.checkHoleAgainstWorker(worker, queuedRead.hole, queuedRead.pendingSlices,
+				queuedRead.demands);
 
 			if (result) {
 				this.queuedReads.splice(i, 1);
@@ -2368,7 +2647,7 @@ class ReadOrchestrator {
 		}
 	}
 
-	createWorker(startPos: number, targetPos: number, strictTarget: boolean) {
+	createWorker(startPos: number, targetPos: number, strictTarget: boolean, demands: ReadDemand[]) {
 		if (this.workers.length >= this.options.maxWorkerCount) {
 			let oldestWorker: ReadWorker | null = null;
 			let oldestIndex: number | null = null;
@@ -2408,6 +2687,9 @@ class ReadOrchestrator {
 			// shut itself down.
 			aborted: this.disposed,
 			pendingSlices: [],
+			demands,
+			hadCanceledReads: false,
+			requiresFiniteRange: demands.some(demand => demand.request.requiresFiniteRange),
 			age: this.nextAge++,
 		};
 		this.workers.push(worker);
@@ -2429,7 +2711,8 @@ class ReadOrchestrator {
 				if (worker.pendingSlices.length > 0) {
 					worker.pendingSlices.forEach(x => x.reject(error)); // Make sure to propagate any errors
 					worker.pendingSlices.length = 0;
-				} else if (!worker.aborted && !this.disposed) {
+				} else if (!worker.aborted && !this.disposed
+					&& !(worker.hadCanceledReads && worker.demands.length === 0)) {
 					if (this.options.handleUnhandledError) {
 						this.options.handleUnhandledError(error);
 					} else {
@@ -2442,6 +2725,10 @@ class ReadOrchestrator {
 					// Rare, but can happen with multiple concurrent reads. In this case, don't do anything.
 					return;
 				}
+				for (const demand of worker.demands) {
+					this.retireDemand(demand);
+				}
+				worker.demands.length = 0;
 
 				if (this.queuedReads.length > 0) {
 					let oldestIndex = 0;
@@ -2458,6 +2745,7 @@ class ReadOrchestrator {
 						queuedRead.hole.start,
 						queuedRead.hole.end,
 						queuedRead.strictTarget,
+						queuedRead.demands,
 					);
 					if (!newWorker) {
 						// In high-contention cases, it could be that we've already reached max worker count, so in this
@@ -2487,6 +2775,13 @@ class ReadOrchestrator {
 			age: this.nextAge++,
 		});
 		worker.currentPos += bytes.length;
+		worker.demands = worker.demands.filter((demand) => {
+			if (demand.end > worker.currentPos) {
+				return true;
+			}
+			this.retireDemand(demand);
+			return false;
+		});
 
 		if (worker.currentPos > worker.targetPos) {
 			// In case it overshoots
@@ -2549,6 +2844,18 @@ class ReadOrchestrator {
 		}
 	}
 
+	private clipDemandsToFileSize(demands: ReadDemand[], size: number) {
+		return demands.filter((demand) => {
+			demand.end = Math.min(demand.end, size);
+			demand.strictTarget = true;
+			if (demand.start >= demand.end) {
+				this.retireDemand(demand);
+				return false;
+			}
+			return true;
+		});
+	}
+
 	supplyFileSize(size: number) {
 		assert(this.fileSize === null);
 
@@ -2558,6 +2865,7 @@ class ReadOrchestrator {
 		for (const worker of this.workers) {
 			worker.targetPos = Math.min(worker.targetPos, size);
 			worker.strictTarget = true;
+			worker.demands = this.clipDemandsToFileSize(worker.demands, size);
 
 			for (let i = 0; i < worker.pendingSlices.length; i++) {
 				const pendingSlice = worker.pendingSlices[i]!;
@@ -2581,12 +2889,16 @@ class ReadOrchestrator {
 			if (queuedRead.hole.start >= size) {
 				// Entirely out of bounds
 				for (const slice of queuedRead.pendingSlices) slice.resolve(null);
+				for (const demand of queuedRead.demands) {
+					this.retireDemand(demand);
+				}
 				this.queuedReads.splice(i, 1);
 				i--;
 			} else if (queuedRead.hole.end > size) {
 				// Partially out of bounds
 				queuedRead.hole.end = size;
 				queuedRead.strictTarget = true;
+				queuedRead.demands = this.clipDemandsToFileSize(queuedRead.demands, size);
 
 				for (let j = 0; j < queuedRead.pendingSlices.length; j++) {
 					const slice = queuedRead.pendingSlices[j]!;
@@ -2726,6 +3038,10 @@ class ReadOrchestrator {
 
 	dispose() {
 		for (const worker of this.workers) {
+			for (const demand of worker.demands) {
+				this.retireDemand(demand);
+			}
+			worker.demands.length = 0;
 			for (const slice of worker.pendingSlices) {
 				slice.reject(new InputDisposedError());
 			}
@@ -2740,6 +3056,9 @@ class ReadOrchestrator {
 		}
 
 		for (const queuedRead of this.queuedReads) {
+			for (const demand of queuedRead.demands) {
+				this.retireDemand(demand);
+			}
 			for (const slice of queuedRead.pendingSlices) {
 				slice.reject(new InputDisposedError());
 			}
@@ -2826,7 +3145,10 @@ export class RangedSource extends Source {
 		end: number,
 		minReadPosition: number,
 		maxReadPosition: number,
+		requireFiniteRange = false,
+		signal?: AbortSignal,
 	): MaybePromise<ReadResult | null> {
+		signal?.throwIfAborted();
 		if (this._length !== null && end > this._length) {
 			return null;
 		}
@@ -2836,6 +3158,8 @@ export class RangedSource extends Source {
 			this._offset + end,
 			this._offset + minReadPosition,
 			this._offset + maxReadPosition,
+			requireFiniteRange,
+			signal,
 		);
 
 		const processResult = (result: ReadResult | null) => {
