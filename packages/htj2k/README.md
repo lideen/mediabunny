@@ -1,6 +1,6 @@
 # @mediabunny/htj2k
 
-Optional complete-frame HTJ2K decoding for Mediabunny. The extension bundles a pinned scalar OpenJPH WebAssembly decoder. Core Mediabunny does not import it.
+Optional complete-frame and explicitly reduced HTJ2K decoding for Mediabunny. The extension bundles a pinned scalar OpenJPH WebAssembly decoder. Core Mediabunny does not import it.
 
 ```ts
 import { Input, MXF, UrlSource, VideoSampleSink } from 'mediabunny';
@@ -32,7 +32,37 @@ Unsupported inputs fail rather than being reinterpreted as ProRes, YCbCr, XYZ, o
 
 The library codec name and decoder configuration string are `htj2k`. This is an internal custom-decoder identifier, **not a registered WebCodecs codec string**. MXF configurations carry a one-byte `description` containing the RGB component depth, 8 or 16. Geometry and component properties must match the codestream SIZ marker. Without a matching registered decoder, capability queries return false instead of probing a native `VideoDecoder` with this string. Initialization and decode failures propagate; there is no native fallback.
 
-There is no HTJ2K encoder or muxer support. MP4, CMAF, MOV, and Matroska output codec lists exclude it. This extension does not implement partial-codestream decoding, resolution-adaptive playback, or a separate player.
+There is no HTJ2K encoder or muxer support. MP4, CMAF, MOV, and Matroska output codec lists exclude it. This extension does not implement a playback controller, automatic resolution adaptation, or a separate player.
+
+## Explicit reduced decoding
+
+```ts
+const input = new Input({
+	formats: [MXF],
+	source: new UrlSource(url, { rangePolicy: { minimumRequestSize: 32768 } }),
+});
+const track = await input.getPrimaryVideoTrack();
+if (track) {
+	const sink = new VideoSampleSink(track, {
+		reducedResolution: { width: 480, height: 270 },
+	});
+	const sample = await sink.getSample(10);
+	sample?.close();
+}
+input.dispose();
+```
+
+Register the decoder before using the sink. For `CanvasSink`, put the same `reducedResolution` value in `decoderOptions`. Canvas sizing, fitting, rotation and flipping retain their existing behavior. Explicit Canvas cropping with reduced decoding rejects.
+
+Both dimensions are minimum coded-raster dimensions, not a crop or exact resize. The decoder chooses the largest integer wavelet reduction whose entire declared raster still meets both dimensions. For example, 3840×2160 requested at 480×270 uses skip 3. A request that requires the complete resolution rejects instead of falling back. Omit `reducedResolution` to use the unchanged complete-frame path.
+
+The reduced profile additionally requires RPCL progression, reversible MCT, one quality layer, explicit precincts, one guard bit, and one to six decompositions. Precinct dimensions are at most 1024×1024 and must contain the codeblocks. There are at most 65,536 packets and 262,144 retained codeblock positions. Unsupported layouts, malformed required headers, or missing physical read coverage reject.
+
+Reads are finite, packet-relative ranges over the original codestream. HTTP sources must opt into `rangePolicy` and return valid 206 responses; this also applies through sliced and pathed sources. The extractor refills in 640 KiB windows, or the required body size if larger, capped at the original packet end. Small codestreams may therefore be read completely. Metadata navigation uses bounded KLV and index reads without fetching full frame bodies. There is no general guarantee that every source-cache or metadata read avoids neighboring essence.
+
+The extractor builds a private derived codestream containing required resolution packets and empty omitted packets. It never replaces an original `EncodedPacket` or decoder configuration. Required coverage is validated exactly, including its last requested byte. Entropy belonging to omitted resolutions is not validated; successful reduced decoding does not certify the complete original codestream.
+
+Range iteration permits two preparation slots, each with a 64 MiB working-buffer budget including buffer replacement overlap. Source caches, native memory and decoded samples are outside this budget. Preparation can overlap, but native decoding and disposal are serialized. Timestamp iteration uses serial reduced decoding. Returning an iterator aborts its reads, drops ready inputs, and disposes late preparations. An input already in native decoding stays alive until that call settles. Synchronous WASM decoding cannot be interrupted.
 
 ## Precision, color, and ownership
 
@@ -52,6 +82,8 @@ npx vitest run --project node test/node/htj2k.test.ts test/node/custom-video-dec
 See `vendor/README.md` for pinned source, hashes, rebuild steps, and third-party licenses. No native build is needed to consume or build this package from the checked-in runtime.
 
 ### Fixture license
+
+The `test/public/htj2k-rpcl-*` fixtures are original deterministic patterns dedicated to CC0-1.0. Their generation recipe and geometry are recorded inline in `test/node/htj2k-reduced.test.ts`. They cover empty high-pass subbands and packet-header bit stuffing. Valid HT placeholder passes with refinement segments are not represented by these encoder-generated fixtures; OpenJPH 0.32.0 emits one coding pass.
 
 The `test/public/htj2k-rgb8*` and `htj2k-rgb16.j2c`/`htj2k-rgb16.mxf` fixtures contain original 8×4 patterns from OpenHTJS commit `a0e1dbbd68e9e4be6beec50abf15ea792fe19f51`, not demonstration-media imagery. `htj2k-rgb16-edges.mxf` contains an original authored pattern with values around eight-bit quantization boundaries and a second phase with reversed pixel order. The owning Node test records source values and encoding/wrapping recipes. All these patterns and codestreams use this license:
 

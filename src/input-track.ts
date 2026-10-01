@@ -8,7 +8,7 @@
 
 import { AudioCodec, MediaCodec, PCM_AUDIO_CODECS, VideoCodec } from './codec';
 import { determineVideoPacketType } from './codec-data';
-import { customAudioDecoders, customVideoDecoders } from './custom-coder';
+import { customAudioDecoders, customVideoDecoders, VideoDecodePacketReader } from './custom-coder';
 import { Input } from './input';
 import { Logging } from './logging';
 import { EncodedPacketSink, PacketRetrievalOptions } from './media-sink';
@@ -113,6 +113,7 @@ export type FrameRateMetricsOptions = {
 };
 
 export interface InputTrackBacking {
+	getVideoDecodePacketReader?(packet: EncodedPacket, signal?: AbortSignal): Promise<VideoDecodePacketReader>;
 	getType(): TrackType;
 	getId(): number;
 	getNumber(): number;

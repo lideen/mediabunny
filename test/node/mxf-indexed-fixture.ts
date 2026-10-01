@@ -18,6 +18,7 @@ export const makeIndexedMxf = (options: {
 	cbe?: boolean; noRip?: boolean; ber?: boolean; unlockedAudio?: boolean;
 	padding?: boolean; repeatIndex?: boolean; exceptionalCbe?: boolean; extraEssence?: boolean;
 	avc?: boolean;
+	htj2k?: { data: Uint8Array; bits: number; width: number; height: number };
 	frameSize?: number;
 	avcSps?: Uint8Array;
 	avcCoding?: string;
@@ -31,7 +32,7 @@ export const makeIndexedMxf = (options: {
 	const item = (tag: number, value: Uint8Array) => join(integer(tag, 2),
 		options.ber ? join(integer(0x83, 1), integer(value.length, 3)) : integer(value.length, 2), value);
 	const count = 10000;
-	const frameSize = options.frameSize ?? 1024 * 1024;
+	const frameSize = options.htj2k?.data.length ?? options.frameSize ?? 1024 * 1024;
 	const pcmSize = 5760;
 	const system = options.videoOnly ? new Uint8Array(0) : klv('060e2b34020501010d01030104010100', new Uint8Array(12));
 	const pictureOffset = system.length;
@@ -41,17 +42,19 @@ export const makeIndexedMxf = (options: {
 	const rate: [number, number] = options.editRate ?? [25, 1];
 	const base = makeMxf({ metadataDuration: metadataCount, editRate: rate, indexSid: 2,
 		audioLocked: !options.unlockedAudio, avc: options.avc, avcCoding: options.avcCoding,
-		videoOnly: options.videoOnly });
+		videoOnly: options.videoOnly, htj2k: options.htj2k });
 	const header = base.data.slice(0, base.firstPayloadOffset - 20 - 140);
 	const partition = (kind: number, offset: number, previous: number, footer: number,
 		bodyOffset: number, bodySid: number, indexSize = 0) => klv(
 		`060e2b34020501010d010201010${kind}0400`, join(
 			integer(1, 2), integer(3, 2), integer(1, 4), integer(offset, 8), integer(previous, 8), integer(footer, 8),
 			integer(0, 8), integer(indexSize, 8), integer(indexSize ? 2 : 0, 4), integer(bodyOffset, 8),
-			integer(bodySid, 4), hex('060e2b34040101010d01020101010900'), integer(0, 4), integer(16, 4),
+			integer(bodySid, 4), hex('060e2b34040101010d01020101010900'),
+			integer(options.htj2k ? 1 : 0, 4), integer(16, 4),
+			...(options.htj2k ? [hex('060e2b340401010d0d010301020c0600')] : []),
 		),
 	);
-	const packSize = 108;
+	const packSize = partition(3, 0, 0, 0, 0, 1).length;
 	const starts = [0, 4000, 8000];
 	const padding = options.padding ? 64 : 0;
 	const firstExtra = options.exceptionalCbe ? 64 : 0;
@@ -153,9 +156,11 @@ export const makeIndexedMxf = (options: {
 					const offset = body + i * stride + (p === 0 && i > 0 ? firstExtra : 0);
 					copy(offset, system);
 					copy(offset + pictureOffset,
-						join(hex(options.avc
-							? '060e2b34010201010d0103011501050083'
-							: '060e2b34010201010d0103011501170083'), integer(frameSize, 3)));
+						join(hex(options.htj2k
+							? '060e2b34010201010d0103011501080183'
+							: options.avc
+								? '060e2b34010201010d0103011501050083'
+								: '060e2b34010201010d0103011501170083'), integer(frameSize, 3)));
 					const frame = new Uint8Array(options.avc ? 128 : 40);
 					if (options.avc) {
 						// SPS/PPS from generated testsrc2, followed by a demux-only slice stub, not decodable media.
@@ -178,7 +183,7 @@ export const makeIndexedMxf = (options: {
 						frame.set(hex('69637066001c000061706c30050002d08000091009'), 4);
 					}
 					frame[frame.length - 1] = (starts[p]! + i) % 256;
-					copy(offset + pictureOffset + 20, frame);
+					copy(offset + pictureOffset + 20, options.htj2k?.data ?? frame);
 					for (let a = 0; a < (options.videoOnly ? 0 : 2); a++) {
 						const shorter = options.unlockedAudio && starts[p] === 0 && i === 0 && a === 0;
 						copy(offset + audioOffset + a * (20 + pcmSize),

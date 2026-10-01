@@ -22,7 +22,10 @@ import {
 	sanitizeHevcPacketForChromium,
 	serializeAvcDecoderConfigurationRecord,
 } from './codec-data';
-import { CustomVideoDecoder, customVideoDecoders, CustomAudioDecoder, customAudioDecoders } from './custom-coder';
+import {
+	CustomVideoDecoder, customVideoDecoders, CustomAudioDecoder, customAudioDecoders,
+	ReducedVideoDecodeRequest, VideoDecodePacketReader, PreparedVideoDecodeInput,
+} from './custom-coder';
 import { InputDisposedError } from './input';
 import { InputAudioTrack, InputTrack, InputVideoTrack } from './input-track';
 import {
@@ -492,6 +495,12 @@ abstract class DecoderWrapper<
 	abstract decode(packet: EncodedPacket): void;
 	abstract flush(): Promise<void>;
 	abstract close(): void;
+	cancel() {}
+	startRangePreparation() {
+		return false;
+	}
+
+	async waitForPreparationCapacity() {}
 }
 
 /**
@@ -503,12 +512,15 @@ export abstract class BaseMediaSampleSink<
 	MediaSample extends VideoSample | AudioSample,
 > {
 	/** @internal */
+	_metadataOnlyForDecode = false;
+	/** @internal */
 	abstract _track: InputTrack;
 
 	/** @internal */
 	abstract _createDecoder(
 		onSample: (sample: MediaSample) => unknown,
-		onError: (error: unknown) => unknown
+		onError: (error: unknown) => unknown,
+		signal?: AbortSignal,
 	): Promise<DecoderWrapper<MediaSample>>;
 	/** @internal */
 	abstract _createPacketSink(): EncodedPacketSink;
@@ -531,6 +543,7 @@ export abstract class BaseMediaSampleSink<
 		let ended = false;
 		let terminated = false;
 		let decoder: DecoderWrapper<MediaSample> | null = null;
+		const navigation = this._metadataOnlyForDecode ? new AbortController() : null;
 
 		// This stores errors that are "out of band" in the sense that they didn't occur in the normal flow of this
 		// method but instead in a different context. This error should not go unnoticed and must be bubbled up to
@@ -540,8 +553,11 @@ export abstract class BaseMediaSampleSink<
 
 		const packetRetrievalOptions: PacketRetrievalOptions = {
 			...options,
-			verifyKeyPackets: true,
-			metadataOnly: false,
+			signal: navigation
+				? options.signal ? AbortSignal.any([navigation.signal, options.signal]) : navigation.signal
+				: options.signal,
+			verifyKeyPackets: !this._metadataOnlyForDecode,
+			metadataOnly: this._metadataOnlyForDecode,
 		};
 
 		// The following is the "pump" process that keeps pumping packets into the decoder
@@ -585,15 +601,24 @@ export abstract class BaseMediaSampleSink<
 				if (!hasOutOfBandError) {
 					outOfBandError = error;
 					hasOutOfBandError = true;
+					decoder?.cancel();
+					navigation?.abort();
+					onQueueDequeue();
 					onQueueNotEmpty();
 				}
-			});
+			}, packetRetrievalOptions.signal);
 
+			if (terminated) {
+				decoder.cancel();
+				return;
+			}
 			const packetSink = this._createPacketSink();
 			const keyPacket = await packetSink.getKeyPacket(startTimestamp, packetRetrievalOptions)
 				?? await packetSink.getFirstKeyPacket(packetRetrievalOptions);
 
 			let currentPacket: EncodedPacket | null = keyPacket;
+			const prepare = decoder.startRangePreparation();
+			const boundedIntraPreparation = prepare && await this._track.getCodec() === 'htj2k';
 
 			// B-frames make it exceedingly difficult to properly define an upper bound for packet iteration if an end
 			// timestamp is set, so we just don't do it. The case that makes it especially tricky is when the frames
@@ -603,10 +628,17 @@ export abstract class BaseMediaSampleSink<
 			// it.
 			const endPacket = undefined;
 
-			const packets = packetSink.packets(keyPacket ?? undefined, endPacket, packetRetrievalOptions);
-			await packets.next(); // Skip the start packet as we already have it
+			const packets = prepare
+				? null
+				: packetSink.packets(keyPacket ?? undefined, endPacket, packetRetrievalOptions);
+			if (packets) {
+				await packets.next(); // Skip the start packet as we already have it
+			}
 
-			while (currentPacket && !ended && !this._track.input._disposed) {
+			while (currentPacket && !ended && !hasOutOfBandError && !this._track.input._disposed) {
+				if (boundedIntraPreparation && currentPacket.timestamp >= endTimestamp) {
+					break;
+				}
 				const maxQueueSize = computeMaxQueueSize(sampleQueue.length);
 				if (sampleQueue.length + decoder.getDecodeQueueSize() > maxQueueSize) {
 					({ promise: queueDequeue, resolve: onQueueDequeue } = promiseWithResolvers());
@@ -614,9 +646,26 @@ export abstract class BaseMediaSampleSink<
 					continue;
 				}
 
+				if (prepare) {
+					await decoder.waitForPreparationCapacity();
+					if (ended || terminated || hasOutOfBandError || this._track.input._disposed) {
+						break;
+					}
+				}
 				decoder.decode(currentPacket);
+				if (prepare) {
+					if (boundedIntraPreparation && currentPacket.timestamp + currentPacket.duration >= endTimestamp) {
+						break;
+					}
+					await decoder.waitForPreparationCapacity();
+					if (ended || terminated || hasOutOfBandError || this._track.input._disposed) {
+						break;
+					}
+					currentPacket = await packetSink.getNextPacket(currentPacket, packetRetrievalOptions);
+					continue;
+				}
 
-				const packetResult = await packets.next();
+				const packetResult = await packets!.next();
 				if (packetResult.done) {
 					break;
 				}
@@ -624,9 +673,9 @@ export abstract class BaseMediaSampleSink<
 				currentPacket = packetResult.value;
 			}
 
-			await packets.return();
+			await packets?.return();
 
-			if (!terminated && !this._track.input._disposed) {
+			if (!terminated && !hasOutOfBandError && !this._track.input._disposed) {
 				await decoder.flush();
 			}
 
@@ -640,6 +689,9 @@ export abstract class BaseMediaSampleSink<
 			if (!hasOutOfBandError) {
 				outOfBandError = error;
 				hasOutOfBandError = true;
+				decoder?.cancel();
+				navigation?.abort();
+				onQueueDequeue();
 				onQueueNotEmpty();
 			}
 		}).finally(() => {
@@ -648,6 +700,9 @@ export abstract class BaseMediaSampleSink<
 
 		const track = this._track;
 		const closeSamples = () => {
+			navigation?.abort();
+			decoder?.cancel();
+			onQueueDequeue();
 			lastSample?.close();
 			for (const sample of sampleQueue) {
 				sample.close();
@@ -716,6 +771,7 @@ export abstract class BaseMediaSampleSink<
 		let decoderIsFlushed = false;
 		let terminated = false;
 		let decoder: DecoderWrapper<MediaSample> | null = null;
+		const navigation = this._metadataOnlyForDecode ? new AbortController() : null;
 
 		// This stores errors that are "out of band" in the sense that they didn't occur in the normal flow of this
 		// method but instead in a different context. This error should not go unnoticed and must be bubbled up to
@@ -731,8 +787,11 @@ export abstract class BaseMediaSampleSink<
 
 		const retrievalOptions: PacketRetrievalOptions = {
 			...options,
-			verifyKeyPackets: true,
-			metadataOnly: false,
+			signal: navigation
+				? options.signal ? AbortSignal.any([navigation.signal, options.signal]) : navigation.signal
+				: options.signal,
+			verifyKeyPackets: !this._metadataOnlyForDecode,
+			metadataOnly: this._metadataOnlyForDecode,
 		};
 
 		// The following is the "pump" process that keeps pumping packets into the decoder
@@ -766,10 +825,17 @@ export abstract class BaseMediaSampleSink<
 				if (!hasOutOfBandError) {
 					outOfBandError = error;
 					hasOutOfBandError = true;
+					decoder?.cancel();
+					navigation?.abort();
+					onQueueDequeue();
 					onQueueNotEmpty();
 				}
-			});
+			}, retrievalOptions.signal);
 
+			if (terminated) {
+				decoder.cancel();
+				return;
+			}
 			const packetSink = this._createPacketSink();
 			let lastPacket: EncodedPacket | null = null;
 			let lastKeyPacket: EncodedPacket | null = null;
@@ -779,6 +845,9 @@ export abstract class BaseMediaSampleSink<
 			let maxSequenceNumber = -1;
 
 			const decodePackets = async () => {
+				if (terminated || hasOutOfBandError || this._track.input._disposed) {
+					return;
+				}
 				assert(lastKeyPacket);
 				assert(decoder);
 
@@ -788,12 +857,13 @@ export abstract class BaseMediaSampleSink<
 
 				while (currentPacket.sequenceNumber < maxSequenceNumber) {
 					const maxQueueSize = computeMaxQueueSize(sampleQueue.length);
-					while (sampleQueue.length + decoder.getDecodeQueueSize() > maxQueueSize && !terminated) {
+					while (sampleQueue.length + decoder.getDecodeQueueSize() > maxQueueSize
+						&& !terminated && !hasOutOfBandError) {
 						({ promise: queueDequeue, resolve: onQueueDequeue } = promiseWithResolvers());
 						await queueDequeue;
 					}
 
-					if (terminated) {
+					if (terminated || hasOutOfBandError || this._track.input._disposed) {
 						break;
 					}
 
@@ -808,6 +878,9 @@ export abstract class BaseMediaSampleSink<
 			};
 
 			const flushDecoder = async () => {
+				if (terminated || hasOutOfBandError || this._track.input._disposed) {
+					return;
+				}
 				assert(decoder);
 				await decoder.flush();
 
@@ -819,14 +892,38 @@ export abstract class BaseMediaSampleSink<
 				timestampsOfInterest.length = 0;
 			};
 
+			const reducedIntra = this._metadataOnlyForDecode && await this._track.getCodec() === 'htj2k';
+			let intraFlush: Promise<void> | null = null;
+
 			for await (const timestamp of timestampIterator) {
 				validateTimestamp(timestamp);
 
-				if (terminated || this._track.input._disposed) {
+				if (terminated || hasOutOfBandError || this._track.input._disposed) {
 					break;
 				}
 
 				const targetPacket = await packetSink.getPacket(timestamp, retrievalOptions);
+				if (reducedIntra) {
+					// Intra frames need no next-key boundary. Only the next lookup overlaps this frame's decode.
+					await intraFlush;
+					while (sampleQueue.length + decoder.getDecodeQueueSize() > computeMaxQueueSize(sampleQueue.length)
+						&& !terminated && !hasOutOfBandError) {
+						({ promise: queueDequeue, resolve: onQueueDequeue } = promiseWithResolvers());
+						await queueDequeue;
+					}
+					if (terminated || hasOutOfBandError || this._track.input._disposed) {
+						break;
+					}
+					if (targetPacket) {
+						timestampsOfInterest.push(targetPacket.timestamp);
+						decoder.decode(targetPacket);
+						intraFlush = flushDecoder();
+						void intraFlush.catch(() => {}); // The next iteration or final await propagates the error.
+					} else {
+						pushToQueue(null);
+					}
+					continue;
+				}
 				const keyPacket = targetPacket && await packetSink.getKeyPacket(timestamp, retrievalOptions);
 
 				if (!keyPacket) {
@@ -859,7 +956,8 @@ export abstract class BaseMediaSampleSink<
 				lastKeyPacket = keyPacket;
 			}
 
-			if (!terminated && !this._track.input._disposed) {
+			await intraFlush;
+			if (!terminated && !hasOutOfBandError && !this._track.input._disposed) {
 				if (maxSequenceNumber !== -1) {
 					// We still need to decode packets
 					await decodePackets();
@@ -874,6 +972,9 @@ export abstract class BaseMediaSampleSink<
 			if (!hasOutOfBandError) {
 				outOfBandError = error;
 				hasOutOfBandError = true;
+				decoder?.cancel();
+				navigation?.abort();
+				onQueueDequeue();
 				onQueueNotEmpty();
 			}
 		}).finally(() => {
@@ -882,6 +983,9 @@ export abstract class BaseMediaSampleSink<
 
 		const track = this._track;
 		const closeSamples = () => {
+			navigation?.abort();
+			decoder?.cancel();
+			onQueueDequeue();
 			for (const sample of sampleQueue) {
 				sample?.close();
 			}
@@ -940,7 +1044,119 @@ const computeMaxQueueSize = (decodedSampleQueueSize: number) => {
 	return decodedSampleQueueSize === 0 ? 40 : 8;
 };
 
+const MAX_REDUCED_PREPARATIONS = 2;
+const REDUCED_PREPARATION_WORKING_BYTES = 64 * 1024 * 1024;
+
 class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
+	closed = false;
+	closeStarted = false;
+	preparationEnabled = false;
+	reducedReadAbort = new AbortController();
+	preparationCount = 0;
+	preparationCapacity = promiseWithResolvers<void>();
+	preparationJobs = new Set<Promise<void>>();
+	readyPreparedInputs = new Set<PreparedVideoDecodeInput>();
+	customDecoderInitialization = Promise.resolve();
+
+	override cancel() {
+		if (this.reduced) {
+			this.closed = true;
+			this.reducedReadAbort.abort();
+			for (const input of this.readyPreparedInputs) {
+				input.dispose();
+			}
+			this.readyPreparedInputs.clear();
+			this.preparationCapacity.resolve();
+		}
+	}
+
+	override startRangePreparation() {
+		return this.preparationEnabled = !!(this.reduced && this.customDecoder?.prepareReduced);
+	}
+
+	override async waitForPreparationCapacity() {
+		while (this.preparationCount >= MAX_REDUCED_PREPARATIONS && !this.closed) {
+			await this.preparationCapacity.promise;
+		}
+	}
+
+	private failPreparation(error: unknown) {
+		if (!this.closed) {
+			this.cancel();
+			this.onError(error);
+		}
+	}
+
+	private async reducedReader(packet: EncodedPacket): Promise<VideoDecodePacketReader> {
+		const signal = this.reducedReadAbort.signal;
+		signal.throwIfAborted();
+		const reader = await this.reduced!.reader(packet, signal);
+		return { ...reader, read: async (start, end) => {
+			signal.throwIfAborted();
+			const bytes = await reader.read(start, end);
+			signal.throwIfAborted();
+			return bytes;
+		} };
+	}
+
+	private decodeWithPreparation(packet: EncodedPacket) {
+		if (this.closed) {
+			return;
+		}
+		assert(this.preparationCount < MAX_REDUCED_PREPARATIONS);
+		this.preparationCount++;
+		this.customDecoderQueueSize++;
+		const preparation = (async () => {
+			await this.customDecoderInitialization;
+			if (this.closed) {
+				return null;
+			}
+			const reader = await this.reducedReader(packet);
+			if (this.closed) {
+				return null;
+			}
+			const input = await this.customDecoder!.prepareReduced!(reader,
+				Object.freeze({ ...this.reduced!.request }),
+				Object.freeze({ maxWorkingBytes: REDUCED_PREPARATION_WORKING_BYTES }));
+			if (!Number.isSafeInteger(input.byteLength) || input.byteLength < 0
+				|| input.byteLength > REDUCED_PREPARATION_WORKING_BYTES) {
+				input.dispose();
+				throw new Error('Prepared input exceeds its working byte budget.');
+			}
+			if (this.closed) {
+				input.dispose();
+				return null;
+			}
+			this.readyPreparedInputs.add(input);
+			return input;
+		})();
+		void preparation.catch(error => this.failPreparation(error));
+		const job = this.customDecoderCallSerializer.call(async () => {
+			const input = await preparation;
+			if (!input || this.closed) {
+				return;
+			}
+			this.readyPreparedInputs.delete(input);
+			await this.customDecoder!.decodePrepared!(input);
+		}).catch(error => this.failPreparation(error)).finally(async () => {
+			const input = await preparation.catch(() => null);
+			try {
+				if (input) {
+					this.readyPreparedInputs.delete(input);
+					input.dispose();
+				}
+			} finally {
+				this.preparationCount--;
+				this.customDecoderQueueSize--;
+				this.preparationJobs.delete(job);
+				this.preparationCapacity.resolve();
+				this.preparationCapacity = promiseWithResolvers<void>();
+			}
+		});
+		this.preparationJobs.add(job);
+		void job.catch(error => this.failPreparation(error));
+	}
+
 	decoder: VideoDecoder | null = null;
 
 	customDecoder: CustomVideoDecoder | null = null;
@@ -975,6 +1191,10 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 		public rotation: Rotation,
 		public flip: boolean,
 		public timeResolution: number,
+		public reduced?: {
+			request: ReducedVideoDecodeRequest;
+			reader: (packet: EncodedPacket, signal?: AbortSignal) => Promise<VideoDecodePacketReader>;
+		},
 	) {
 		super(onSample, onError);
 
@@ -982,6 +1202,12 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 		if (MatchingCustomDecoder) {
 			// @ts-expect-error "Can't create instance of abstract class 🤓"
 			this.customDecoder = new MatchingCustomDecoder() as CustomVideoDecoder;
+			if (!!this.customDecoder.prepareReduced !== !!this.customDecoder.decodePrepared) {
+				throw new Error('Selected decoder must implement both prepareReduced and decodePrepared.');
+			}
+			if (reduced && !this.customDecoder.decodeReduced) {
+				throw new Error('Selected decoder does not support reduced resolution.');
+			}
 			// @ts-expect-error It's technically readonly
 			this.customDecoder.codec = codec;
 			// @ts-expect-error It's technically readonly
@@ -999,11 +1225,10 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 				onError(error);
 			};
 
-			void this.customDecoderCallSerializer
-				.call(() => this.customDecoder!.init())
-				.catch(error => onError(error));
+			this.customDecoderInitialization = this.customDecoderCallSerializer.call(() => this.customDecoder!.init());
+			void this.customDecoderInitialization.catch(error => onError(error));
 		} else {
-			if (codec === 'htj2k') {
+			if (reduced || codec === 'htj2k') {
 				throw new Error('HTJ2K requires a registered custom decoder.');
 			}
 			const colorHandler = (frame: VideoFrame) => {
@@ -1101,6 +1326,10 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 	}
 
 	decode(packet: EncodedPacket) {
+		if (this.preparationEnabled) {
+			this.decodeWithPreparation(packet);
+			return;
+		}
 		if (this.codec === 'hevc' && this.currentPacketIndex > 0 && !this.raslSkipped) {
 			if (this.hasHevcRaslPicture(packet.data)) {
 				return; // Drop
@@ -1112,7 +1341,17 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 		if (this.customDecoder) {
 			this.customDecoderQueueSize++;
 			void this.customDecoderCallSerializer
-				.call(() => this.customDecoder!.decode(packet))
+				.call(async () => {
+					if (this.closed) {
+						return;
+					}
+					if (this.reduced) {
+						const reader = await this.reducedReader(packet);
+						await this.customDecoder!.decodeReduced!(reader, this.reduced.request);
+					} else {
+						await this.customDecoder!.decode(packet);
+					}
+				})
 				.catch(error => this.onError(error))
 				.finally(() => this.customDecoderQueueSize--);
 		} else {
@@ -1339,6 +1578,10 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 	}
 
 	finalizeAndEmitSample(sample: VideoSample) {
+		if (this.closed) {
+			sample.close();
+			return;
+		}
 		// Round the timestamps to the time resolution
 		sample.setTimestamp(Math.round(sample.timestamp * this.timeResolution) / this.timeResolution);
 		sample.setDuration(Math.round(sample.duration * this.timeResolution) / this.timeResolution);
@@ -1384,6 +1627,7 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 	}
 
 	async flush() {
+		await Promise.all(this.preparationJobs);
 		if (this.customDecoder) {
 			await this.customDecoderCallSerializer.call(() => this.customDecoder!.flush());
 		} else {
@@ -1420,9 +1664,15 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 	}
 
 	close() {
+		if (this.closeStarted) {
+			return;
+		}
+		this.closeStarted = true;
+		this.closed = true;
+		this.cancel();
 		if (this.customDecoder) {
 			// Release native resources even if initialization or decoding rejected the serialized queue.
-			void this.customDecoderCallSerializer.currentPromise
+			void Promise.allSettled(this.preparationJobs).then(() => this.customDecoderCallSerializer.currentPromise)
 				.finally(() => this.customDecoder!.close())
 				.catch(error => this.onError(error));
 		} else {
@@ -1761,6 +2011,8 @@ const colorAlphaMergerWorkerCode = () => {
  * @public
  */
 export type VideoSinkDecoderOptions = {
+	/** Explicit reduced decoding; unsupported containers, layouts and full-resolution requests reject. */
+	reducedResolution?: ReducedVideoDecodeRequest;
 	/**
 	 * A hint that configures the hardware acceleration method of the decoder. This is best left on `'no-preference'`,
 	 * the default.
@@ -1776,6 +2028,11 @@ export type VideoSinkDecoderOptions = {
 const validateVideoSinkDecoderOptions = (decoderOptions: VideoSinkDecoderOptions) => {
 	if (!decoderOptions || typeof decoderOptions !== 'object') {
 		throw new TypeError('decoderOptions must be an object.');
+	}
+	const reduced = decoderOptions.reducedResolution;
+	if (reduced !== undefined && (!reduced || !Number.isSafeInteger(reduced.width) || reduced.width <= 0
+		|| !Number.isSafeInteger(reduced.height) || reduced.height <= 0)) {
+		throw new TypeError('reducedResolution requires positive integer width and height.');
 	}
 	if (
 		decoderOptions.hardwareAcceleration !== undefined
@@ -1813,13 +2070,20 @@ export class VideoSampleSink extends BaseMediaSampleSink<VideoSample> {
 
 		this._track = videoTrack;
 		this._decoderOptions = decoderOptions;
+		this._metadataOnlyForDecode = !!decoderOptions.reducedResolution;
 	}
 
 	/** @internal */
 	async _createDecoder(
 		onSample: (sample: VideoSample) => unknown,
 		onError: (error: unknown) => unknown,
+		signal?: AbortSignal,
 	) {
+		const request = this._decoderOptions.reducedResolution;
+		if (request && (await this._track.getCodec() !== 'htj2k'
+			|| !this._track._backing.getVideoDecodePacketReader)) {
+			throw new Error('Reduced resolution requires an HTJ2K track with bounded packet reads.');
+		}
 		if (!(await this._track.canDecode())) {
 			if (typeof VideoDecoder === 'undefined') {
 				throw new Error(missingWebCodecsClassMessage('VideoDecoder'));
@@ -1844,7 +2108,16 @@ export class VideoSampleSink extends BaseMediaSampleSink<VideoSample> {
 			optimizeForLatency: this._decoderOptions.optimizeForLatency,
 		};
 
-		return new VideoDecoderWrapper(onSample, onError, codec, decoderConfig, rotation, flip, timeResolution);
+		return new VideoDecoderWrapper(onSample, onError, codec, decoderConfig, rotation, flip, timeResolution,
+			request
+				? { request, reader: (packet, readSignal) => {
+						const combined = signal && readSignal
+							? AbortSignal.any([signal, readSignal])
+							: signal ?? readSignal;
+						return this._track._backing.getVideoDecodePacketReader!(packet, combined);
+					} }
+				: undefined,
+		);
 	}
 
 	/** @internal */
@@ -2043,6 +2316,9 @@ export class CanvasSink {
 			throw new TypeError('options.flip, when provided, must be a boolean.');
 		}
 		if (options.crop !== undefined) {
+			if (options.decoderOptions?.reducedResolution) {
+				throw new TypeError('Cropping is not supported with reducedResolution.');
+			}
 			validateCropRectangle(options.crop, 'options.');
 		}
 		if (

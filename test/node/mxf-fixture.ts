@@ -82,6 +82,7 @@ export const makeMxf = (options: {
 	audioLocked?: boolean;
 	avc?: boolean;
 	avcCoding?: string;
+	htj2k?: { data: Uint8Array; bits: number; width: number; height: number };
 	videoOnly?: boolean;
 	opAtom?: boolean;
 	legacyAvc?: boolean;
@@ -95,7 +96,17 @@ export const makeMxf = (options: {
 		? '060e2b34040101020d01030102106001'
 		: '060e2b340401010a0d01030102106001');
 	const audioTrackNumber = options.waveAudio ? 0x16020100 : 0x16020300;
-	const videoTrackNumber = options.avc ? 0x15010500 : 0x15011700;
+	const videoTrackNumber = options.htj2k ? 0x15010801 : options.avc ? 0x15010500 : 0x15011700;
+	const videoContainer = options.htj2k ? bytes('060e2b340401010d0d010301020c0600') : proresContainer;
+	const rgbFields: Record<number, Uint8Array> = options.htj2k
+		? {
+				0x3401: join(Uint8Array.of(82, options.htj2k.bits, 71, options.htj2k.bits, 66, options.htj2k.bits),
+					new Uint8Array(10)),
+				0x3406: integer(2 ** options.htj2k.bits - 1, 4), 0x3407: integer(0, 4),
+				0x3219: bytes('060e2b34040101060401010103030000'),
+				0x3210: bytes('060e2b34040101010401010101020000'),
+			}
+		: {};
 	const sourceReference = umid(4);
 	const pcmDescriptorRate = options.pcmDescriptorRate
 		? join(integer(options.pcmDescriptorRate[0], 4), integer(options.pcmDescriptorRate[1], 4))
@@ -153,19 +164,22 @@ export const makeMxf = (options: {
 			sets.push(set(0x11, id + 2, clipFields));
 		}
 		sets.push(i === 1
-			? set(options.avc ? 0x51 : 0x28, base + 6, {
+			? set(options.htj2k ? 0x29 : options.avc ? 0x51 : 0x28, base + 6, {
 					0x3006: integer(i, 4), 0x3001: rate,
-					0x3004: options.avc ? avcContainer : options.unsupportedContainer ? pcmContainer : proresContainer,
+					0x3004: options.avc ? avcContainer : options.unsupportedContainer ? pcmContainer : videoContainer,
 					0x3005: options.legacyAvc ? bytes('060e2b340401010a0401020201322001') : new Uint8Array(16),
 					0x3201: options.legacyAvc
 						? new Uint8Array(16)
-						: bytes(options.avc
-								? options.avcCoding ?? '060e2b340401010d0401020201314001'
-								: '060e2b340401010d0401020203060100'),
+						: bytes(options.htj2k
+								? '060e2b340401010d0401020203010801'
+								: options.avc
+									? options.avcCoding ?? '060e2b340401010d0401020201314001'
+									: '060e2b340401010d0401020203060100'),
 					0x320c: integer(options.layout ?? 0, 1),
-					0x3203: integer(1280, 4),
-					0x3202: integer(720, 4),
-					0x320e: join(integer(16, 4), integer(9, 4)),
+					0x3203: integer(options.htj2k?.width ?? 1280, 4),
+					0x3202: integer(options.htj2k?.height ?? 720, 4),
+					0x320e: join(integer(options.htj2k?.width ?? 16, 4), integer(options.htj2k?.height ?? 9, 4)),
+					...rgbFields,
 					0x8000: bytes('12345678'),
 				})
 			: set(options.waveAudio ? 0x48 : 0x47, base + 6, {
@@ -174,9 +188,18 @@ export const makeMxf = (options: {
 					0x3d07: integer(1, 4), 0x3d01: integer(24, 4), 0x3d0a: integer(options.blockAlign ?? 3, 2),
 				}));
 	}
+	const fixtureLabels = { ...labels, ...(options.htj2k
+		? {
+				0x3401: '060e2b34010101020401050306000000',
+				0x3406: '060e2b3401010105040105030b000000',
+				0x3407: '060e2b3401010105040105030c000000',
+				0x3219: '060e2b34010101090401020101060100',
+				0x3210: '060e2b34010101020401020101010200',
+			}
+		: {}) };
 	const primer = klv('060e2b34020501010d01020101050100', join(
-		integer(Object.keys(labels).length, 4), integer(18, 4),
-		...Object.entries(labels).map(([key, value]) => join(integer(tag(Number(key)), 2), bytes(value))),
+		integer(Object.keys(fixtureLabels).length, 4), integer(18, 4),
+		...Object.entries(fixtureLabels).map(([key, value]) => join(integer(tag(Number(key)), 2), bytes(value))),
 	));
 	const metadata = join(primer, ...sets);
 	const partition = (
@@ -190,7 +213,7 @@ export const makeMxf = (options: {
 				? options.legacyAvc
 					? batch(bytes('060e2b34040101030d010301027f0100'), bytes('060e2b34040101020d01030102106001'))
 					: batch(bytes('060e2b340401010a0d01030102106001'))
-				: batch(proresContainer, audioContainer),
+				: batch(videoContainer, audioContainer),
 		),
 	);
 	const empty = new Uint8Array(0);
@@ -236,8 +259,9 @@ export const makeMxf = (options: {
 		frame.set(bytes('69637066001c000061706c30050002d08000091009'), 4);
 		frame[39] = i;
 		if (i < videoPacketCount) {
-			payloads.push(frame);
-			packets.push(klv(`060e2b34010201010d010301${videoTrackNumber.toString(16)}`, frame));
+			const payload = options.htj2k?.data ?? frame;
+			payloads.push(payload);
+			packets.push(klv(`060e2b34010201010d010301${videoTrackNumber.toString(16)}`, payload));
 		}
 		if (i >= 5 || options.videoOnly) {
 			continue;

@@ -33,20 +33,72 @@ type Segment = {
 	entries: number; entrySize: number; entryCount: number;
 };
 type IndexReader = {
-	bytes(offset: number, size: number): Promise<Uint8Array>;
-	klv(offset: number): Promise<MxfKlv>;
-	partition(klv: MxfKlv, offset: number): Promise<MxfPartition>;
-	countedRegion(offset: number, size: number, kind: 'header' | 'index'): Promise<Region>;
+	bytes(offset: number, size: number, prefetchEnd?: number, requireFiniteRange?: boolean,
+		signal?: AbortSignal): Promise<Uint8Array>;
+	klv(offset: number, signal?: AbortSignal): Promise<MxfKlv>;
+	partition(klv: MxfKlv, offset: number, signal?: AbortSignal): Promise<MxfPartition>;
+	countedRegion(offset: number, size: number, kind: 'header' | 'index', signal?: AbortSignal): Promise<Region>;
 };
 
 /** ST 377-1 partition directory and on-demand index entries. Never stores the IndexEntryArray. */
 export class MxfIndex {
 	private directory?: Promise<Partition[]>;
+	private pendingOwners = new WeakMap<Promise<unknown>, AbortSignal>();
 	private entryWindows = new Map<string, Promise<Uint8Array>>();
 	constructor(private reader: IndexReader, private size: number, private footer: number) {}
 
-	private getDirectory() {
-		return this.directory ??= this.partitions();
+	private readerFor(signal?: AbortSignal): IndexReader {
+		if (!signal) {
+			return this.reader;
+		}
+		const read = async <T>(operation: () => Promise<T>) => {
+			signal.throwIfAborted();
+			const value = await operation();
+			signal.throwIfAborted();
+			return value;
+		};
+		return {
+			bytes: (offset, size) => read(() => this.reader.bytes(offset, size, undefined, false, signal)),
+			klv: offset => read(() => this.reader.klv(offset, signal)),
+			partition: (klv, offset) => read(() => this.reader.partition(klv, offset, signal)),
+			countedRegion: (offset, size, kind) => read(() => this.reader.countedRegion(offset, size, kind, signal)),
+		};
+	}
+
+	// Completed metadata remains shared. A canceled builder must not poison another navigation's cached promise.
+	private async cached<T>(get: () => Promise<T> | undefined, set: (value: Promise<T> | undefined) => void,
+		create: () => Promise<T>, signal?: AbortSignal): Promise<T> {
+		while (true) {
+			signal?.throwIfAborted();
+			let pending = get();
+			if (!pending || this.pendingOwners.get(pending)?.aborted) {
+				pending = create();
+				set(pending);
+				if (signal) {
+					this.pendingOwners.set(pending, signal);
+				}
+				const task = pending;
+				void task.then(() => this.pendingOwners.delete(task), () => {});
+			}
+			try {
+				const result = await pending;
+				signal?.throwIfAborted();
+				return result;
+			} catch (error) {
+				if (signal?.aborted || !this.pendingOwners.get(pending)?.aborted) {
+					throw error;
+				}
+				if (get() === pending) {
+					set(undefined);
+				}
+			}
+		}
+	}
+
+	private getDirectory(signal?: AbortSignal) {
+		return this.cached(() => this.directory, (value) => {
+			this.directory = value;
+		}, () => this.partitions(signal), signal);
 	}
 
 	private async entry(s: Segment, index: number) {
@@ -143,8 +195,8 @@ export class MxfIndex {
 		return { presentation, key, isKey: decode === key };
 	}
 
-	private async partitions() {
-		const r = this.reader;
+	private async partitions(signal?: AbortSignal) {
+		const r = this.readerFor(signal);
 		if (this.footer) {
 			requireMxf(this.footer < this.size, 'footer partition exceeds file');
 			const start = Math.max(this.footer, this.size - 4096);
@@ -226,20 +278,24 @@ export class MxfIndex {
 		return result;
 	}
 
-	private regions(p: Partition) {
-		const reader = this.reader;
-		return p.regions ??= (async () => {
+	private regions(p: Partition, signal?: AbortSignal) {
+		const reader = this.readerFor(signal);
+		return this.cached(() => p.regions, (value) => {
+			p.regions = value;
+		}, async () => {
 			const header = await reader.countedRegion(p.packEnd, p.headerSize, 'header');
 			const index = await reader.countedRegion(header.end, p.indexSize, 'index');
 			requireMxf(index.end <= p.end, 'partition regions overlap next partition');
 			return { index, end: index.end };
-		})();
+		}, signal);
 	}
 
-	private bodyStart(p: Partition) {
-		const reader = this.reader;
-		return p.bodyStart ??= (async () => {
-			let offset = (await this.regions(p)).end;
+	private bodyStart(p: Partition, signal?: AbortSignal) {
+		const reader = this.readerFor(signal);
+		return this.cached(() => p.bodyStart, (value) => {
+			p.bodyStart = value;
+		}, async () => {
+			let offset = (await this.regions(p, signal)).end;
 			while (offset < p.end) {
 				const klv = await reader.klv(offset);
 				if (!FILL_KEYS.includes(klv.key)) {
@@ -249,11 +305,11 @@ export class MxfIndex {
 			}
 			requireMxf(offset <= p.end, 'alignment Fill exceeds partition');
 			return offset;
-		})();
+		}, signal);
 	}
 
-	private async readSegment(klv: MxfKlv): Promise<Segment> {
-		const reader = this.reader;
+	private async readSegment(klv: MxfKlv, signal?: AbortSignal): Promise<Segment> {
+		const reader = this.readerFor(signal);
 		await reader.bytes(klv.offset, Math.min(klv.size, 512));
 		const fields = new Map<number, { offset: number; size: number }>();
 		let offset = klv.offset;
@@ -323,10 +379,12 @@ export class MxfIndex {
 			bodySid: uint(await value(0x3f07, 4), 4), indexSid: uint(await value(0x3f06, 4), 4) };
 	}
 
-	private segments(p: Partition) {
-		const reader = this.reader;
-		return p.segments ??= (async () => {
-			const { index } = await this.regions(p);
+	private segments(p: Partition, signal?: AbortSignal) {
+		const reader = this.readerFor(signal);
+		return this.cached(() => p.segments, (value) => {
+			p.segments = value;
+		}, async () => {
+			const { index } = await this.regions(p, signal);
 			const result: Segment[] = [];
 			const ends = new Map<number, number>();
 			let offset = index.start;
@@ -334,7 +392,7 @@ export class MxfIndex {
 				const klv = await reader.klv(offset);
 				requireMxf(klv.end <= index.end, 'index KLV exceeds region');
 				if (INDEX_KEYS.includes(klv.key)) {
-					const segment = await this.readSegment(klv);
+					const segment = await this.readSegment(klv, signal);
 					requireMxf(segment.indexSid === p.indexSid, 'index SID disagrees with partition');
 					requireMxf(segment.start >= (ends.get(segment.bodySid) ?? 0),
 						'overlapping or unordered index segments');
@@ -346,25 +404,25 @@ export class MxfIndex {
 				offset = klv.end;
 			}
 			return result;
-		})();
+		}, signal);
 	}
 
-	async locate(index: number, track: IndexedTrack, temporal = false): Promise<MxfKlv | null> {
-		const partitions = await this.getDirectory();
+	async locate(index: number, track: IndexedTrack, temporal = false, signal?: AbortSignal): Promise<MxfKlv | null> {
+		const partitions = await this.getDirectory(signal);
 		let result: MxfKlv | null = null;
 		for (let i = partitions.length - 1; i >= 0; i--) {
 			const p = partitions[i]!;
 			if (!p.indexSize || p.indexSid !== track.indexSid) {
 				continue;
 			}
-			for (const s of await this.segments(p)) {
+			for (const s of await this.segments(p, signal)) {
 				if (s.bodySid !== track.bodySid || index < s.start
 					|| (s.duration && index >= s.start + s.duration)) {
 					continue;
 				}
 				requireMxf(!s.duration || s.start + s.duration <= track.editUnitCount,
 					'index duration exceeds track metadata');
-				const location = await this.locateSegment(s, index, track, partitions, temporal);
+				const location = await this.locateSegment(s, index, track, partitions, temporal, signal);
 				if (!location) {
 					return null;
 				}
@@ -378,8 +436,9 @@ export class MxfIndex {
 
 	private async locateSegment(
 		s: Segment, index: number, track: IndexedTrack, partitions: Partition[], temporal: boolean,
+		signal?: AbortSignal,
 	) {
-		const reader = this.reader;
+		const reader = this.readerFor(signal);
 		requireMxf(!track.avci || (s.byteCount > 0 && s.start === 0
 			&& (s.duration === 0 || s.duration === track.editUnitCount) && !s.slices && !s.positions && !s.entryCount),
 		'AVC-Intra requires an ordinary whole-container CBE index');
@@ -435,7 +494,7 @@ export class MxfIndex {
 				}
 			}
 			requireMxf(body, 'index offset outside body stream');
-			const bodyStart = await this.bodyStart(body);
+			const bodyStart = await this.bodyStart(body, signal);
 			const physical = bodyStart + stream - body.bodyOffset;
 			requireMxf(Number.isSafeInteger(physical) && physical >= bodyStart && physical + 17 <= body.end,
 				'index offset outside body partition');
