@@ -68,6 +68,13 @@ import {
  */
 export type PacketRetrievalOptions = {
 	/**
+	 * Cancels packet retrieval and rejects with the signal's reason. Already-started or non-cancellable reads may
+	 * finish in the background. Aborting does not dispose the Input or cancel other consumers. This controls packet
+	 * retrieval only, not decoding or sample iterator termination.
+	 */
+	signal?: AbortSignal;
+
+	/**
 	 * When set to `true`, only packet metadata (like timestamp) will be retrieved - the actual packet data will not
 	 * be loaded.
 	 */
@@ -111,6 +118,36 @@ const validatePacketRetrievalOptions = (options: PacketRetrievalOptions) => {
 	if (options.skipLiveWait !== undefined && typeof options.skipLiveWait !== 'boolean') {
 		throw new TypeError('options.skipLiveWait, when defined, must be a boolean.');
 	}
+	if (options.signal !== undefined && !(options.signal instanceof AbortSignal)) {
+		throw new TypeError('options.signal, when defined, must be an AbortSignal.');
+	}
+	options.signal?.throwIfAborted();
+};
+
+const abortableRead = <T>(read: Promise<T>, signal?: AbortSignal) => {
+	if (!signal) {
+		return read;
+	}
+
+	const { promise, resolve, reject } = promiseWithResolvers<T>();
+	const abort = () => reject(signal.reason);
+	if (signal.aborted) {
+		abort();
+	} else {
+		signal.addEventListener('abort', abort, { once: true });
+	}
+	void read.then((value) => {
+		signal.removeEventListener('abort', abort);
+		if (signal.aborted) {
+			reject(signal.reason);
+		} else {
+			resolve(value);
+		}
+	}, (error) => {
+		signal.removeEventListener('abort', abort);
+		reject(error);
+	});
+	return promise;
 };
 
 const validateTimestamp = (timestamp: number) => {
@@ -125,12 +162,14 @@ const maybeFixPacketType = (
 	options: PacketRetrievalOptions,
 ) => {
 	if (options.verifyKeyPackets) {
-		return promise.then(async (packet) => {
+		promise = promise.then(async (packet) => {
+			options.signal?.throwIfAborted();
 			if (!packet || packet.type === 'delta') {
 				return packet;
 			}
 
 			const determinedType = await track.determinePacketType(packet);
+			options.signal?.throwIfAborted();
 			if (determinedType) {
 				// @ts-expect-error Technically readonly
 				packet.type = determinedType;
@@ -138,9 +177,8 @@ const maybeFixPacketType = (
 
 			return packet;
 		});
-	} else {
-		return promise;
 	}
+	return abortableRead(promise, options.signal);
 };
 
 /**
@@ -180,6 +218,7 @@ export class EncodedPacketSink {
 		validatePacketRetrievalOptions(options);
 
 		const firstPacket = await this.getFirstPacket(options);
+		options.signal?.throwIfAborted();
 		if (!firstPacket) {
 			return null;
 		}
@@ -248,19 +287,20 @@ export class EncodedPacketSink {
 		}
 
 		if (!options.verifyKeyPackets) {
-			return this._track._backing.getKeyPacket(timestamp, options);
+			return abortableRead(this._track._backing.getKeyPacket(timestamp, options), options.signal);
 		}
 
-		const packet = await this._track._backing.getKeyPacket(timestamp, options);
+		const packet = await abortableRead(this._track._backing.getKeyPacket(timestamp, options), options.signal);
 		if (!packet) {
 			return packet;
 		}
 		assert(packet.type === 'key');
 
-		const determinedType = await this._track.determinePacketType(packet);
+		const determinedType = await abortableRead(this._track.determinePacketType(packet), options.signal);
 		if (determinedType === 'delta') {
 			// Try returning the previous key packet (in hopes that it's actually a key packet)
-			return this.getKeyPacket(packet.timestamp - 1 / await this._track.getTimeResolution(), options);
+			const timeResolution = await abortableRead(this._track.getTimeResolution(), options.signal);
+			return this.getKeyPacket(packet.timestamp - 1 / timeResolution, options);
 		}
 
 		return packet;
@@ -283,16 +323,16 @@ export class EncodedPacketSink {
 		}
 
 		if (!options.verifyKeyPackets) {
-			return this._track._backing.getNextKeyPacket(packet, options);
+			return abortableRead(this._track._backing.getNextKeyPacket(packet, options), options.signal);
 		}
 
-		const nextPacket = await this._track._backing.getNextKeyPacket(packet, options);
+		const nextPacket = await abortableRead(this._track._backing.getNextKeyPacket(packet, options), options.signal);
 		if (!nextPacket) {
 			return nextPacket;
 		}
 		assert(nextPacket.type === 'key');
 
-		const determinedType = await this._track.determinePacketType(nextPacket);
+		const determinedType = await abortableRead(this._track.determinePacketType(nextPacket), options.signal);
 		if (determinedType === 'delta') {
 			// Try returning the next key packet (in hopes that it's actually a key packet)
 			return this.getNextKeyPacket(nextPacket, options);
@@ -334,6 +374,13 @@ export class EncodedPacketSink {
 		let { promise: queueDequeue, resolve: onQueueDequeue } = promiseWithResolvers();
 		let ended = false;
 		let terminated = false;
+		const abort = () => {
+			terminated = true;
+			packetQueue.length = 0;
+			onQueueDequeue();
+			onQueueNotEmpty();
+		};
+		options.signal?.addEventListener('abort', abort, { once: true });
 
 		// This stores errors that are "out of band" in the sense that they didn't occur in the normal flow of this
 		// method but instead in a different context. This error should not go unnoticed and must be bubbled up to
@@ -376,6 +423,8 @@ export class EncodedPacketSink {
 				hasOutOfBandError = true;
 				onQueueNotEmpty();
 			}
+		}).finally(() => {
+			options.signal?.removeEventListener('abort', abort);
 		});
 
 		const track = this._track;
@@ -383,6 +432,10 @@ export class EncodedPacketSink {
 		return {
 			async next() {
 				while (true) {
+					if (options.signal?.aborted) {
+						abort();
+						throw options.signal.reason;
+					}
 					if (track.input._disposed) {
 						throw new InputDisposedError();
 					} else if (terminated) {
@@ -410,6 +463,8 @@ export class EncodedPacketSink {
 			},
 			async return() {
 				terminated = true;
+				packetQueue.length = 0;
+				options.signal?.removeEventListener('abort', abort);
 				onQueueDequeue();
 				onQueueNotEmpty();
 
