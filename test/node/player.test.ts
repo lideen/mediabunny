@@ -10,12 +10,70 @@ const media = vi.hoisted(() => ({
 	videoStart: 0,
 	finalVideoOffset: 0.08,
 	live: false,
+	codec: 'avc',
+	audio: true,
+	width: 16,
+	audioContexts: 0,
+	smoothDisposal: null as Promise<void> | null,
+	smoothSeeks: [] as number[],
+	smoothSteps: [] as { gate?: Promise<void>; error?: Error; reject?: boolean; retired?: boolean }[],
 	previewGate: null as Promise<void> | null,
 	lookaheadGate: null as Promise<void> | null,
 }));
 vi.mock('@mediabunny/ac3', () => ({ registerAc3Decoder: () => {} }));
 vi.mock('@mediabunny/dts', () => ({ registerDtsDecoder: () => {} }));
 vi.mock('@mediabunny/prores', () => ({ registerProresDecoder: () => {} }));
+vi.mock('@mediabunny/htj2k', () => ({ registerHtj2kDecoder: () => {} }));
+vi.mock('../../examples/media-player/smooth-playback.js', () => ({
+	SmoothPlayback: class {
+		state = 'paused';
+		timestamp = 0;
+		wantsPlay = false;
+		refining = false;
+		resolution = '120×68';
+		bufferedSeconds = 0;
+		ownedBytes = 0;
+		lateness = 0;
+		constructor(_track: unknown, private draw: (sample: unknown) => void,
+			private reportError: (error: unknown) => void) {}
+
+		async seek(timestamp: number, resume = false) {
+			media.smoothSeeks.push(timestamp);
+			const step = media.smoothSteps.shift();
+			this.state = 'seeking';
+			await step?.gate;
+			if (step?.retired) {
+				return;
+			}
+			if (step?.error) {
+				if (step.reject) {
+					throw step.error;
+				}
+				this.state = 'error';
+				this.wantsPlay = false;
+				this.reportError(step.error);
+				return;
+			}
+			this.timestamp = timestamp;
+			this.state = resume ? 'playing' : 'paused';
+			this.wantsPlay = resume;
+			this.draw({ drawWithFit: () => media.draws.push(timestamp) });
+		}
+
+		play() {
+			this.state = 'playing';
+			this.wantsPlay = true;
+		}
+
+		pause() {
+			this.state = 'paused';
+			this.wantsPlay = false;
+		}
+
+		async dispose() { await media.smoothDisposal; }
+		tick() {}
+	},
+}));
 vi.mock('mediabunny', async (original) => {
 	const metadata = {
 		isRelativeToUnixEpoch: () => false,
@@ -23,8 +81,10 @@ vi.mock('mediabunny', async (original) => {
 		isLive: () => media.live,
 	};
 	const videoTrack = {
-		...metadata, getCodec: () => 'avc', canDecode: () => true,
+		...metadata, getCodec: () => media.codec, canDecode: () => true,
+		getCodedWidth: () => media.width, getCodedHeight: () => 540,
 		getFirstTimestamp: () => media.videoStart,
+		getDurationFromMetadata: () => media.end,
 		getDisplayWidth: () => 16, getDisplayHeight: () => 16, canBeTransparent: () => false,
 	};
 	const audioTrack = {
@@ -34,10 +94,15 @@ vi.mock('mediabunny', async (original) => {
 		...await original<object>(),
 		Input: class {
 			getPrimaryVideoTrack() { return videoTrack; }
-			getPrimaryAudioTrack() { return audioTrack; }
+			getPrimaryAudioTrack() { return media.audio ? audioTrack : null; }
+			getAudioTracks() { return media.audio ? [audioTrack] : []; }
 			getFirstTimestamp() { return 0; }
 			getDurationFromMetadata() { return media.end; }
 			dispose() {}
+		},
+		EncodedPacketSink: class {
+			async getFirstPacket() { return { type: 'key', duration: 1 / 24, timestamp: 0 }; }
+			async prefetchPacketRange() {}
 		},
 		CanvasSink: class {
 			pool: { pixels: number }[];
@@ -102,11 +167,16 @@ const settle = async () => {
 
 const loadPlayer = async ({
 	live = false, lookaheadGate = null, videoStart = 0, finalVideoOffset = 0.08,
+	query = '', codec = 'avc', audio = true, width = 16,
 }: {
 	live?: boolean;
 	lookaheadGate?: Promise<void> | null;
 	videoStart?: number;
 	finalVideoOffset?: number;
+	query?: string;
+	codec?: string;
+	audio?: boolean;
+	width?: number;
 } = {}) => {
 	vi.resetModules();
 	vi.useFakeTimers();
@@ -117,6 +187,13 @@ const loadPlayer = async ({
 	media.videoStart = videoStart;
 	media.finalVideoOffset = finalVideoOffset;
 	media.live = live;
+	media.codec = codec;
+	media.audio = audio;
+	media.width = width;
+	media.audioContexts = 0;
+	media.smoothDisposal = null;
+	media.smoothSeeks = [];
+	media.smoothSteps = [];
 	media.previewGate = null;
 	media.lookaheadGate = lookaheadGate;
 	const elements = new Map<string, Element>();
@@ -129,6 +206,7 @@ const loadPlayer = async ({
 	const window = Object.assign(new EventTarget(), {
 		innerWidth: 800, setTimeout,
 		AudioContext: class {
+			constructor() { media.audioContexts++; }
 			state = 'running';
 			sampleRate = 48000;
 			destination = {};
@@ -142,6 +220,7 @@ const loadPlayer = async ({
 		},
 	});
 	vi.stubGlobal('window', window);
+	vi.stubGlobal('location', { search: query });
 	vi.stubGlobal('document', Object.assign(new EventTarget(), { querySelector: element }));
 	vi.stubGlobal('prompt', () => 'https://example.invalid/authored');
 	let render = () => {};
@@ -171,6 +250,132 @@ afterEach(() => {
 });
 
 describe('given the media player example', () => {
+	describe('when using smooth video controls', () => {
+		const smoothOptions = { query: '?smooth=1&minimumRequestSize=32768', codec: 'htj2k',
+			audio: false, width: 960 };
+		const key = (player: Awaited<ReturnType<typeof loadPlayer>>, code: string) => {
+			player.window.dispatchEvent(Object.assign(new Event('keydown'), { code }));
+		};
+
+		it('should ignore playback controls while an old controller is disposing during reload', async () => {
+			const player = await loadPlayer(smoothOptions);
+			expect(media.draws).toEqual([0]);
+			let release!: () => void;
+			media.smoothDisposal = new Promise<void>((resolve) => {
+				release = resolve;
+			});
+			try {
+				player.element('#load-url').click();
+				await settle();
+				key(player, 'Space');
+				await settle();
+				expect(player.element('#player').style['display']).toBe('none');
+				expect(media.audioContexts).toBe(0);
+				expect(media.draws).toEqual([0]);
+			} finally {
+				release();
+				media.smoothDisposal = null;
+				await settle();
+			}
+			player.tick();
+			expect(player.element('#player').style['display']).toBe('');
+			expect(player.element('#error-element').textContent).toBe('');
+			expect(media.draws).toEqual([0, 0]);
+		});
+
+		it('should clear a transient seek failure only after a successful seek and allow resume', async () => {
+			const player = await loadPlayer(smoothOptions);
+			media.smoothSteps.push({ error: new Error('Transient decode failure') });
+			key(player, 'ArrowRight');
+			await settle();
+			expect(player.element('#error-element').textContent).toContain('Transient decode failure');
+			let release!: () => void;
+			const gate = new Promise<void>((resolve) => {
+				release = resolve;
+			});
+			media.smoothSteps.push({ gate });
+			try {
+				key(player, 'ArrowLeft');
+				await settle();
+				expect(player.element('#error-element').textContent).toContain('Transient decode failure');
+			} finally {
+				release();
+				await settle();
+			}
+			key(player, 'Space');
+			await settle();
+			player.tick();
+			expect(player.element('#error-element').textContent).toBe('');
+			expect(player.element('#pause-icon').style['display']).toBe('');
+			expect(media.smoothSeeks).toEqual([0, 0.12, 0]);
+		});
+
+		it.each(['retired', 'rejected'] as const)(
+			'should preserve the latest error when an older %s seek settles', async (outcome) => {
+				const player = await loadPlayer(smoothOptions);
+				let release!: () => void;
+				const gate = new Promise<void>((resolve) => {
+					release = resolve;
+				});
+				media.smoothSteps.push({ gate, retired: outcome === 'retired', reject: true,
+					error: outcome === 'rejected' ? new Error('Retired failure') : undefined });
+				try {
+					key(player, 'ArrowRight');
+					await settle();
+					media.smoothSteps.push({ error: new Error('Current failure'), reject: true });
+					key(player, 'ArrowLeft');
+					await settle();
+					expect(player.element('#error-element').textContent).toContain('Current failure');
+					release();
+					await settle();
+					expect(player.element('#error-element').textContent).toContain('Current failure');
+				} finally {
+					release();
+				}
+			});
+
+		it('should ignore M and hidden mute-button clicks when no audio track exists', async () => {
+			const player = await loadPlayer(smoothOptions);
+			player.tick();
+			const before = player.element('#warning-element').textContent;
+			key(player, 'KeyM');
+			player.element('#volume-button').click();
+			await settle();
+			player.tick();
+			expect(player.element('#volume-bar').style['width']).toBeUndefined();
+			expect(player.element('#warning-element').textContent).toBe(before);
+			expect(player.element('#error-element').textContent).toBe('');
+			expect(media.audioContexts).toBe(0);
+		});
+	});
+
+	describe('when muting ordinary audio/video playback', () => {
+		it('should toggle volume through M and the volume button', async () => {
+			const player = await loadPlayer();
+			player.window.dispatchEvent(Object.assign(new Event('keydown'), { code: 'KeyM' }));
+			expect(player.element('#volume-bar').style['width']).toBe('0%');
+			player.element('#volume-button').click();
+			expect(player.element('#volume-bar').style['width']).toBe('70%');
+		});
+	});
+
+	describe('when requesting smooth playback with incompatible input or settings', () => {
+		it.each([
+			{ query: '?smooth=1&decodeWidth=120', message: 'cannot be combined' },
+			{ query: '?smooth=1', message: 'minimumRequestSize' },
+			{ codec: 'avc', audio: false, message: 'seekable HTJ2K' },
+			{ codec: 'htj2k', audio: true, message: 'without audio' },
+			{ codec: 'htj2k', audio: false, live: true, message: 'seekable HTJ2K' },
+			{ codec: 'htj2k', audio: false, width: 720, message: '16:9' },
+		])('should show an admission error for $message', async (options) => {
+			vi.spyOn(console, 'error').mockImplementation(() => {});
+			const player = await loadPlayer({ query: '?smooth=1&minimumRequestSize=32768', ...options });
+			expect(player.element('#error-element').textContent).toContain(options.message);
+			expect(player.element('#player').style['display']).toBe('none');
+			expect(media.draws).toEqual([]);
+		});
+	});
+
 	describe('when video starts after audio', () => {
 		it('should preview the first video frame on load and early seek without advancing the clock', async () => {
 			const player = await loadPlayer({ videoStart: 0.08 });

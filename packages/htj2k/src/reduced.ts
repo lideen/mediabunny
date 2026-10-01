@@ -33,6 +33,9 @@ export const extractReduced = async (
 		'descriptor geometry');
 	requireHt(Number.isInteger(request.width) && request.width > 0
 		&& Number.isInteger(request.height) && request.height > 0, 'reduced dimensions');
+	// Transport heuristic only; parsing still determines every byte required for complete reduced pixels.
+	const previewScale = Math.min(1, request.width * request.height / (480 * 270));
+	const readWindow = Math.max(16 * 1024, Math.ceil(READ_WINDOW * previewScale / (16 * 1024)) * 16 * 1024);
 	let position = 0;
 	checkWorkingBytes(65536);
 	let prefix = new Uint8Array(65536);
@@ -42,7 +45,7 @@ export const extractReduced = async (
 		requireHt(Number.isSafeInteger(length) && length >= 0 && position + length <= reader.byteLength,
 			'missing required packet bytes');
 		if (position < windowStart || position + length > windowStart + window.length) {
-			const end = Math.min(reader.byteLength, position + Math.max(length, READ_WINDOW));
+			const end = Math.min(reader.byteLength, position + Math.max(length, readWindow));
 			// Old window, reader-owned result, and its stable copy coexist during replacement.
 			checkWorkingBytes(prefix.length + window.length + 2 * (end - position));
 			window = (await reader.read(position, end)).slice();

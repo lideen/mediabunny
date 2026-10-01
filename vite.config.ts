@@ -31,6 +31,8 @@ export default defineConfig({
 				path.resolve(__dirname, './packages/flac-encoder/dist/bundles/mediabunny-flac-encoder.mjs'),
 			'@mediabunny/prores':
 				path.resolve(__dirname, './packages/prores/dist/bundles/mediabunny-prores.mjs'),
+			'@mediabunny/htj2k':
+				path.resolve(__dirname, './packages/htj2k/dist/bundles/mediabunny-htj2k.mjs'),
 		},
 	},
 	plugins: [

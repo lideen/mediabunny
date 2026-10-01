@@ -78,10 +78,17 @@ export type PacketRetrievalOptions = {
 	signal?: AbortSignal;
 
 	/**
-	 * When set to `true`, only packet metadata (like timestamp) will be retrieved - the actual packet data will not
-	 * be loaded.
+	 * When set to `true`, only packet metadata (like timestamp) is returned. By default, packet data is not loaded
+	 * either; `prefetchBytes` can opt into bounded cache warming.
 	 */
 	metadataOnly?: boolean;
+
+	/**
+	 * Best-effort container-window cache warming during metadata-only retrieval, including the packet header.
+	 * Must be a safe integer from 0 through 65536. Nonzero requires `metadataOnly`. Unsupported layouts may ignore
+	 * the hint, and cached metadata need not trigger another read. This does not establish decode coverage.
+	 */
+	prefetchBytes?: number;
 
 	/**
 	 * When set to `true`, key packets will be verified upon retrieval by looking into the packet's bitstream.
@@ -111,6 +118,15 @@ const validatePacketRetrievalOptions = (options: PacketRetrievalOptions) => {
 	}
 	if (options.metadataOnly !== undefined && typeof options.metadataOnly !== 'boolean') {
 		throw new TypeError('options.metadataOnly, when defined, must be a boolean.');
+	}
+	if (options.prefetchBytes !== undefined) {
+		if (!Number.isSafeInteger(options.prefetchBytes)
+			|| options.prefetchBytes < 0 || options.prefetchBytes > 65536) {
+			throw new TypeError('options.prefetchBytes must be a safe integer from 0 through 65536.');
+		}
+		if (options.prefetchBytes && options.metadataOnly !== true) {
+			throw new TypeError('Nonzero options.prefetchBytes requires options.metadataOnly.');
+		}
 	}
 	if (options.verifyKeyPackets !== undefined && typeof options.verifyKeyPackets !== 'boolean') {
 		throw new TypeError('options.verifyKeyPackets, when defined, must be a boolean.');
@@ -200,6 +216,37 @@ export class EncodedPacketSink {
 		}
 
 		this._track = track;
+	}
+
+	/**
+	 * Warms the source cache with the exact half-open packet-relative range [start, end).
+	 * Requires an original metadata-only packet from this track. Unsupported tracks reject without fetching a
+	 * complete packet. Completion guarantees neither cache residency nor decode coverage. No bytes are returned.
+	 * Cancellation removes this operation's demands; already-started physical reads may finish into cache.
+	 */
+	async prefetchPacketRange(
+		packet: EncodedPacket, start: number, end: number, options: {
+			/** Cancels this range demand and rejects with the signal's reason. */
+			signal?: AbortSignal;
+		} = {},
+	) {
+		validatePacketRetrievalOptions(options);
+		if (this._track.input._disposed) {
+			throw new InputDisposedError();
+		}
+		if (!(packet instanceof EncodedPacket) || !packet.isMetadataOnly) {
+			throw new TypeError('packet must be an original metadata-only packet from this track.');
+		}
+		if (!Number.isSafeInteger(packet.byteLength) || packet.byteLength < 0
+			|| !Number.isSafeInteger(start) || !Number.isSafeInteger(end)
+			|| start < 0 || end < start || end > packet.byteLength) {
+			throw new RangeError('Invalid packet-relative range.');
+		}
+		const backing = this._track._backing;
+		if (!backing.prefetchPacketRange) {
+			throw new Error('This track does not support finite packet-range prefetching.');
+		}
+		await abortableRead(backing.prefetchPacketRange(packet, start, end, options.signal), options.signal);
 	}
 
 	/**

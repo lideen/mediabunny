@@ -140,6 +140,30 @@ describe('given lossless RPCL RGB fixtures', () => {
 });
 
 describe('given bounded HTTP packet reads', () => {
+	describe('when refill windows scale with requested pixel area', () => {
+		it.each([[25, 17, 16384, 3], [97, 66, 32768, 1]])(
+			'should decode %ix%i with %i-byte refills and complete native pixels',
+			async (width, height, window, skip) => {
+				registerHtj2kDecoder();
+				const htj2k = fixture();
+				const file = makeIndexedMxf({ htj2k, videoOnly: true });
+				using input = new Input({ formats: [MXF], source: new CustomSource({ getSize: () => file.size,
+					read: file.read, prefetchProfile: 'none' }) });
+				const track = (await input.getPrimaryVideoTrack())!;
+				await track.getDecoderConfig();
+				await new EncodedPacketSink(track).getPacket(10.5 / 25, { metadataOnly: true });
+				const before = file.reads.length;
+				using sample = (await new VideoSampleSink(track, { reducedResolution: { width, height } })
+					.getSample(10.5 / 25))!;
+				const reads = file.reads.slice(before);
+				expect(reads.length).toBeGreaterThan(0);
+				expect(reads.every(([start, end]) => end - start <= window)).toBe(true);
+				const rgba = new Uint8Array(sample.allocationSize());
+				await sample.copyTo(rgba);
+				expect(rgba).toEqual(await decodeComplete(htj2k.data, skip, width, height, 16));
+			});
+	});
+
 	describe.each(['direct', 'slice', 'pathed'] as const)('when using a %s source', (wrapper) => {
 		it.each([true, false])('should require finite range policy, enabled=%s', async (finite) => {
 			registerHtj2kDecoder();
@@ -193,7 +217,7 @@ describe('given bounded HTTP packet reads', () => {
 			let shortened = false;
 			using input = new Input({ formats: [MXF], source: new CustomSource({ getSize: () => file.length,
 				maxCacheSize: 0, prefetchProfile: 'none', read: (start, end) => {
-					if (end - start > 65536) {
+					if (end - start >= 16384) {
 						shortened = true;
 						return file.slice(start, end - 1);
 					}
@@ -217,7 +241,7 @@ describe('given cancellable reduced sample and canvas iterators', () => {
 			using input = new Input({ formats: [MXF], source: new CustomSource({
 				getSize: () => file.length, maxCacheSize: 0, prefetchProfile: 'none',
 				read: async (start, end) => {
-					if (hold && end - start > 65536) {
+					if (hold && end - start >= 16384) {
 						entered.resolve();
 						await release.promise;
 					}
@@ -332,7 +356,7 @@ describe('given cancellable reduced sample and canvas iterators', () => {
 			const source = new CustomSource({ getSize: () => file.length, maxCacheSize: 0,
 				prefetchProfile: 'none', read: async (start, end) => {
 					reads++;
-					if (hold && end - start > 65536) {
+					if (hold && end - start >= 16384) {
 						entered.resolve();
 						await release.promise;
 					}

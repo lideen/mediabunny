@@ -114,6 +114,7 @@ export type FrameRateMetricsOptions = {
 
 export interface InputTrackBacking {
 	getVideoDecodePacketReader?(packet: EncodedPacket, signal?: AbortSignal): Promise<VideoDecodePacketReader>;
+	prefetchPacketRange?(packet: EncodedPacket, start: number, end: number, signal?: AbortSignal): Promise<void>;
 	getType(): TrackType;
 	getId(): number;
 	getNumber(): number;
