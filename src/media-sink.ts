@@ -2123,12 +2123,8 @@ export class CanvasSink {
 	 * @param endTimestamp - The timestamp in seconds at which to stop yielding canvases (exclusive).
 	 * @param options - Options used for the underlying packet retrieval.
 	 */
-	async* canvases(startTimestamp?: number, endTimestamp?: number, options?: PacketRetrievalOptions) {
-		await this._ensureInit();
-		yield* mapAsyncGenerator(
-			this._videoSampleSink.samples(startTimestamp, endTimestamp, options),
-			sample => this._videoSampleToWrappedCanvas(sample),
-		);
+	canvases(startTimestamp?: number, endTimestamp?: number, options?: PacketRetrievalOptions) {
+		return this.iterateCanvases(() => this._videoSampleSink.samples(startTimestamp, endTimestamp, options));
 	}
 
 	/**
@@ -2143,12 +2139,69 @@ export class CanvasSink {
 	 * @param timestamps - An iterable or async iterable of timestamps in seconds.
 	 * @param options - Options used for the underlying packet retrieval.
 	 */
-	async* canvasesAtTimestamps(timestamps: AnyIterable<number>, options?: PacketRetrievalOptions) {
-		await this._ensureInit();
-		yield* mapAsyncGenerator(
-			this._videoSampleSink.samplesAtTimestamps(timestamps, options),
-			sample => sample && this._videoSampleToWrappedCanvas(sample),
-		);
+	canvasesAtTimestamps(timestamps: AnyIterable<number>, options?: PacketRetrievalOptions) {
+		return this.iterateCanvases(() => this._videoSampleSink.samplesAtTimestamps(timestamps, options));
+	}
+
+	/** @internal */
+	private iterateCanvases(create: () => AsyncGenerator<VideoSample, void, unknown>):
+	AsyncGenerator<WrappedCanvas, void, unknown>;
+	/** @internal */
+	private iterateCanvases(create: () => AsyncGenerator<VideoSample | null, void, unknown>):
+	AsyncGenerator<WrappedCanvas | null, void, unknown>;
+	private iterateCanvases(create: () => AsyncGenerator<VideoSample | null, void, unknown>):
+	AsyncGenerator<WrappedCanvas | null, void, unknown> {
+		let iterator: AsyncGenerator<VideoSample | null, void, unknown> | undefined;
+		let terminated = false;
+		let pending = Promise.resolve();
+		const stop = async () => {
+			terminated = true;
+			await iterator?.return();
+		};
+		return {
+			next: () => {
+				const result = pending.then(async (): Promise<IteratorResult<WrappedCanvas | null, void>> => {
+					if (terminated) {
+						return { done: true, value: undefined };
+					}
+					try {
+						await this._ensureInit();
+						if (terminated) {
+							return { done: true, value: undefined };
+						}
+						iterator ??= create();
+						const result = await iterator.next();
+						if (result.done) {
+							terminated = true;
+							return { done: true, value: undefined };
+						}
+						using sample = result.value;
+						if (terminated) {
+							return { done: true, value: undefined };
+						}
+						return { done: false, value: sample && this._videoSampleToWrappedCanvas(sample) };
+					} catch (error) {
+						const canceled = terminated;
+						await stop();
+						if (canceled) {
+							return { done: true, value: undefined };
+						}
+						throw error;
+					}
+				});
+				pending = result.then(() => {}, () => {});
+				return result;
+			},
+			async return() {
+				await stop();
+				return { done: true, value: undefined };
+			},
+			async throw(error) {
+				await stop();
+				throw error;
+			},
+			[Symbol.asyncIterator]() { return this; },
+		};
 	}
 }
 
