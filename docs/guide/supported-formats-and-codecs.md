@@ -21,6 +21,22 @@ Mediabunny supports many commonly used media container formats, all of which are
 - MPEG Transport Stream (.ts)
 - HLS (.m3u8)
 
+### Experimental LXF input
+
+Use `formats: [LXF]` explicitly. `LxfInputFormat` recognizes `LEITCH\0\0` independently of the filename. LXF is separate from MXF and is not included in `ALL_FORMATS`. There is no LXF muxer or encoder.
+
+HTTP input requires an explicit finite `rangePolicy` option on `UrlSource` and HTTP 206 byte-range responses. Default open-ended HTTP reads do not meet LXF's finite-read contract.
+
+The admitted subset requires a known finite size, checksummed version-1 headers of 72 to 256 bytes, one 25 fps closed all-I MPEG-2 4:2:2/profile-82 stream with N=1/M=1 and temporal reference zero, and one 48 kHz packed PCM24 stream with 1 to 8 contiguous channel ordinals. Both tracks are required. Separate field pictures, repeated fields, reordered video, version 0, sparse masks, 20-bit packing, multiple stream IDs and midstream format changes are unsupported. Decoding requires the optional [MPEG-2 extension](./extensions/mpeg2). Woven I422 samples preserve native field-order metadata without deinterlacing.
+
+Only single-segment files are supported. A type-2 segment header is admitted only at byte zero. An observed later segment boundary rejects; bounded discovery does not prove that every unvisited byte is free of additional segments.
+
+Version-1 timestamps use 720,000 ticks per second. The reader preserves the common origin and separate track endpoints, including a shorter audio tail. Public PCM packets are an owned lossless permutation from wire channel planes to interleaved signed-24 triplets. Channels are not labeled as 7.1, downmixed or removed when silent.
+
+Ancillary payloads and segment metadata are skipped except for subset validation. Source timecode, captions/ANC and descriptive tags are not exposed or preserved.
+
+Random access uses sparse timestamp anchors and checksummed successor boundaries, not a full-file index. Tail discovery is limited to one 1 MiB window. Each seek permits at most twelve 1 MiB search windows and 12 MiB of uncached logical navigation requests, including successor headers; whole packet extents are limited to 2 MiB. Missing coverage, timestamp gaps or exhausted budgets reject rather than return a future frame or scan from zero. These are demuxer bounds, not HTTP traffic bounds or arbitrary-duration seek guarantees. Source transport policy and prefetch can transfer additional bytes. See `src/lxf/README.md` for provenance and exact scope. Browser playback acceptance is separate from Node verification.
+
 ## Codecs
 
 Mediabunny supports a wide range of video, audio, and subtitle codecs. More specifically, it supports all codecs specified by the WebCodecs API and a few additional PCM codecs out of the box.

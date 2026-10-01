@@ -43,6 +43,8 @@ For presentation ordinal `p`, decode ordinal is `d = p + TemporalOffset[p]`. Inv
 
 Metadata-only MPEG-2 reads inspect up to 512 payload bytes per validated picture. This is a demuxer read bound, not an HTTP traffic bound. Source-managed prefetch can transfer additional bytes.
 
+The separate opt-in [LXF input](../supported-formats-and-codecs#experimental-lxf-input) uses this decoder for a narrower finite, single-segment, version-1 subset: 25 fps closed all-I profile-82 frame pictures with temporal reference zero and planar PCM24 audio. Use `formats: [LXF]`; LXF is not included in `ALL_FORMATS`. Container timestamps come from the 720 kHz wire clock. This adds no native decoder fallback, output format or license grant.
+
 ## Decoding and browser execution
 
 The standalone `mpeg2-wasm` decoder embeds its scalar/shared WASM and worker graph. No assets URL or external runtime directory is needed. Every execution mode requires WebAssembly SIMD128. It selects direct execution when browser Workers are unavailable, a serial worker without cross-origin isolation, or an automatically sized slice pool when shared memory is available. Browser CSP must permit WebAssembly compilation and Blob module workers. Pooling requires cross-origin isolation, normally with these response headers:

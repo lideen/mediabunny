@@ -28,6 +28,8 @@ import { readNextMp3FrameHeader } from './mp3/mp3-reader';
 import { OggDemuxer } from './ogg/ogg-demuxer';
 import { WaveDemuxer } from './wave/wave-demuxer';
 import { MxfDemuxer } from './mxf/mxf-demuxer';
+import { LxfDemuxer } from './lxf/lxf-demuxer';
+import { isLxfSignature } from './lxf/lxf-reader';
 import { MAX_ADTS_FRAME_HEADER_SIZE, MIN_ADTS_FRAME_HEADER_SIZE, readAdtsFrameHeader } from './adts/adts-reader';
 import { AdtsDemuxer } from './adts/adts-demuxer';
 import { readAscii, readBytes, readU32Be, readU64Be } from './reader';
@@ -800,6 +802,32 @@ export const HLS = /* #__PURE__ */ new HlsInputFormat();
  * @public
  */
 export const MXF = /* #__PURE__ */ new MxfInputFormat();
+
+/**
+ * Experimental version-1 LXF input: finite sources, closed all-I MPEG-2 4:2:2 and planar PCM24.
+ * Bounded seeking can reject unsupported packet distributions. Not included in {@link ALL_FORMATS}.
+ * @group Input formats
+ * @public
+ */
+export class LxfInputFormat extends InputFormat {
+	/** @internal */
+	async _canReadInput(input: Input) {
+		const slice = await input._reader.source._read(0, 8, 0, 8, true);
+		return !!slice && isLxfSignature(slice.bytes.subarray(-slice.offset, 8 - slice.offset));
+	}
+
+	/** @internal */
+	_createDemuxer(input: Input) { return new LxfDemuxer(input); }
+	get name() { return 'LXF'; }
+	get mimeType() { return 'application/x-lxf'; }
+}
+
+/**
+ * Experimental LXF input singleton. Opt in using `formats: [LXF]`.
+ * @group Input formats
+ * @public
+ */
+export const LXF = /* #__PURE__ */ new LxfInputFormat();
 
 /**
  * List of all input format singletons. If you don't need to support all input formats, you should specify the
