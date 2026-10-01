@@ -13,3 +13,4 @@ packages/aac-encoder/dist
 packages/flac-encoder/dist
 packages/server/dist
 packages/prores/dist
+packages/htj2k/dist

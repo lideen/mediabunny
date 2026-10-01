@@ -21,6 +21,8 @@ Mediabunny supports many commonly used media container formats, all of which are
 - MPEG Transport Stream (.ts)
 - HLS (.m3u8)
 
+MXF is also supported for input. For full-frame HTJ2K decoding in OP1a MXF, see the optional [HTJ2K extension](./extensions/htj2k). Its narrow RGB8/RGB16 profile produces RGBA8 output and does not add encoding or muxing support.
+
 ## Codecs
 
 Mediabunny supports a wide range of video, audio, and subtitle codecs. More specifically, it supports all codecs specified by the WebCodecs API and a few additional PCM codecs out of the box.
@@ -41,6 +43,7 @@ Mediabunny ships with built-in decoders and encoders for all audio PCM codecs, m
 - `'vp9'` - VP9
 - `'av1'` - AOMedia Video 1 (AV1)
 - `'prores'` - Apple ProRes [^prores]
+- `'htj2k'` - High-throughput JPEG 2000, decode-only via the optional [HTJ2K extension](./extensions/htj2k)
 
 ### Audio codecs
 

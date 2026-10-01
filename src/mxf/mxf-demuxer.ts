@@ -36,6 +36,7 @@ const SET_PREFIX = '060e2b34025301010d0101010101';
 const ESSENCE_PREFIX = '060e2b34010201010d010301';
 // SMPTE RDD 44 frame-wrapped ProRes mapping.
 const PRORES_CONTAINER = '060e2b340401010d0d010301021c0100';
+const HTJ2K_CONTAINER = '060e2b340401010d0d010301020c0600';
 const AVC_CONTAINER = '060e2b340401010a0d01030102106001';
 const HEVC_CONTAINER = '060e2b340401010d0d01030102206001';
 const HEVC_SUB_DESCRIPTOR = '060e2b34025301010d01010101018101';
@@ -508,7 +509,7 @@ abstract class MxfTrackBacking implements InputTrackBacking {
 
 	constructor(public demuxer: MxfDemuxer, public info: TrackInfo) {}
 	abstract getType(): 'video' | 'audio';
-	abstract getCodec(): 'prores' | 'avc' | 'hevc' | AudioCodec | null;
+	abstract getCodec(): 'prores' | 'avc' | 'hevc' | 'htj2k' | AudioCodec | null;
 	abstract getDecoderConfig(): Promise<VideoDecoderConfig | AudioDecoderConfig | null>;
 	abstract append(klv: Klv): MaybePromise<void>;
 	abstract indexedLocation(klv: Klv, index: number): MaybePromise<PacketLocation>;
@@ -828,6 +829,7 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 	private squareWidth: number;
 	private codec: string;
 	private nalCodec: 'avc' | 'hevc' | null;
+	private htj2k: boolean;
 	private nalProfile = 0;
 	private avciFormat: AvciFormat | undefined;
 	private nalConfig: Promise<VideoDecoderConfig> | null = null;
@@ -847,9 +849,12 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 		this.nalCodec = container === HEVC_CONTAINER
 			? 'hevc'
 			: container === AVC_CONTAINER || info.legacyAvc ? 'avc' : null;
+		this.htj2k = container === HTJ2K_CONTAINER;
 		requireMxf(this.nalCodec === 'avc'
 			? [0x28, 0x51].includes(d.kind)
-			: d.kind === 0x28 && (this.nalCodec === 'hevc' || container === PRORES_CONTAINER),
+			: this.htj2k
+				? d.kind === 0x29
+				: d.kind === 0x28 && (this.nalCodec === 'hevc' || container === PRORES_CONTAINER),
 		'unsupported picture descriptor or frame wrapping');
 		const profile = Number.parseInt(coding.slice(28, 30), 16);
 		const avci = this.avciFormat = this.nalCodec === 'avc' ? AVCI_FORMATS[coding.slice(16)] : undefined;
@@ -866,6 +871,19 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 			requireMxf(this.nalCodec !== 'hevc' || !info.opAtom, 'HEVC OPAtom is not supported');
 			requireMxf(!avci || !info.opAtom, 'AVC-Intra OPAtom is not supported');
 			this.codec = this.nalCodec;
+		} else if (this.htj2k) {
+			requireMxf(!info.opAtom, 'HTJ2K OPAtom is not supported');
+			requireMxf(coding === '060e2b340401010d0401020203010801', 'unsupported HTJ2K picture coding');
+			const layout = property(d, P.pixelLayout, 16);
+			const bits = layout[1]!;
+			requireMxf(['52084708420800000000000000000000', '52104710421000000000000000000000'].includes(hex(layout)),
+				'HTJ2K requires RGB8 or RGB16');
+			requireMxf(uint(property(d, P.componentMin), 4) === 0
+				&& uint(property(d, P.componentMax), 4) === 2 ** bits - 1, 'HTJ2K requires full-range RGB');
+			requireMxf(hex(property(d, P.primaries, 16)) === '060e2b34040101060401010103030000'
+				&& hex(property(d, P.transfer, 16)) === '060e2b34040101010401010101020000'
+				&& !d.properties.has(P.equations), 'HTJ2K requires BT.709 RGB without coding equations');
+			this.codec = 'htj2k';
 		} else {
 			requireMxf(coding.startsWith('060e2b340401010d040102020306') && coding.endsWith('00')
 				&& profile >= 1 && profile <= 6, 'unsupported ProRes profile');
@@ -876,11 +894,18 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 		requireMxf(equalRationals(rate, info.rate), 'picture rate mismatch');
 		const number = info.trackNumber;
 		requireMxf((number >>> 24) === 0x15
-			&& ((number >>> 8) & 255) === (this.nalCodec ? 0x05 : 0x17),
+			&& ((number >>> 8) & 255) === (this.nalCodec ? 0x05 : this.htj2k ? 0x08 : 0x17),
 		'unsupported picture essence key');
 		this.width = uint(property(d, P.width), 4);
 		this.height = uint(property(d, P.height), 4);
 		requireMxf(this.width > 0 && this.height > 0, 'empty picture');
+		if (this.htj2k) {
+			for (const [key, expected] of [[P.sampledWidth, this.width], [P.sampledHeight, this.height],
+				[P.sampledX, 0], [P.sampledY, 0]] as const) {
+				const value = d.properties.get(key);
+				requireMxf(!value || uint(value, 4) === expected, 'HTJ2K requires a full-frame sampled raster');
+			}
+		}
 		let sampledWidth = this.width;
 		let sampledHeight = this.height;
 		if (this.nalCodec) {
@@ -909,6 +934,8 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 			requireMxf(!value || uint(value, 4) === expected, 'cropped picture is not supported');
 		}
 		const aspect = rational(property(d, P.aspect));
+		requireMxf(!this.htj2k || equalRationals(aspect, { numerator: this.width, denominator: this.height }),
+			'HTJ2K requires square pixels');
 		this.squareWidth = this.height * aspect.numerator / aspect.denominator;
 		if (avci) {
 			requireMxf(avci.rates.some(numerator => equalRationals(info.rate,
@@ -938,6 +965,9 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 	}
 
 	getCodec() {
+		if (this.htj2k) {
+			return 'htj2k' as const;
+		}
 		return this.nalCodec ?? 'prores' as const;
 	}
 
@@ -978,7 +1008,7 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 	}
 
 	indexedLocation(klv: Klv, index: number) {
-		requireMxf(klv.size >= (this.nalCodec ? 5 : 36), 'truncated picture frame');
+		requireMxf(klv.size >= (this.nalCodec ? 5 : this.htj2k ? 51 : 36), 'truncated picture frame');
 		if (this.avciFormat) {
 			requireMxf(klv.lengthSize === 4 && klv.size === this.avciFormat.size,
 				'AVC-Intra requires complete fixed-size access units with four-byte BER lengths');
@@ -1039,6 +1069,9 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 	}
 
 	getColorSpace(): Promise<VideoColorSpaceInit> {
+		if (this.htj2k) {
+			return Promise.resolve({ primaries: 'bt709', transfer: 'bt709', matrix: 'rgb', fullRange: true });
+		}
 		if (this.nalCodec) {
 			return this.getDecoderConfig().then(config => config.colorSpace!);
 		}
@@ -1242,6 +1275,7 @@ class MxfVideoTrackBacking extends MxfTrackBacking implements InputVideoTrackBac
 		}
 		return {
 			codec: this.codec, codedWidth: this.width, codedHeight: this.height, colorSpace: await this.getColorSpace(),
+			...(this.htj2k ? { description: Uint8Array.of(property(this.info.descriptor, P.pixelLayout)[1]!) } : {}),
 		};
 	}
 

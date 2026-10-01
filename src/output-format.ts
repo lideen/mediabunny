@@ -334,7 +334,7 @@ export class Mp4OutputFormat extends IsobmffOutputFormat {
 
 	getSupportedCodecs(): MediaCodec[] {
 		return [
-			...VIDEO_CODECS,
+			...VIDEO_CODECS.filter(codec => codec !== 'htj2k'),
 			...NON_PCM_AUDIO_CODECS,
 
 			// These are supported via ISO/IEC 23003-5:
@@ -403,7 +403,7 @@ export class CmafOutputFormat extends IsobmffOutputFormat {
 
 	getSupportedCodecs(): MediaCodec[] {
 		return [
-			...VIDEO_CODECS,
+			...VIDEO_CODECS.filter(codec => codec !== 'htj2k'),
 			...NON_PCM_AUDIO_CODECS,
 
 			// These are supported via ISO/IEC 23003-5:
@@ -449,7 +449,7 @@ export class MovOutputFormat extends IsobmffOutputFormat {
 
 	getSupportedCodecs(): MediaCodec[] {
 		return [
-			...VIDEO_CODECS,
+			...VIDEO_CODECS.filter(codec => codec !== 'htj2k'),
 			...AUDIO_CODECS,
 		];
 	}
@@ -583,7 +583,7 @@ export class MkvOutputFormat extends OutputFormat {
 
 	getSupportedCodecs(): MediaCodec[] {
 		return [
-			...VIDEO_CODECS,
+			...VIDEO_CODECS.filter(codec => codec !== 'htj2k'),
 			...NON_PCM_AUDIO_CODECS,
 			...PCM_AUDIO_CODECS.filter(codec => !['pcm-s8', 'pcm-f32be', 'pcm-f64be', 'ulaw', 'alaw'].includes(codec)),
 			...SUBTITLE_CODECS,

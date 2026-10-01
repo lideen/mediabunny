@@ -128,6 +128,7 @@ export default withMermaid({
 						{ text: 'dts', link: '/guide/extensions/dts' },
 						{ text: 'flac-encoder', link: '/guide/extensions/flac-encoder' },
 						{ text: 'prores', link: '/guide/extensions/prores' },
+						{ text: 'htj2k', link: '/guide/extensions/htj2k' },
 					],
 				},
 			],

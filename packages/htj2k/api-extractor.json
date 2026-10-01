@@ -1,0 +1,9 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+  "mainEntryPointFilePath": "dist/modules/src/index.d.ts",
+  "apiReport": { "enabled": false },
+  "docModel": { "enabled": false },
+  "dtsRollup": { "enabled": true, "untrimmedFilePath": "dist/mediabunny-htj2k.d.ts" },
+  "tsdocMetadata": { "enabled": false },
+  "newlineKind": "lf"
+}

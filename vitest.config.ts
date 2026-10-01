@@ -6,6 +6,7 @@ import path from 'node:path';
 export default defineConfig({
 	resolve: {
 		alias: {
+			'@mediabunny/htj2k': path.resolve(__dirname, './packages/htj2k/dist/bundles/mediabunny-htj2k.mjs'),
 			'mediabunny': path.resolve(__dirname, './src/index.ts'),
 			'@mediabunny/ac3': path.resolve(__dirname, './packages/ac3/dist/bundles/mediabunny-ac3.mjs'),
 			'@mediabunny/aac-encoder':

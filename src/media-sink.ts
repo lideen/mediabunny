@@ -948,6 +948,9 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 				.call(() => this.customDecoder!.init())
 				.catch(error => onError(error));
 		} else {
+			if (codec === 'htj2k') {
+				throw new Error('HTJ2K requires a registered custom decoder.');
+			}
 			const colorHandler = (frame: VideoFrame) => {
 				if (this.alphaQueue.length > 0) {
 					// Even when no alpha data is present (most of the time), there will be nulls in this queue
@@ -1363,7 +1366,10 @@ class VideoDecoderWrapper extends DecoderWrapper<VideoSample> {
 
 	close() {
 		if (this.customDecoder) {
-			void this.customDecoderCallSerializer.call(() => this.customDecoder!.close());
+			// Release native resources even if initialization or decoding rejected the serialized queue.
+			void this.customDecoderCallSerializer.currentPromise
+				.finally(() => this.customDecoder!.close())
+				.catch(error => this.onError(error));
 		} else {
 			assert(this.decoder);
 

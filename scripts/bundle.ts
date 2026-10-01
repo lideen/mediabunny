@@ -1,5 +1,6 @@
 import * as esbuild from 'esbuild';
 import process from 'node:process';
+import { readFileSync, readdirSync } from 'node:fs';
 import PluginExternalGlobal from 'esbuild-plugin-external-global';
 import { inlineWorkerPlugin } from './esbuild/inlined-workers.js';
 
@@ -272,6 +273,29 @@ const proresVariants = await createVariants(
 	},
 );
 
+const htj2kNotices = readdirSync('packages/htj2k/vendor').filter(name => name.startsWith('LICENSE'))
+	.map(name => `/* ${name}\n${readFileSync(`packages/htj2k/vendor/${name}`, 'utf8').replaceAll('*/', '* /')}\n*/`)
+	.join('\n');
+const htj2kVariants = await createVariants(
+	'packages/htj2k/src/index.ts',
+	'MediabunnyHtj2k',
+	'packages/htj2k/dist/bundles/mediabunny-htj2k',
+	'js',
+	{
+		loader: { '.wasm': 'binary' },
+		external: ['node:*'],
+		define: { 'import.meta.url': '""' },
+		banner: { js: htj2kNotices },
+		plugins: [PluginExternalGlobal.externalGlobalPlugin({ mediabunny: 'Mediabunny' })],
+	},
+	{
+		loader: { '.wasm': 'binary' },
+		external: ['mediabunny', 'node:*'],
+		platform: 'neutral',
+		banner: { js: htj2kNotices },
+	},
+);
+
 const serverVariants = await createVariants(
 	'packages/server/src/index.ts',
 	'MediabunnyServer',
@@ -297,6 +321,7 @@ const contexts = [
 	...aacEncoderVariants,
 	...flacEncoderVariants,
 	...proresVariants,
+	...htj2kVariants,
 	...serverVariants,
 ];
 

@@ -12,6 +12,7 @@
 			"@mediabunny/flac-encoder": ["./packages/flac-encoder/src/index.ts"],
 			"@mediabunny/mp3-encoder": ["./packages/mp3-encoder/src/index.ts"],
 			"@mediabunny/prores": ["./packages/prores/src/index.ts"],
+			"@mediabunny/htj2k": ["./packages/htj2k/src/index.ts"],
 			"@mediabunny/server": ["./packages/server/src/index.ts"],
 		},
 	},
@@ -24,6 +25,7 @@
 		{ "path": "./packages/flac-encoder" },
 		{ "path": "./packages/mp3-encoder" },
 		{ "path": "./packages/prores" },
+		{ "path": "./packages/htj2k" },
 		{ "path": "./packages/server" },
 	]
 }
